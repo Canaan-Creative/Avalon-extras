@@ -158,23 +158,42 @@ main()
 	read_count = 56;
 	char result[56];
 	uint8_t *p = buf;
-	int i = 0;
+
+	int finish_read = 20;
+	int write_i;
 
 	memset(result, 0, 56);
 	while (1) {
 		if (read_count == 0) {
-			printf("Info: I got 56 chars: --------------------\n");
+			p = buf;
+			read_count = 56;
+
+			printf("Info: (%d) I got 56 chars: ---------------\n", finish_read);
 			hexdump(buf, 56);
 			printf("------------------------------------------\n");
 
+			if (buf[0] == 0xA1) {
+				printf("This is a BIG RESET\n");
+				if (write(fd, result, 56) != 56) {
+					printf("Error: on write\n");
+					break;
+				}
+				continue;
+			}
+			finish_read--;
+		}
+
+		if (finish_read == 0) {
 			rts(fd, 0);
-			if (write(fd, result, 56) != 56) {
-				printf("Error: on write\n");
-				break;
+			sleep(1);
+			for (write_i = 0; write_i < 20; write_i++) {
+				if (write(fd, result, 56) != 56) {
+					printf("Error: on write\n");
+					break;
+				}
 			}
 
-			read_count = 56;
-			i = 0;
+			finish_read = 20;
 			continue;
 		}
 
