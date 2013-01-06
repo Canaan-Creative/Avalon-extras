@@ -1,25 +1,19 @@
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <termios.h>
-#include <stdio.h>
-#include <stdint.h>
-
-#include <unistd.h>
-#include <stdlib.h>
-#include <errno.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <signal.h>
-
+#include <termios.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
 
 #define BAUDRATE B115200
 #define MODEMDEVICE "/dev/ttyUSB1"
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
-#define FALSE 0
-#define TRUE 1
-
-volatile int STOP = FALSE;
 
 #define hex_print(p) printf("%s\n", p)
 
@@ -82,7 +76,7 @@ void hexdump(const uint8_t *p, unsigned int len)
 /* Does the reverse of bin2hex but does not allocate any ram */
 int hex2bin(unsigned char *p, const char *hexstr, size_t len)
 {
-	int ret = FALSE;
+	int ret = 0;
 
 	while (*hexstr && len) {
 		char hex_byte[4];
@@ -109,7 +103,7 @@ int hex2bin(unsigned char *p, const char *hexstr, size_t len)
 	}
 
 	if (len == 0 && *hexstr == 0)
-		ret = TRUE;
+		ret = 1;
 	return ret;
 }
 
@@ -118,7 +112,7 @@ int rts(int fd, int rtsEnable)
 	int flags;
 
 	ioctl(fd, TIOCMGET, &flags);
-	fprintf(stderr, "Flags are %x.\n", flags);
+	/* fprintf(stderr, "Flags before %x\t", flags); */
 
 	if(rtsEnable!=0)
 		flags |= TIOCM_RTS;
@@ -126,15 +120,16 @@ int rts(int fd, int rtsEnable)
 		flags &= ~TIOCM_RTS;
 
 	ioctl(fd, TIOCMSET, &flags);
-	fprintf(stderr, "After set: %x.\n", flags);
+	/* fprintf(stderr, "after: %x\n", flags); */
 }
 
 main()
 {
 	struct termios oldtio,newtio;
-	char buf[255];
-	int fd, c, res;
-	int read_count = 56;
+	uint8_t buf[1024];
+
+	int fd, c, ret;
+	int read_count;
 
 	fd = open(MODEMDEVICE, O_RDWR | O_CLOEXEC | O_NOCTTY ); 
 	if (fd <0) {perror(MODEMDEVICE); exit(-1); }
@@ -160,19 +155,45 @@ main()
 	tcflush(fd, TCIFLUSH);
 	tcsetattr(fd, TCSANOW, &newtio);
 
-	while (read_count) {
+	read_count = 56;
+	char result[56];
+	uint8_t *p = buf;
+	int i = 0;
+
+	memset(result, 0, 56);
+	while (1) {
 		if (read_count == 0) {
-			rts(fd, 0);
+			printf("Info: I got 56 chars: --------------------\n");
 			hexdump(buf, 56);
-			write(fd, buf, 56);
+			printf("------------------------------------------\n");
+
+			rts(fd, 0);
+			if (write(fd, result, 56) != 56) {
+				printf("Error: on write\n");
+				break;
+			}
+
 			read_count = 56;
+			i = 0;
 			continue;
 		}
 
 		rts(fd, 1);
-		res = read(fd, buf, 1);
-		if (res != 56) {
-			read_count -= res;
+		ret = read(fd, p, 1);
+		if (ret < 0) {
+			printf("Error: on read\n");
+			break;
+		}
+
+		if (ret == 0) {
+			printf("Info: read nothing: %d\n", ret);
+			continue;
+		}
+
+		if (ret > 0) {
+			p += ret;
+			read_count -= ret;
+			/* printf("Info: (%d) read: %d\n", i++, ret); */
 			continue;
 		}
 	}
