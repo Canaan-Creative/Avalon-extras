@@ -113,7 +113,6 @@ int rts(int fd, int rtsEnable)
 	int flags;
 
 	ioctl(fd, TIOCMGET, &flags);
-	/* fprintf(stderr, "Flags before %x\t", flags); */
 
 	if(rtsEnable!=0)
 		flags |= TIOCM_RTS;
@@ -121,10 +120,29 @@ int rts(int fd, int rtsEnable)
 		flags &= ~TIOCM_RTS;
 
 	ioctl(fd, TIOCMSET, &flags);
-	/* fprintf(stderr, "after: %x\n", flags); */
 
 	return 0;
 }
+
+int get_rts(int fd)
+{
+	int flags;
+
+	ioctl(fd, TIOCMGET, &flags);
+
+	printf("Info: Flags: %x\t RTS: %d\t CTS: %d\n",
+	       flags,
+	       ((flags & TIOCM_RTS) ? 1 : 0),
+	       ((flags & TIOCM_CTS) ? 1 : 0));
+
+	return (flags & TIOCM_RTS) ? 1 : 0;
+}
+
+#define AVA_BUFFER_FULL 0
+#define AVA_BUFFER_EMPTY 1
+#define AVA_TASK_SIZE 56
+#define AVA_RESULT_SIZE 56
+
 
 int main(int argc, char *argv[])
 {
@@ -166,7 +184,7 @@ int main(int argc, char *argv[])
 
 
 #include "data.test.c"
-	char reset[56] = {
+	char reset[AVA_RESULT_SIZE] = {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -177,25 +195,26 @@ int main(int argc, char *argv[])
 	};
 
 	int write_i;
-	uint8_t result[56];
+	uint8_t result[AVA_RESULT_SIZE];
 	int finish_read = 20;
 	uint8_t *p = buf;
 
-	read_count = 56;
+	read_count = AVA_TASK_SIZE;
 
-	memset(result, 0, 56);
+	memset(result, 0, AVA_RESULT_SIZE);
+
+	rts(fd, AVA_BUFFER_EMPTY);
 	while (1) {
-		if (read_count == 0) {
+		if (!read_count) {
 			p = buf;
-			read_count = 56;
+			read_count = AVA_TASK_SIZE;
 
-			printf("Info: (%d) I got 56 chars: ---------------\n", finish_read);
-			hexdump(buf, 56);
-			printf("------------------------------------------\n");
+			printf("Info: (%d) I got %d chars: ---------------\n", finish_read, AVA_TASK_SIZE);
+			hexdump(buf, AVA_TASK_SIZE);
 
 			if (buf[0] == 0xA1) {
-				printf("This is a BIG RESET\n");
-				if (write(fd, reset, 56) != 56) {
+				printf("Info: This is a BIG RESET\n");
+				if (write(fd, reset, AVA_RESULT_SIZE) != AVA_RESULT_SIZE) {
 					printf("Error: on write\n");
 					break;
 				}
@@ -204,22 +223,23 @@ int main(int argc, char *argv[])
 			finish_read--;
 		}
 
-		if (finish_read == 0) {
-			rts(fd, 0);
-			sleep(1);
+		if (!finish_read) {
+			rts(fd, AVA_BUFFER_FULL);
+			sleep(2);
+			printf("Info: send back the results, rts: %d\n", get_rts(fd));
+
 			for (write_i = 0; write_i < 20; write_i++) {
-				hex2bin(result, data_test[write_i], 56);
-				if (write(fd, result, 56) != 56) {
+				hex2bin(result, data_test[write_i], AVA_RESULT_SIZE);
+				if (write(fd, result, AVA_RESULT_SIZE) != AVA_RESULT_SIZE) {
 					printf("Error: on write\n");
 					break;
 				}
 			}
 
 			finish_read = 20;
-			continue;
 		}
 
-		rts(fd, 1);
+		rts(fd, AVA_BUFFER_EMPTY);
 		ret = read(fd, p, 1);
 		if (ret < 0) {
 			printf("Error: on read\n");
@@ -227,7 +247,7 @@ int main(int argc, char *argv[])
 		}
 
 		if (ret == 0) {
-			printf("Info: read nothing in X second, ret: %d\n", ret);
+			printf("Info: read nothing in X second, ret: %d, rts: %d\n", ret, get_rts(fd));
 			continue;
 		}
 
