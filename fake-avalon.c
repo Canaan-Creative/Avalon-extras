@@ -122,14 +122,16 @@ int rts(int fd, int rtsEnable)
 
 	ioctl(fd, TIOCMSET, &flags);
 	/* fprintf(stderr, "after: %x\n", flags); */
+
+	return 0;
 }
 
-main()
+int main()
 {
 	struct termios oldtio,newtio;
 	uint8_t buf[1024];
 
-	int fd, c, ret;
+	int fd, ret;
 	int read_count;
 
 	fd = open(MODEMDEVICE, O_RDWR | O_CLOEXEC | O_NOCTTY ); 
@@ -170,7 +172,7 @@ main()
 	};
 
 	int write_i;
-	char result[56];
+	uint8_t result[56];
 	int finish_read = 20;
 	uint8_t *p = buf;
 
@@ -234,5 +236,6 @@ main()
 
 	tcsetattr(fd,TCSANOW,&oldtio);
 	close(fd);
-}
 
+	return 0;
+}
