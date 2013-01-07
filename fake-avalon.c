@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
 #define BAUDRATE B115200
 #define MODEMDEVICE "/dev/ttyUSB1"
@@ -155,12 +156,25 @@ main()
 	tcflush(fd, TCIFLUSH);
 	tcsetattr(fd, TCSANOW, &newtio);
 
-	read_count = 56;
+
+#include "data.test.c"
+
+	char reset[56] = {
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x20, 0x13, 0x01, 0x07,
+		0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+	};
+
+	int write_i;
 	char result[56];
+	int finish_read = 20;
 	uint8_t *p = buf;
 
-	int finish_read = 20;
-	int write_i;
+	read_count = 56;
 
 	memset(result, 0, 56);
 	while (1) {
@@ -174,7 +188,7 @@ main()
 
 			if (buf[0] == 0xA1) {
 				printf("This is a BIG RESET\n");
-				if (write(fd, result, 56) != 56) {
+				if (write(fd, reset, 56) != 56) {
 					printf("Error: on write\n");
 					break;
 				}
@@ -187,6 +201,7 @@ main()
 			rts(fd, 0);
 			sleep(1);
 			for (write_i = 0; write_i < 20; write_i++) {
+				hex2bin(result, data_test[write_i], 56);
 				if (write(fd, result, 56) != 56) {
 					printf("Error: on write\n");
 					break;
