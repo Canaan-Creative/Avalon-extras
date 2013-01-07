@@ -59,7 +59,7 @@ void hexdump(const uint8_t *p, unsigned int len)
 
 			if (addr + i >= len)
 				break;
-		
+
 			v = p[addr + i];
 			line[pos + (i * 3) + 0] = nibble[v >> 4];
 			line[pos + (i * 3) + 1] = nibble[v & 0xf];
@@ -126,20 +126,26 @@ int rts(int fd, int rtsEnable)
 	return 0;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
 	struct termios oldtio,newtio;
 	uint8_t buf[1024];
 
 	int fd, ret;
 	int read_count;
+	char *path;
 
-	fd = open(MODEMDEVICE, O_RDWR | O_CLOEXEC | O_NOCTTY ); 
-	if (fd <0) {perror(MODEMDEVICE); exit(-1); }
-        
+	if (argc == 1)
+		path = MODEMDEVICE;
+	else
+		path = argv[1];
+
+	fd = open(path, O_RDWR | O_CLOEXEC | O_NOCTTY );
+	if (fd <0) {perror(path); exit(-1); }
+
 	tcgetattr(fd,&oldtio); /* save current serial port settings */
 	bzero(&newtio, sizeof(newtio)); /* clear struct for new port settings */
-        
+
 	newtio.c_cflag |= BAUDRATE;
 	newtio.c_cflag |= CS8;
 	newtio.c_cflag |= CREAD;
@@ -151,8 +157,8 @@ int main()
 	newtio.c_oflag &= ~OPOST;
 	newtio.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
 
-        
-	newtio.c_cc[VTIME] = 60;
+
+	newtio.c_cc[VTIME] = 20;
 	newtio.c_cc[VMIN] = 0;
 
 	tcflush(fd, TCIFLUSH);
@@ -160,7 +166,6 @@ int main()
 
 
 #include "data.test.c"
-
 	char reset[56] = {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -222,7 +227,7 @@ int main()
 		}
 
 		if (ret == 0) {
-			printf("Info: read nothing: %d\n", ret);
+			printf("Info: read nothing in X second, ret: %d\n", ret);
 			continue;
 		}
 
