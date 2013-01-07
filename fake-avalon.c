@@ -142,7 +142,7 @@ int get_rts(int fd)
 #define AVA_BUFFER_EMPTY 1
 #define AVA_TASK_SIZE 56
 #define AVA_RESULT_SIZE 56
-
+#define AVALON_GET_WORK_COUNT 24
 
 int main(int argc, char *argv[])
 {
@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
 
 	int write_i;
 	uint8_t result[AVA_RESULT_SIZE];
-	int finish_read = 20;
+	int finish_read = AVALON_GET_WORK_COUNT;
 	uint8_t *p = buf;
 
 	read_count = AVA_TASK_SIZE;
@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
 			sleep(2);
 			printf("Info: send back the results, rts: %d\n", get_rts(fd));
 
-			for (write_i = 0; write_i < 20; write_i++) {
+			for (write_i = 0; write_i < AVALON_GET_WORK_COUNT; write_i++) {
 				hex2bin(result, data_test[write_i], AVA_RESULT_SIZE);
 				if (write(fd, result, AVA_RESULT_SIZE) != AVA_RESULT_SIZE) {
 					printf("Error: on write\n");
@@ -236,7 +236,7 @@ int main(int argc, char *argv[])
 				}
 			}
 
-			finish_read = 20;
+			finish_read = AVALON_GET_WORK_COUNT;
 		}
 
 		rts(fd, AVA_BUFFER_EMPTY);
