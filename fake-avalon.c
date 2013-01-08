@@ -214,6 +214,7 @@ int main(int argc, char *argv[])
 
 			if (buf[0] == 0xA1) {
 				printf("Info: This is a BIG RESET\n");
+				tcflush(fd, TCOFLUSH);
 				if (write(fd, reset, AVA_RESULT_SIZE) != AVA_RESULT_SIZE) {
 					printf("Error: on write\n");
 					break;
