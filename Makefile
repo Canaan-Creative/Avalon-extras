@@ -3,7 +3,7 @@ all:
 	mips-openwrt-linux-gcc cts.c -o cts-test-703n
 	gcc -g -Wall -W fake-avalon.c -o fake-avalon
 
-fake-avalon:
+test: fake-avalon
 	./fake-avalon || ./fake-avalon /dev/ttyUSB2
 
 clean:

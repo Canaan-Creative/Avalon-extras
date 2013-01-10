@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#define BAUDRATE B115200
+#define BAUDRATE B19200
 #define MODEMDEVICE "/dev/ttyUSB1"
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 
@@ -141,8 +141,8 @@ int get_rts(int fd)
 #define AVA_BUFFER_FULL 0
 #define AVA_BUFFER_EMPTY 1
 #define AVA_TASK_SIZE 56
-#define AVA_RESULT_SIZE 56
-#define AVALON_GET_WORK_COUNT 24
+#define AVA_RESULT_SIZE 64
+#define AVALON_GET_WORK_COUNT 3
 
 int main(int argc, char *argv[])
 {
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
 	newtio.c_cflag |= BAUDRATE;
 	newtio.c_cflag |= CS8;
 	newtio.c_cflag |= CREAD;
-	newtio.c_cflag |= CRTSCTS;
+//	newtio.c_cflag |= CRTSCTS;
 	newtio.c_cflag |= CLOCAL;
 	newtio.c_cflag &= ~(CSIZE | PARENB);
 	newtio.c_iflag &= ~(IGNBRK | BRKINT | PARMRK |
@@ -192,41 +192,53 @@ int main(int argc, char *argv[])
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x20, 0x13, 0x01, 0x07,
 		0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+		0x55, 0x55, 0x55, 0x55, 0xAA, 0xAA, 0xAA, 0xAA,
 	};
 
-	uint8_t result[AVA_RESULT_SIZE];
 	int finish_read = AVALON_GET_WORK_COUNT;
 	uint8_t *p = buf;
 	int write_i = 0;
 
-	read_count = AVA_TASK_SIZE;
-
+	uint8_t result[AVA_RESULT_SIZE];
 	memset(result, 0, AVA_RESULT_SIZE);
 
-	rts(fd, AVA_BUFFER_EMPTY);
+	read_count = AVA_TASK_SIZE;
+
 	while (1) {
 		if (!read_count) {
-			p = buf;
+			printf("Info: (%d) I got %d chars: ---------------\n", finish_read, AVA_TASK_SIZE);
 			read_count = AVA_TASK_SIZE;
 
-			printf("Info: (%d) I got %d chars: ---------------\n", finish_read, AVA_TASK_SIZE);
-			hexdump(buf, AVA_TASK_SIZE);
 
-			if (buf[0] == 0xA1) {
-				printf("Info: This is a BIG RESET\n");
+			if (buf[0] & 0x01) {
+				int res;
+				int nonce_range = 4;
+				printf("Info: This is a BIG RESET:0x%02x\n", (buf[0] & 0x01));
+				while(1) {
+					res = read(fd, p++, 1);
+					nonce_range -= res;
+					if (!nonce_range)
+						break;
+				}
+
+				hexdump(buf, AVA_TASK_SIZE + 4 * AVALON_GET_WORK_COUNT);
+
 				tcflush(fd, TCOFLUSH);
 				if (write(fd, reset, AVA_RESULT_SIZE) != AVA_RESULT_SIZE) {
 					printf("Error: on write\n");
 					break;
 				}
 				finish_read = AVALON_GET_WORK_COUNT * 2;
-				continue;
+				memset(buf, 0, 1024);
+			} else {
+				finish_read--;
+				hexdump(buf, AVA_TASK_SIZE);
 			}
-			finish_read--;
+
+			p = buf;
 		}
 
 		if (!finish_read) {
-			rts(fd, AVA_BUFFER_FULL);
 			sleep(2);
 			printf("Info: send back the results, rts: %d\n", get_rts(fd));
 
@@ -243,7 +255,11 @@ int main(int argc, char *argv[])
 			finish_read = AVALON_GET_WORK_COUNT;
 		}
 
-		rts(fd, AVA_BUFFER_EMPTY);
+		if (finish_read <= 1)
+			rts(fd, AVA_BUFFER_FULL);
+		else
+			rts(fd, AVA_BUFFER_EMPTY);
+
 		ret = read(fd, p, 1);
 		if (ret < 0) {
 			printf("Error: on read\n");
