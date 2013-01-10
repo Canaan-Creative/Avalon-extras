@@ -22,12 +22,22 @@ int rts(int fd, int rtsEnable)
 
 	ioctl(fd, TIOCMGET, &flags);
 
+	printf("Info: Flags before: %x\t RTS: %d\t CTS: %d\n",
+	       flags,
+	       ((flags & TIOCM_RTS) ? 1 : 0),
+	       ((flags & TIOCM_CTS) ? 1 : 0));
+
 	if(rtsEnable!=0)
 		flags |= TIOCM_RTS;
 	else
 		flags &= ~TIOCM_RTS;
 
 	ioctl(fd, TIOCMSET, &flags);
+
+	printf("Info: Flags after: %x\t RTS: %d\t CTS: %d\n",
+	       flags,
+	       ((flags & TIOCM_RTS) ? 1 : 0),
+	       ((flags & TIOCM_CTS) ? 1 : 0));
 
 	return 0;
 }
@@ -53,14 +63,17 @@ int main(int argc, char *argv[])
 
 	int fd, ret;
 	int read_count;
-	char *path;
 
-	path = MODEMDEVICE;
-	fd = open(path, O_RDWR | O_NOCTTY );
+	if (argc < 3) {
+		printf("Usage: %s DEVICE high/low/set \t\tVersion:20130110\n", argv[0]);
+		return 1;
+	}
+
+	fd = open(argv[1], O_RDWR | O_NOCTTY);
 	if (fd <0) {
-		printf("Usage %s high/low, Version:20130109\n", argv[0]);
-		perror(path);
-		exit(-1);
+		printf("Usage: %s DEVICE high/low/set \t\tVersion:20130110\n", argv[0]);
+		perror(argv[1]);
+		return 1;
 	}
 
 	tcgetattr(fd,&oldtio); /* save current serial port settings */
@@ -69,7 +82,6 @@ int main(int argc, char *argv[])
 	newtio.c_cflag |= BAUDRATE;
 	newtio.c_cflag |= CS8;
 	newtio.c_cflag |= CREAD;
-	//newtio.c_cflag |= CRTSCTS;
 	newtio.c_cflag |= CLOCAL;
 	newtio.c_cflag &= ~(CSIZE | PARENB);
 	newtio.c_iflag &= ~(IGNBRK | BRKINT | PARMRK |
@@ -84,16 +96,22 @@ int main(int argc, char *argv[])
 	tcflush(fd, TCIFLUSH);
 	tcsetattr(fd, TCSANOW, &newtio);
 
-	const char *result = "A";
-	int cts;
-
-	if (argc != 2) {
-		printf("Usage %s high/low, Version:20130109\n", argv[0]);
-		return 1;
+	if (!strcmp(argv[2], "set") && argc == 4) {
+		while (1) {
+			rts(fd, atoi(argv[3]));
+			char b[2] = {'b', 'B'};
+			if (write(fd, b, 1) != 1) {
+				printf("Error: on write\n");
+				goto xout;
+			}
+			usleep(1000000);
+		}
 	}
 
+	const char *result = "A";
+	int cts;
 	cts = get_cts(fd);
-	while ((!strcmp(argv[1], "high") && cts != 1) || (!strcmp(argv[1], "low") && cts != 0)) {
+	while ((!strcmp(argv[2], "high") && cts != 1) || (!strcmp(argv[2], "low") && cts != 0)) {
 		printf("CTS is not what I want. wait another second\n");
 		sleep(1);
 		cts = get_cts(fd);
@@ -106,7 +124,6 @@ int main(int argc, char *argv[])
 	}
 	get_cts(fd);
 
-
 	uint8_t r[2] = {0, 0};
 	printf("Read...\n");
 	while (read(fd, r, 1) != 1) {
@@ -117,6 +134,7 @@ int main(int argc, char *argv[])
 	printf("Done\n");
 
 
+xout:
 	tcsetattr(fd,TCSANOW,&oldtio);
 	close(fd);
 
