@@ -1,0 +1,12 @@
+#!/bin/sh
+
+killall -s 9 cgminer
+
+mkdir -p cgminer-logs
+
+valgrind --leak-check=full --trace-children=yes --log-file=./v.log ./cgminer $@ \
+	--avalon-options 115200:24:10:50 \
+	--api-allow "W:0/0" --api-listen \
+	-o stratum.ozco.in:80       -O 12300:xRbYjN \
+	-S /dev/ttyUSB1 \
+	2>./cgminer-logs/cgminer.`date +"%Y%m%d-%H%M"`.log
