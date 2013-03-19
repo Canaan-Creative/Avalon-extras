@@ -31,7 +31,7 @@ echo "openwrt-package-$OW_GIT_VERSION$OW_GIT_STATUS" >> ${HOME}/workspace/PanGu/
 make -C ${HOME}/workspace/PanGu/openwrt package/cgminer/{clean,compile} V=99 && \
 make -C ${HOME}/workspace/PanGu/openwrt && \
 cp ${HOME}/workspace/PanGu/openwrt/bin/ar71xx/openwrt-ar71xx-generic-tl-wr703n-v1-squashfs-factory.bin \
-     ${HOME}/workspace/PanGu/openwrt/bin/ar71xx/old/openwrt-ar71xx-generic-tl-wr703n-v1-squashfs-factory-${DATE}.bin;  \
+     ${HOME}/workspace/PanGu/openwrt/bin/old/openwrt-ar71xx-generic-tl-wr703n-v1-squashfs-factory-${DATE}.bin;  \
 ssh-keygen -f "${HOME}/.ssh/known_hosts" -R ${IP} && \
 scp ${HOME}/workspace/PanGu/openwrt/bin/ar71xx/openwrt-ar71xx-generic-tl-wr703n-v1-squashfs-factory.bin root@${IP}:/tmp/abc && \
 ssh root@${IP} mtd -r write /tmp/abc firmware
