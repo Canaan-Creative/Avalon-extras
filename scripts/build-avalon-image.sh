@@ -6,10 +6,12 @@ OPENWRT_PATH=../openwrt
 OPENWRT_DL_PATH=${OPENWRT_PATH}/../dl
 LUCI_PATH=../luci
 
+mkdir -p avalon
+mkdir -p avalon/dl
+mkdir -p avalon/bin
 
 ## Init
 if [ "$1" == "--clone" ]; then
-    mkdir -p avalon
     cd avalon
     svn co svn://svn.openwrt.org/openwrt/trunk@36095 openwrt
     git clone git://github.com/BitSyncom/cgminer.git && (cd cgminer && git checkout -b avalon origin/avalon)
@@ -18,7 +20,6 @@ if [ "$1" == "--clone" ]; then
     (cd cgminer && git archive --format tar.gz --prefix=cgminer-20130108/ HEAD > \
       ${OPENWRT_DL_PATH}/cgminer-20130108-HEAD.tar.gz)
     cd openwrt
-    mkdir -p ../dl
     ln -s ../dl
     wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/feeds.conf
     wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/config -O .config
@@ -40,7 +41,6 @@ fi
 
 ## Rebuild cgminer
 cd avalon/cgminer
-mkdir -p ../bin
 
 git archive --format tar.gz --prefix=cgminer-20130108/ HEAD > \
       ${OPENWRT_DL_PATH}/cgminer-20130108-HEAD.tar.gz                                            && \
