@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# VERSION: 2013-04-04
+
 OPENWRT_PATH=../openwrt
 OPENWRT_DL_PATH=${OPENWRT_PATH}/../dl
 LUCI_PATH=../luci
@@ -13,6 +15,8 @@ if [ "$1" == "--clone" ]; then
     git clone git://github.com/BitSyncom/cgminer.git && (cd cgminer && git checkout -b avalon origin/avalon)
     git clone git://github.com/BitSyncom/luci.git && (cd luci && git checkout -b cgminer-webui origin/cgminer-webui)
     git clone git://github.com/BitSyncom/cgminer-openwrt-packages.git
+    (cd cgminer && git archive --format tar.gz --prefix=cgminer-20130108/ HEAD > \
+      ${OPENWRT_DL_PATH}/cgminer-20130108-HEAD.tar.gz)
     cd openwrt
     mkdir -p ../dl
     ln -s ../dl
@@ -60,8 +64,8 @@ fi
 
 rm -rf ${LUCI_PATH}/applications/luci-cgminer/dist                                               && \
 make -C ${LUCI_PATH}                                                                             && \
-cp -a ${HOME}/workspace/bitcoin/avalon/luci/applications/luci-cgminer/dist/* \
-        ${OPENWRT_PATH}/files/                                                                   && \
+cp -a  ${LUCI_PATH}/applications/luci-cgminer/dist/* \
+         ${OPENWRT_PATH}/files/                                                                  && \
 echo "$DATE"                                          > ${OPENWRT_PATH}/files/etc/avalon_version && \
 echo "cgminer-$GIT_VERSION$GIT_STATUS"               >> ${OPENWRT_PATH}/files/etc/avalon_version && \
 echo "luci-$LUCI_GIT_VERSION$LUCI_GIT_STATUS"        >> ${OPENWRT_PATH}/files/etc/avalon_version && \
