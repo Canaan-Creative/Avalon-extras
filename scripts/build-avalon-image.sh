@@ -40,6 +40,8 @@ fi
 
 ## Rebuild cgminer
 cd avalon/cgminer
+mkdir -p ../bin
+
 git archive --format tar.gz --prefix=cgminer-20130108/ HEAD > \
       ${OPENWRT_DL_PATH}/cgminer-20130108-HEAD.tar.gz                                            && \
 make -C ${OPENWRT_PATH} package/cgminer/{clean,compile} V=s
@@ -47,8 +49,8 @@ make -C ${OPENWRT_PATH} package/cgminer/{clean,compile} V=s
 RET="$?"
 if [ "${RET}" != "0" ] || [ "$1" == "--cgminer" ]; then
     if [ "${RET}" == "0" ]; then
-	cp ${OPENWRT_PATH}/bin/ar71xx/packages/cgminer_20130108-1_ar71xx.ipk  ./
-	cp ${OPENWRT_PATH}/build_dir/target-mips_r2_uClibc-0.9.33.2/cgminer-20130108/cgminer ./cgminer-mips
+	cp ${OPENWRT_PATH}/bin/ar71xx/packages/cgminer_20130108-1_ar71xx.ipk  ../bin/
+	cp ${OPENWRT_PATH}/build_dir/target-mips_r2_uClibc-0.9.33.2/cgminer-20130108/cgminer ../bin/cgminer-mips
     fi
     exit "$?"
 fi
@@ -80,7 +82,5 @@ echo "cgminer-$GIT_VERSION$GIT_STATUS"               >> ${OPENWRT_PATH}/files/et
 echo "luci-$LUCI_GIT_VERSION$LUCI_GIT_STATUS"        >> ${OPENWRT_PATH}/files/etc/avalon_version && \
 echo "openwrt-package-$OW_GIT_VERSION$OW_GIT_STATUS" >> ${OPENWRT_PATH}/files/etc/avalon_version && \
 make -C ${OPENWRT_PATH} V=s                                  && \
-mkdir -p ${OPENWRT_PATH}/bin/old/                            && \
-cp ${OPENWRT_PATH}/bin/ar71xx/openwrt-ar71xx-generic-tl-wr703n-v1-squashfs-factory.bin \
-     ${OPENWRT_PATH}/bin/old/openwrt-ar71xx-generic-tl-wr703n-v1-squashfs-factory-${DATE}.bin
-
+mkdir -p ../bin/${DATE}/                                     && \
+cp -a ${OPENWRT_PATH}/bin/ar71xx/*  ../bin/${DATE}/
