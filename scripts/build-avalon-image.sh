@@ -29,6 +29,15 @@ if [ "$1" == "--clone" ]; then
     exit 0;
 fi
 
+## Update all git
+if [ "$1" == "--update" ]; then
+    (cd avalon/cgminer && git pull)
+    (cd avalon/luci    && git pull)
+    (cd avalon/openwrt && ./scripts/feeds update cgminer; ./scripts/feeds install -a -p cgminer)
+    exit 0
+fi
+
+
 ## Rebuild cgminer
 cd avalon/cgminer
 git archive --format tar.gz --prefix=cgminer-20130108/ HEAD > \
@@ -70,8 +79,8 @@ echo "$DATE"                                          > ${OPENWRT_PATH}/files/et
 echo "cgminer-$GIT_VERSION$GIT_STATUS"               >> ${OPENWRT_PATH}/files/etc/avalon_version && \
 echo "luci-$LUCI_GIT_VERSION$LUCI_GIT_STATUS"        >> ${OPENWRT_PATH}/files/etc/avalon_version && \
 echo "openwrt-package-$OW_GIT_VERSION$OW_GIT_STATUS" >> ${OPENWRT_PATH}/files/etc/avalon_version && \
-make -C ${OPENWRT_PATH}                                      && \
+make -C ${OPENWRT_PATH} V=s                                  && \
 mkdir -p ${OPENWRT_PATH}/bin/old/                            && \
-cp ${HOME}/workspace/PanGu/openwrt/bin/ar71xx/openwrt-ar71xx-generic-tl-wr703n-v1-squashfs-factory.bin \
-     ${HOME}/workspace/PanGu/openwrt/bin/old/openwrt-ar71xx-generic-tl-wr703n-v1-squashfs-factory-${DATE}.bin
+cp ${OPENWRT_PATH}/bin/ar71xx/openwrt-ar71xx-generic-tl-wr703n-v1-squashfs-factory.bin \
+     ${OPENWRT_PATH}/bin/old/openwrt-ar71xx-generic-tl-wr703n-v1-squashfs-factory-${DATE}.bin
 
