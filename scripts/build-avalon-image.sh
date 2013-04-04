@@ -10,9 +10,9 @@ if [ "$1" == "--clone" ]; then
     mkdir -p avalon
     cd avalon
     svn co svn://svn.openwrt.org/openwrt/trunk@36095 openwrt
-    git clone git@github.com:BitSyncom/cgminer.git && (cd cgminer && git checkout -b avalon origin/avalon)
-    git clone git@github.com:BitSyncom/luci.git && (cd luci && git checkout -b cgminer-webui origin/cgminer-webui)
-    git clone git@github.com:BitSyncom/cgminer-openwrt-package.git
+    git clone git://github.com/BitSyncom/cgminer.git && (cd cgminer && git checkout -b avalon origin/avalon)
+    git clone git://github.com/BitSyncom/luci.git && (cd luci && git checkout -b cgminer-webui origin/cgminer-webui)
+    git clone git://github.com/BitSyncom/cgminer-openwrt-package.git
     cd openwrt
     mkdir -p ../dl
     ln -s ../dl
