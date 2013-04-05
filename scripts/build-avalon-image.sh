@@ -26,7 +26,7 @@ if [ "$1" == "--clone" ]; then
     ./scripts/feeds update -a &&  ./scripts/feeds install -a
     ln -s feeds/cgminer/cgminer/root-files files
     cp feeds/cgminer/cgminer/data/config .config
-    make -j4 V=s
+    make V=s
     exit 0;
 fi
 
@@ -68,8 +68,8 @@ if [ ! -z "`cd ../luci && git status -s -uno`" ]; then
 	LUCI_GIT_STATUS="+"
 fi
 
-OW_GIT_VERSION=`cd ../cgminer-openwrt-package && git rev-parse HEAD | cut -c 1-7`
-if [ ! -z "`cd ../cgminer-openwrt-package && git status -s -uno`" ]; then
+OW_GIT_VERSION=`cd ../cgminer-openwrt-packages && git rev-parse HEAD | cut -c 1-7`
+if [ ! -z "`cd ../cgminer-openwrt-packages && git status -s -uno`" ]; then
 	OW_GIT_STATUS="+"
 fi
 
@@ -80,7 +80,7 @@ cp -a  ${LUCI_PATH}/applications/luci-cgminer/dist/* \
 echo "$DATE"                                          > ${OPENWRT_PATH}/files/etc/avalon_version && \
 echo "cgminer-$GIT_VERSION$GIT_STATUS"               >> ${OPENWRT_PATH}/files/etc/avalon_version && \
 echo "luci-$LUCI_GIT_VERSION$LUCI_GIT_STATUS"        >> ${OPENWRT_PATH}/files/etc/avalon_version && \
-echo "openwrt-package-$OW_GIT_VERSION$OW_GIT_STATUS" >> ${OPENWRT_PATH}/files/etc/avalon_version && \
+echo "cgminer-openwrt-packages-$OW_GIT_VERSION$OW_GIT_STATUS" >> ${OPENWRT_PATH}/files/etc/avalon_version && \
 make -C ${OPENWRT_PATH} V=s                                  && \
 mkdir -p ../bin/${DATE}/                                     && \
 cp -a ${OPENWRT_PATH}/bin/ar71xx/*  ../bin/${DATE}/
