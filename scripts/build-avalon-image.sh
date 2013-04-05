@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# VERSION: 2013-04-04
+VERSION=20130405
 
 OPENWRT_PATH=../openwrt
 OPENWRT_DL_PATH=${OPENWRT_PATH}/../dl
@@ -9,6 +9,32 @@ LUCI_PATH=../luci
 mkdir -p avalon
 mkdir -p avalon/dl
 mkdir -p avalon/bin
+
+
+## Version
+if [ "$1" == "--version" ] || [ "$1" == "--help" ]; then
+    echo "\
+
+Usage: $0 [--version] [--help] [--clone] [--update] [--cgminer]
+
+     --version
+     --help	Display help message
+
+     --clone	Get all source code, ONLY NEED ONCE
+
+     --update	Update all repos
+
+     --cgminer	Recompile cgminer openwrt package
+
+Without any parameter I will build the Avalon firmware. make sure you run
+  [$0 --clone] ONCE before you start build the firmware
+
+Written by: Xiangfu <xiangfu@openmobilefree.net>
+		    12h6gdGnThW385JaX1LRMA8cXKmbYRTP8Q
+
+						     Version: ${VERSION}"
+    exit 0
+fi
 
 ## Init
 if [ "$1" == "--clone" ]; then
@@ -60,23 +86,23 @@ fi
 DATE=`date +%Y%m%d`
 GIT_VERSION=`git rev-parse HEAD | cut -c 1-7`
 if [ ! -z "`git status -s -uno`" ]; then
-	GIT_STATUS="+"
+    GIT_STATUS="+"
 fi
 
 LUCI_GIT_VERSION=`cd ../luci && git rev-parse HEAD | cut -c 1-7`
 if [ ! -z "`cd ../luci && git status -s -uno`" ]; then
-	LUCI_GIT_STATUS="+"
+    LUCI_GIT_STATUS="+"
 fi
 
 OW_GIT_VERSION=`cd ../cgminer-openwrt-packages && git rev-parse HEAD | cut -c 1-7`
 if [ ! -z "`cd ../cgminer-openwrt-packages && git status -s -uno`" ]; then
-	OW_GIT_STATUS="+"
+    OW_GIT_STATUS="+"
 fi
 
 rm -rf ${LUCI_PATH}/applications/luci-cgminer/dist                                               && \
 make -C ${LUCI_PATH}                                                                             && \
 cp -a  ${LUCI_PATH}/applications/luci-cgminer/dist/* \
-         ${OPENWRT_PATH}/files/                                                                  && \
+	 ${OPENWRT_PATH}/files/                                                                  && \
 echo "$DATE"                                          > ${OPENWRT_PATH}/files/etc/avalon_version && \
 echo "cgminer-$GIT_VERSION$GIT_STATUS"               >> ${OPENWRT_PATH}/files/etc/avalon_version && \
 echo "luci-$LUCI_GIT_VERSION$LUCI_GIT_STATUS"        >> ${OPENWRT_PATH}/files/etc/avalon_version && \
