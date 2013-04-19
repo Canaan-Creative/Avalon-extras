@@ -60,6 +60,7 @@ fi
 if [ "$1" == "--update" ]; then
     (cd avalon/cgminer && git pull)
     (cd avalon/luci    && git pull)
+    (cd avalon/cgminer-openwrt-packages && git pull)
     (cd avalon/openwrt && ./scripts/feeds update cgminer; ./scripts/feeds install -a -p cgminer)
     exit 0
 fi
