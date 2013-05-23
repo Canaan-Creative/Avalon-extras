@@ -70,14 +70,14 @@ fi
 cd avalon/cgminer
 
 git archive --format tar.gz --prefix=cgminer-20130108/ HEAD > \
-      ${OPENWRT_DL_PATH}/cgminer-20130108-HEAD.tar.gz                                            && \
+      ${OPENWRT_DL_PATH}/cgminer-20130108-HEAD.tar.gz      && \
 make -C ${OPENWRT_PATH} package/cgminer/{clean,compile} V=s
 
 RET="$?"
 if [ "${RET}" != "0" ] || [ "$1" == "--cgminer" ]; then
     if [ "${RET}" == "0" ]; then
-	cp ${OPENWRT_PATH}/bin/ar71xx/packages/cgminer_20130108-1_ar71xx.ipk  ../bin/
-	cp ${OPENWRT_PATH}/build_dir/target-mips_r2_uClibc-0.9.33.2/cgminer-20130108/cgminer ../bin/cgminer-mips
+	cp ${OPENWRT_PATH}/bin/ar71xx/packages/cgminer_*_ar71xx.ipk  ../bin/
+	cp ${OPENWRT_PATH}/build_dir/target-mips_r2_uClibc-0.9.33.2/cgminer-*/cgminer ../bin/cgminer-mips
     fi
     exit "$?"
 fi
