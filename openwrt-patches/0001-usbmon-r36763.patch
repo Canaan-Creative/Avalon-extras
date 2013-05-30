@@ -1,0 +1,26 @@
+Index: package/kernel/modules/usb.mk
+===================================================================
+--- package/kernel/modules/usb.mk	(revision 36763)
++++ package/kernel/modules/usb.mk	(working copy)
+@@ -36,6 +36,21 @@
+ endef
+ 
+ 
++define KernelPackage/usb-mon
++  TITLE:=USB Monitor
++  KCONFIG:=CONFIG_USB_MON
++  FILES:=$(LINUX_DIR)/drivers/usb/mon/usbmon.ko
++  AUTOLOAD:=$(call AutoLoad,51,usbmon)
++  $(call AddDepends/usb)
++endef
++
++define KernelPackage/usb-mon/description
++  Kernel support for USB Monitor
++endef
++
++$(eval $(call KernelPackage,usb-mon))
++
++
+ define KernelPackage/usb-gadget
+   TITLE:=USB Gadget support
+   KCONFIG:=CONFIG_USB_GADGET
