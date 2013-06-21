@@ -40,11 +40,11 @@ fi
 if [ "$1" == "--clone" ]; then
     cd avalon
     svn co svn://svn.openwrt.org/openwrt/trunk@36095 openwrt
-    git clone git://github.com/BitSyncom/cgminer.git && (cd cgminer && git checkout -b avalon origin/avalon)
-    git clone git://github.com/BitSyncom/luci.git && (cd luci && git checkout -b cgminer-webui origin/cgminer-webui)
+    git clone git://github.com/BitSyncom/cgminer.git
     git clone git://github.com/BitSyncom/cgminer-openwrt-packages.git
-    (cd cgminer && git archive --format tar.gz --prefix=cgminer-20130108/ HEAD > \
-      ${OPENWRT_DL_PATH}/cgminer-20130108-HEAD.tar.gz)
+    git clone git://github.com/BitSyncom/luci.git && (cd luci && git checkout -b cgminer-webui origin/cgminer-webui)
+    (cd cgminer && git archive --format tar --prefix=cgminer-3.2.2/ HEAD | gzip > \
+      ${OPENWRT_DL_PATH}/cgminer-3.2.2.tar.gz)
     cd openwrt
     ln -s ../dl
     wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/feeds.conf
@@ -69,8 +69,8 @@ fi
 ## Rebuild cgminer
 cd avalon/cgminer
 
-git archive --format tar.gz --prefix=cgminer-20130108/ HEAD > \
-      ${OPENWRT_DL_PATH}/cgminer-20130108-HEAD.tar.gz      && \
+git archive --format tar --prefix=cgminer-3.2.2/ HEAD | gzip > \
+      ${OPENWRT_DL_PATH}/cgminer-3.2.2.tar.gz           && \
 make -C ${OPENWRT_PATH} package/cgminer/{clean,compile} V=s
 
 RET="$?"
