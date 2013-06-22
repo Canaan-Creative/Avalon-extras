@@ -39,12 +39,13 @@ fi
 ## Init
 if [ "$1" == "--clone" ]; then
     cd avalon
-    svn co svn://svn.openwrt.org/openwrt/trunk@36095 openwrt
+    svn co svn://svn.openwrt.org/openwrt/trunk@37008 openwrt
     git clone git://github.com/BitSyncom/cgminer.git
     git clone git://github.com/BitSyncom/cgminer-openwrt-packages.git
     git clone git://github.com/BitSyncom/luci.git && (cd luci && git checkout -b cgminer-webui origin/cgminer-webui)
-    (cd cgminer && git archive --format tar --prefix=cgminer-3.2.2/ HEAD | gzip > \
-      ${OPENWRT_DL_PATH}/cgminer-3.2.2.tar.gz)
+    (cd cgminer && git archive --format tar --prefix=cgminer-3.2.2/ HEAD > \
+      ${OPENWRT_DL_PATH}/cgminer-3.2.2.tar && \
+      bzip2 -f -z ${OPENWRT_DL_PATH}/cgminer-3.2.2.tar)
     cd openwrt
     ln -s ../dl
     wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/feeds.conf
@@ -69,9 +70,10 @@ fi
 ## Rebuild cgminer
 cd avalon/cgminer
 
-git archive --format tar --prefix=cgminer-3.2.2/ HEAD | gzip > \
-      ${OPENWRT_DL_PATH}/cgminer-3.2.2.tar.gz           && \
-make -C ${OPENWRT_PATH} package/cgminer/{clean,compile} V=s
+git archive --format tar --prefix=cgminer-3.2.2/ HEAD > \
+    ${OPENWRT_DL_PATH}/cgminer-3.2.2.tar && \
+    bzip2 -f -z ${OPENWRT_DL_PATH}/cgminer-3.2.2.tar && \
+make -C ${OPENWRT_PATH} package/cgminer/{clean,compile} V=s IGNORE_ERRORS=m
 
 RET="$?"
 if [ "${RET}" != "0" ] || [ "$1" == "--cgminer" ]; then
@@ -108,6 +110,6 @@ echo "$DATE"                                          > ${OPENWRT_PATH}/files/et
 echo "cgminer-$GIT_VERSION$GIT_STATUS"               >> ${OPENWRT_PATH}/files/etc/avalon_version && \
 echo "luci-$LUCI_GIT_VERSION$LUCI_GIT_STATUS"        >> ${OPENWRT_PATH}/files/etc/avalon_version && \
 echo "cgminer-openwrt-packages-$OW_GIT_VERSION$OW_GIT_STATUS" >> ${OPENWRT_PATH}/files/etc/avalon_version && \
-make -C ${OPENWRT_PATH} V=s                                  && \
+make -C ${OPENWRT_PATH} V=s IGNORE_ERRORS=m                                 && \
 mkdir -p ../bin/${DATE}/                                     && \
 cp -a ${OPENWRT_PATH}/bin/ar71xx/*  ../bin/${DATE}/
