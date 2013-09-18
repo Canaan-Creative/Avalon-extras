@@ -39,7 +39,7 @@ fi
 ## Init
 if [ "$1" == "--clone" ]; then
     cd avalon
-    svn co svn://svn.openwrt.org/openwrt/trunk@37008 openwrt
+    svn co svn://svn.openwrt.org/openwrt/trunk@38031 openwrt
     git clone git://github.com/BitSyncom/cgminer.git
     git clone git://github.com/BitSyncom/cgminer-openwrt-packages.git
     git clone git://github.com/BitSyncom/luci.git && (cd luci && git checkout -b cgminer-webui origin/cgminer-webui)
