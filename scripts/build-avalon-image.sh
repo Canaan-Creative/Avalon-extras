@@ -1,12 +1,11 @@
 #!/bin/bash
 
-VERSION=20130405
 
+VERSION=20130918
 OPENWRT_PATH=../openwrt
 OPENWRT_DL_PATH=${OPENWRT_PATH}/../dl
 LUCI_PATH=../luci
 
-mkdir -p avalon
 mkdir -p avalon/dl
 mkdir -p avalon/bin
 
@@ -20,21 +19,22 @@ Usage: $0 [--version] [--help] [--clone] [--update] [--cgminer]
      --version
      --help	Display help message
 
-     --clone	Get all source code, ONLY NEED ONCE
+     --clone	Get all source code and build firmware, ONLY NEED ONCE
 
      --update	Update all repos
 
-     --cgminer	Recompile cgminer openwrt package
+     --cgminer	Re-compile only cgminer openwrt package
 
 Without any parameter I will build the Avalon firmware. make sure you run
-  [$0 --clone] ONCE before you start build the firmware
+  [$0 --clone] ONCE for get all sources
 
 Written by: Xiangfu <xiangfu@openmobilefree.net>
-		    12h6gdGnThW385JaX1LRMA8cXKmbYRTP8Q
+		    19BT2rcGStUK23vwrmF6y6s3ZWpxzQQn8x
 
 						     Version: ${VERSION}"
     exit 0
 fi
+
 
 ## Init
 if [ "$1" == "--clone" ]; then
@@ -43,9 +43,7 @@ if [ "$1" == "--clone" ]; then
     git clone git://github.com/BitSyncom/cgminer.git
     git clone git://github.com/BitSyncom/cgminer-openwrt-packages.git
     git clone git://github.com/BitSyncom/luci.git && (cd luci && git checkout -b cgminer-webui origin/cgminer-webui)
-    (cd cgminer && git archive --format tar --prefix=cgminer-3.2.2/ HEAD > \
-      ${OPENWRT_DL_PATH}/cgminer-3.2.2.tar && \
-      bzip2 -f -z ${OPENWRT_DL_PATH}/cgminer-3.2.2.tar)
+     
     cd openwrt
     ln -s ../dl
     wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/feeds.conf
@@ -59,6 +57,7 @@ if [ "$1" == "--clone" ]; then
     exit 0;
 fi
 
+
 ## Update all git
 if [ "$1" == "--update" ]; then
     (cd avalon/cgminer && git pull)
@@ -70,13 +69,7 @@ fi
 
 
 ## Rebuild cgminer
-cd avalon/cgminer
-
-git archive --format tar --prefix=cgminer-3.2.2/ HEAD > \
-    ${OPENWRT_DL_PATH}/cgminer-3.2.2.tar && \
-    bzip2 -f -z ${OPENWRT_DL_PATH}/cgminer-3.2.2.tar && \
 make -C ${OPENWRT_PATH} package/cgminer/{clean,compile} V=s
-
 RET="$?"
 if [ "${RET}" != "0" ] || [ "$1" == "--cgminer" ]; then
     if [ "${RET}" == "0" ]; then
@@ -86,9 +79,10 @@ if [ "${RET}" != "0" ] || [ "$1" == "--cgminer" ]; then
     exit "$?"
 fi
 
+
 ## Build the Web UI & OpenWrt
-## Get all repo commit for Avalon version file /etc/avalon_version
 DATE=`date +%Y%m%d`
+## Get all repo commit for Avalon version file /etc/avalon_version
 GIT_VERSION=`git rev-parse HEAD | cut -c 1-7`
 if [ ! -z "`git status -s -uno`" ]; then
     GIT_STATUS="+"
@@ -104,14 +98,13 @@ if [ ! -z "`cd ../cgminer-openwrt-packages && git status -s -uno`" ]; then
     OW_GIT_STATUS="+"
 fi
 
-rm -rf ${LUCI_PATH}/applications/luci-cgminer/dist                                               && \
-make -C ${LUCI_PATH}                                                                             && \
-cp -a  ${LUCI_PATH}/applications/luci-cgminer/dist/* \
-	 ${OPENWRT_PATH}/files/                                                                  && \
-echo "$DATE"                                          > ${OPENWRT_PATH}/files/etc/avalon_version && \
-echo "cgminer-$GIT_VERSION$GIT_STATUS"               >> ${OPENWRT_PATH}/files/etc/avalon_version && \
-echo "luci-$LUCI_GIT_VERSION$LUCI_GIT_STATUS"        >> ${OPENWRT_PATH}/files/etc/avalon_version && \
-echo "cgminer-openwrt-packages-$OW_GIT_VERSION$OW_GIT_STATUS" >> ${OPENWRT_PATH}/files/etc/avalon_version && \
+rm -rf ${LUCI_PATH}/applications/luci-cgminer/dist                                                && \
+make -C ${LUCI_PATH}                                                                              && \
+cp -a  ${LUCI_PATH}/applications/luci-cgminer/dist/* ${OPENWRT_PATH}/files/                       && \
+echo "Firmware: $DATE"                                > ${OPENWRT_PATH}/files/etc/avalon_version  && \
+echo "cgminer: $GIT_VERSION$GIT_STATUS"               >> ${OPENWRT_PATH}/files/etc/avalon_version && \
+echo "cgminer-openwrt-packages: $OW_GIT_VERSION$OW_GIT_STATUS" >> ${OPENWRT_PATH}/files/etc/avalon_version && \
+echo "luci: $LUCI_GIT_VERSION$LUCI_GIT_STATUS"        >> ${OPENWRT_PATH}/files/etc/avalon_version && \
 make -C ${OPENWRT_PATH} V=s IGNORE_ERRORS=m                  && \
 mkdir -p ../bin/${DATE}/                                     && \
 cp -a ${OPENWRT_PATH}/bin/ar71xx/*  ../bin/${DATE}/
