@@ -2,9 +2,9 @@
 
 
 VERSION=20130918
-OPENWRT_PATH=../openwrt
+OPENWRT_PATH=./openwrt
 OPENWRT_DL_PATH=${OPENWRT_PATH}/../dl
-LUCI_PATH=../luci
+LUCI_PATH=./luci
 
 mkdir -p avalon/dl
 mkdir -p avalon/bin
@@ -69,6 +69,7 @@ fi
 
 
 ## Rebuild cgminer
+cd avalon
 make -C ${OPENWRT_PATH} package/cgminer/{clean,compile} V=s
 RET="$?"
 if [ "${RET}" != "0" ] || [ "$1" == "--cgminer" ]; then
