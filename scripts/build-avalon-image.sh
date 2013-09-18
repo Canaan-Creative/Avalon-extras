@@ -101,7 +101,7 @@ fi
 rm -rf ${LUCI_PATH}/applications/luci-cgminer/dist                                                && \
 make -C ${LUCI_PATH}                                                                              && \
 cp -a  ${LUCI_PATH}/applications/luci-cgminer/dist/* ${OPENWRT_PATH}/files/                       && \
-echo "Firmware: $DATE"                                > ${OPENWRT_PATH}/files/etc/avalon_version  && \
+echo "$DATE"		                              > ${OPENWRT_PATH}/files/etc/avalon_version  && \
 echo "cgminer: $GIT_VERSION$GIT_STATUS"               >> ${OPENWRT_PATH}/files/etc/avalon_version && \
 echo "cgminer-openwrt-packages: $OW_GIT_VERSION$OW_GIT_STATUS" >> ${OPENWRT_PATH}/files/etc/avalon_version && \
 echo "luci: $LUCI_GIT_VERSION$LUCI_GIT_STATUS"        >> ${OPENWRT_PATH}/files/etc/avalon_version && \
