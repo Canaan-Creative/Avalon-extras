@@ -3,7 +3,6 @@
 
 VERSION=20130918
 OPENWRT_PATH=./openwrt
-OPENWRT_DL_PATH=${OPENWRT_PATH}/../dl
 LUCI_PATH=./luci
 
 mkdir -p avalon/dl
@@ -74,8 +73,8 @@ make -C ${OPENWRT_PATH} package/cgminer/{clean,compile} V=s
 RET="$?"
 if [ "${RET}" != "0" ] || [ "$1" == "--cgminer" ]; then
     if [ "${RET}" == "0" ]; then
-	cp ${OPENWRT_PATH}/bin/ar71xx/packages/cgminer_*_ar71xx.ipk  ../bin/
-	cp ${OPENWRT_PATH}/build_dir/target-mips_r2_uClibc-0.9.33.2/cgminer-*/cgminer ../bin/cgminer-mips
+	cp ${OPENWRT_PATH}/bin/ar71xx/packages/cgminer_*_ar71xx.ipk  bin/
+	cp ${OPENWRT_PATH}/build_dir/target-mips_r2_uClibc-0.9.33.2/cgminer-*/cgminer bin/cgminer-mips
     fi
     exit "$?"
 fi
@@ -84,18 +83,18 @@ fi
 ## Build the Web UI & OpenWrt
 DATE=`date +%Y%m%d`
 ## Get all repo commit for Avalon version file /etc/avalon_version
-GIT_VERSION=`git rev-parse HEAD | cut -c 1-7`
-if [ ! -z "`git status -s -uno`" ]; then
+GIT_VERSION=`cd cgminer && git rev-parse HEAD | cut -c 1-7`
+if [ ! -z "`cd cgminer && git status -s -uno`" ]; then
     GIT_STATUS="+"
 fi
 
-LUCI_GIT_VERSION=`cd ../luci && git rev-parse HEAD | cut -c 1-7`
-if [ ! -z "`cd ../luci && git status -s -uno`" ]; then
+LUCI_GIT_VERSION=`cd luci && git rev-parse HEAD | cut -c 1-7`
+if [ ! -z "`cd luci && git status -s -uno`" ]; then
     LUCI_GIT_STATUS="+"
 fi
 
-OW_GIT_VERSION=`cd ../cgminer-openwrt-packages && git rev-parse HEAD | cut -c 1-7`
-if [ ! -z "`cd ../cgminer-openwrt-packages && git status -s -uno`" ]; then
+OW_GIT_VERSION=`cd cgminer-openwrt-packages && git rev-parse HEAD | cut -c 1-7`
+if [ ! -z "`cd cgminer-openwrt-packages && git status -s -uno`" ]; then
     OW_GIT_STATUS="+"
 fi
 
@@ -107,5 +106,5 @@ echo "cgminer: $GIT_VERSION$GIT_STATUS"               >> ${OPENWRT_PATH}/files/e
 echo "cgminer-openwrt-packages: $OW_GIT_VERSION$OW_GIT_STATUS" >> ${OPENWRT_PATH}/files/etc/avalon_version && \
 echo "luci: $LUCI_GIT_VERSION$LUCI_GIT_STATUS"        >> ${OPENWRT_PATH}/files/etc/avalon_version && \
 make -C ${OPENWRT_PATH} V=s IGNORE_ERRORS=m                  && \
-mkdir -p ../bin/${DATE}/                                     && \
-cp -a ${OPENWRT_PATH}/bin/ar71xx/*  ../bin/${DATE}/
+mkdir -p bin/${DATE}/                                     && \
+cp -a ${OPENWRT_PATH}/bin/ar71xx/*  bin/${DATE}/
