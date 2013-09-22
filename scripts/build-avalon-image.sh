@@ -49,7 +49,12 @@ if [ "$1" == "--clone" ]; then
     wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/config -O .config
     yes "" | make oldconfig
     ./scripts/feeds update -a && ./scripts/feeds install -a
+
     ln -s feeds/cgminer/cgminer/root-files files
+    (cd feeds/packages && \
+        svn revert libs/curl/Makefile && \
+	patch -Np0 < ../cgminer/cgminer/data/feeds-patches/packages-libs-curl-disable-libopenssl.patch)
+
     cp feeds/cgminer/cgminer/data/config .config
     yes "" | make oldconfig
     make V=s IGNORE_ERRORS=m
@@ -63,6 +68,9 @@ if [ "$1" == "--update" ]; then
     (cd avalon/luci    && git pull)
     (cd avalon/cgminer-openwrt-packages && git pull)
     (cd avalon/openwrt && ./scripts/feeds update cgminer; ./scripts/feeds install -a -p cgminer)
+    (cd avalon/openwrt/feeds/packages && \
+        svn revert libs/curl/Makefile && \
+	patch -Np0 < ../cgminer/cgminer/data/feeds-patches/packages-libs-curl-disable-libopenssl.patch)
     exit 0
 fi
 
