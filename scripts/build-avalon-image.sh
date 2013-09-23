@@ -27,11 +27,20 @@ Usage: $0 [--version] [--help] [--clone] [--update] [--cgminer]
 Without any parameter I will build the Avalon firmware. make sure you run
   [$0 --clone] ONCE for get all sources
 
+     --clean	Remove all files
+
 Written by: Xiangfu <xiangfu@openmobilefree.net>
 		    19BT2rcGStUK23vwrmF6y6s3ZWpxzQQn8x
 
 						     Version: ${VERSION}"
     exit 0
+fi
+
+
+## Remove
+if [ "$1" == "--clean" ]; then
+    rm -rf avalon/cgminer avalon/cgminer-openwrt-packages/ avalon/luci/ avalon/openwrt/ 
+    exit $?
 fi
 
 
@@ -46,19 +55,17 @@ if [ "$1" == "--clone" ]; then
     cd openwrt
     ln -s ../dl
     wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/feeds.conf
-    wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/config -O .config
-    yes "" | make oldconfig
     ./scripts/feeds update -a && ./scripts/feeds install -a
 
     ln -s feeds/cgminer/cgminer/root-files files
     (cd feeds/packages && \
-        svn revert libs/curl/Makefile && \
+        git checkout -f libs/curl/Makefile && \
 	patch -Np0 < ../cgminer/cgminer/data/feeds-patches/packages-libs-curl-disable-libopenssl.patch)
 
-    cp feeds/cgminer/cgminer/data/config .config
+    wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/config -O .config
     yes "" | make oldconfig
     make V=s IGNORE_ERRORS=m
-    exit 0;
+    exit $?
 fi
 
 
@@ -69,9 +76,9 @@ if [ "$1" == "--update" ]; then
     (cd avalon/cgminer-openwrt-packages && git pull)
     (cd avalon/openwrt && ./scripts/feeds update cgminer; ./scripts/feeds install -a -p cgminer)
     (cd avalon/openwrt/feeds/packages && \
-        svn revert libs/curl/Makefile && \
+        git checkout -f && \
 	patch -Np0 < ../cgminer/cgminer/data/feeds-patches/packages-libs-curl-disable-libopenssl.patch)
-    exit 0
+    exit $?
 fi
 
 
