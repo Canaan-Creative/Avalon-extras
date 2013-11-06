@@ -1,5 +1,9 @@
 #!/usr/bin/env python2.7
 
+# This simple script was for test A3255 modular. there are 128 cores in one A3255 chip.
+# If all cores are working the number should be 0.
+# If some of them not working the number is the broken cores count.
+
 from serial import Serial
 from optparse import OptionParser
 import binascii
