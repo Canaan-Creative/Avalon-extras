@@ -83,7 +83,7 @@ RET="$?"
 if [ "${RET}" != "0" ] || [ "$1" == "--cgminer" ]; then
     if [ "${RET}" == "0" ]; then
 	cp ${OPENWRT_PATH}/bin/ar71xx/packages/cgminer_*_ar71xx.ipk  bin/
-	cp ${OPENWRT_PATH}/build_dir/target-mips_r2_uClibc-0.9.33.2/cgminer-*/cgminer bin/cgminer-mips
+	cp ${OPENWRT_PATH}/build_dir/target-mips*uClibc-*/cgminer-*/cgminer bin/cgminer-mips
     fi
     exit "$?"
 fi
