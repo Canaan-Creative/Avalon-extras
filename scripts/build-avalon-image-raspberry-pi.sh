@@ -59,8 +59,7 @@ if [ "$1" == "--clone" ]; then
 
     ln -s feeds/cgminer/cgminer/root-files files
 
-    #wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/config -O .config
-    wget http://hotabc.3322.org:7070/sam/kamikaze-svn/rspp/config -O .config
+    wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/config.raspberry-pi -O .config
     yes "" | make oldconfig
     make V=s IGNORE_ERRORS=m
     exit $?
