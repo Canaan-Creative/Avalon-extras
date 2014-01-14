@@ -1,5 +1,12 @@
 #!/bin/bash
 
+#HOST_TARGET=ar71xx	# TP-LINK WR703N
+HOST_TARGET=brcm2708	# Raspberry Pi
+
+OPENWRT_CONFIG=config
+if [ "${HOST_TARGET}" == "brcm2708" ]; then
+    OPENWRT_CONFIG=config.raspberry-pi
+fi
 
 VERSION=20130918
 OPENWRT_PATH=./openwrt
@@ -59,7 +66,7 @@ if [ "$1" == "--clone" ]; then
 
     ln -s feeds/cgminer/cgminer/root-files files
 
-    wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/config -O .config
+    wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/${OPENWRT_CONFIG} -O .config
     yes "" | make oldconfig
     make V=s IGNORE_ERRORS=m
     exit $?
@@ -71,7 +78,10 @@ if [ "$1" == "--update" ]; then
     (cd avalon/cgminer && git pull)
     (cd avalon/luci    && git pull)
     (cd avalon/cgminer-openwrt-packages && git pull)
-    (cd avalon/openwrt && ./scripts/feeds update cgminer; ./scripts/feeds install -a -p cgminer)
+    cd avalon/openwrt
+    ./scripts/feeds update cgminer; ./scripts/feeds install -a -p cgminer
+    wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/${OPENWRT_CONFIG} -O .config
+    yes "" | make oldconfig
     exit $?
 fi
 
@@ -82,8 +92,8 @@ make -C ${OPENWRT_PATH} package/cgminer/{clean,compile} V=s
 RET="$?"
 if [ "${RET}" != "0" ] || [ "$1" == "--cgminer" ]; then
     if [ "${RET}" == "0" ]; then
-	cp ${OPENWRT_PATH}/bin/ar71xx/packages/cgminer_*_ar71xx.ipk  bin/
-	cp ${OPENWRT_PATH}/build_dir/target-mips*uClibc-*/cgminer-*/cgminer bin/cgminer-mips
+	cp ${OPENWRT_PATH}/bin/${HOST_TARGET}/packages/cgminer*.ipk  bin/
+	cp ${OPENWRT_PATH}/build_dir/target-*uClibc-*/cgminer-*/cgminer bin/cgminer-mips
     fi
     exit "$?"
 fi
@@ -116,4 +126,5 @@ echo "cgminer-openwrt-packages: $OW_GIT_VERSION$OW_GIT_STATUS" >> ${OPENWRT_PATH
 echo "luci: $LUCI_GIT_VERSION$LUCI_GIT_STATUS"        >> ${OPENWRT_PATH}/files/etc/avalon_version && \
 make -C ${OPENWRT_PATH} V=s IGNORE_ERRORS=m                  && \
 mkdir -p bin/${DATE}/                                     && \
-cp -a ${OPENWRT_PATH}/bin/ar71xx/*  bin/${DATE}/
+cp -a ${OPENWRT_PATH}/bin/${HOST_TARGET}/*  bin/${DATE}/
+
