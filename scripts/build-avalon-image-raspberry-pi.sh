@@ -72,7 +72,7 @@ if [ "$1" == "--update" ]; then
     (cd avalon/luci    && git pull)
     (cd avalon/cgminer-openwrt-packages && git pull)
     cd avalon/openwrt
-    ./scripts/feeds update cgminer; ./scripts/feeds install -a -p cgminer)
+    ./scripts/feeds update cgminer; ./scripts/feeds install -a -p cgminer
     wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/config.raspberry-pi -O .config
     yes "" | make oldconfig
     exit $?
