@@ -29,7 +29,7 @@ while (1):
 		else :
 			result = binascii.hexlify(res_s)
 			for i in range(0, 8):
-				number = '{:03}'.format(int(result[11 + i:12 + i]))
+				number = '{:03}'.format(int(result[11 + i:12 + i], 16))
 				if (i == 0):
 					sys.stdout.write(number + ":\t")
 				else :
