@@ -1,12 +1,19 @@
 #!/bin/bash
 
-MACHINE=avalon
-#MACHINE=avalon2	# Support Avalon2/MM firmware
+#MACHINE=avalon
+MACHINE=avalon2	# Support Avalon2/MM firmware
 
-HOST_TARGET=ar71xx	# TP-LINK WR703N
-#HOST_TARGET=brcm2708	# Raspberry Pi
+#HOST_TARGET=ar71xx	# TP-LINK WR703N
+HOST_TARGET=brcm2708	# Raspberry Pi
 
-OPENWRT_CONFIG=config.${MACHINE}.raspberry-pi
+if [ "${HOST_TARGET}" == "ar71xx" ]; then
+    OPENWRT_CONFIG=config.${MACHINE}.703n
+fi
+
+if [ "${HOST_TARGET}" == "brcm2708" ]; then
+    OPENWRT_CONFIG=config.${MACHINE}.raspberry-pi
+fi
+
 
 VERSION=20140124
 OPENWRT_PATH=./openwrt
