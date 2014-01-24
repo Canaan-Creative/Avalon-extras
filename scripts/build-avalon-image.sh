@@ -1,14 +1,14 @@
 #!/bin/bash
 
-#HOST_TARGET=ar71xx	# TP-LINK WR703N
-HOST_TARGET=brcm2708	# Raspberry Pi
+MACHINE=avalon
+#MACHINE=avalon2	# Support Avalon2/MM firmware
 
-OPENWRT_CONFIG=config
-if [ "${HOST_TARGET}" == "brcm2708" ]; then
-    OPENWRT_CONFIG=config.raspberry-pi
-fi
+HOST_TARGET=ar71xx	# TP-LINK WR703N
+#HOST_TARGET=brcm2708	# Raspberry Pi
 
-VERSION=20130918
+OPENWRT_CONFIG=config.${MACHINE}.raspberry-pi
+
+VERSION=20140124
 OPENWRT_PATH=./openwrt
 LUCI_PATH=./luci
 
@@ -54,10 +54,15 @@ fi
 ## Init
 if [ "$1" == "--clone" ]; then
     cd avalon
-    svn co svn://svn.openwrt.org/openwrt/trunk@38816 openwrt
+    svn co svn://svn.openwrt.org/openwrt/trunk@39381 openwrt
     git clone git://github.com/BitSyncom/cgminer.git
     git clone git://github.com/BitSyncom/cgminer-openwrt-packages.git
-    git clone git://github.com/BitSyncom/luci.git && (cd luci && git checkout -b cgminer-webui origin/cgminer-webui)
+
+    if [ "${MACHINE}" == "avalon2" ]; then
+	git clone git://github.com/BitSyncom/luci.git && (cd luci && git checkout -b cgminer-webui-avalon2 origin/cgminer-webui-avalon2)
+    else
+	git clone git://github.com/BitSyncom/luci.git && (cd luci && git checkout -b cgminer-webui origin/cgminer-webui)
+    fi
      
     cd openwrt
     ln -s ../dl
