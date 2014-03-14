@@ -106,8 +106,9 @@ if [ "${RET}" != "0" ] || [ "$1" == "--cgminer" ]; then
     if [ "${RET}" == "0" ]; then
 	cp ${OPENWRT_PATH}/bin/${HOST_TARGET}/packages/cgminer*.ipk  bin/
 	cp ${OPENWRT_PATH}/build_dir/target-*uClibc-*/cgminer-*/cgminer bin/cgminer-${HOST_TARGET}
+	exit "$?"
     fi
-    exit "$?"
+    exit "${RET}"
 fi
 
 
