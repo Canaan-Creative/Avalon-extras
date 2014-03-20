@@ -1,5 +1,5 @@
 diff --git a/driver-avalon2.c b/driver-avalon2.c
-index 5725cc6..ba5bce7 100644
+index 5725cc6..103d0a5 100644
 --- a/driver-avalon2.c
 +++ b/driver-avalon2.c
 @@ -153,6 +153,27 @@ static int job_idcmp(uint8_t *job_id, char *pool_job_id)
@@ -30,6 +30,15 @@ index 5725cc6..ba5bce7 100644
  extern void submit_nonce2_nonce(struct thr_info *thr, uint32_t pool_no, uint32_t nonce2, uint32_t nonce);
  static int decode_pkg(struct thr_info *thr, struct avalon2_ret *ar, uint8_t *pkg)
  {
+@@ -211,7 +232,7 @@ static int decode_pkg(struct thr_info *thr, struct avalon2_ret *ar, uint8_t *pkg
+ 				break;
+ 			} else
+ 				info->matching_work[modular_id * AVA2_DEFAULT_MINERS + miner]++;
+-			nonce2 = bswap_32(nonce2);
++			nonce2 = be32toh(nonce2);
+ 			nonce = be32toh(nonce);
+ 			nonce -= 0x180;
+ 
 @@ -241,6 +262,7 @@ static int decode_pkg(struct thr_info *thr, struct avalon2_ret *ar, uint8_t *pkg
  			memcpy(&(info->get_voltage[modular_id]), ar->data + 12, 4);
  			memcpy(&(info->local_work[modular_id]), ar->data + 16, 4);
