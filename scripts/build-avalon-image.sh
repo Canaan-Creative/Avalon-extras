@@ -41,7 +41,7 @@ Usage: $0 [--version] [--help] [--clone] [--update] [--cgminer]
 Without any parameter I will build the Avalon firmware. make sure you run
   [$0 --clone] ONCE for get all sources
 
-     --clean	Remove all files
+     --removeall	Remove all files
 
 Written by: Xiangfu <xiangfu@openmobilefree.net>
 		    19BT2rcGStUK23vwrmF6y6s3ZWpxzQQn8x
@@ -52,7 +52,7 @@ fi
 
 
 ## Remove
-if [ "$1" == "--clean" ]; then
+if [ "$1" == "--removeall" ]; then
     rm -rf avalon/cgminer avalon/cgminer-openwrt-packages/ avalon/luci/ avalon/openwrt/ 
     exit $?
 fi
