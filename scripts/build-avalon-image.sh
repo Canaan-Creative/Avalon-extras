@@ -19,12 +19,14 @@ VERSION=20140124
 OPENWRT_PATH=./openwrt
 LUCI_PATH=./luci
 
-mkdir -p avalon/dl
-mkdir -p avalon/bin
-
+CORE_NUM="`nproc`"
+[ "$CORE_NUM" -ge "2" ] || CORE_NUM=2
 
 ## Version
-if [ "$1" == "--version" ] || [ "$1" == "--help" ]; then
+if [ "$#" == "0" -a ! -d ./avalon ]; then
+    $0 --help
+    exit 0
+elif [ "$1" == "--version" ] || [ "$1" == "--help" ]; then
     echo "\
 
 Usage: $0 [--version] [--help] [--clone] [--update] [--cgminer]
@@ -60,6 +62,7 @@ fi
 
 ## Init
 if [ "$1" == "--clone" ]; then
+    [ ! -d avalon ] && mkdir -p avalon/bin
     cd avalon
     svn co svn://svn.openwrt.org/openwrt/trunk@39381 openwrt
     git clone git://github.com/BitSyncom/cgminer.git
@@ -72,7 +75,9 @@ if [ "$1" == "--clone" ]; then
     fi
      
     cd openwrt
-    ln -s ../dl
+    [ -d ../../dl ] && ln -sf ../dl ../dl
+    [ ! -e ../dl ] && mkdir ../dl
+    ln -sf ../dl
     wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/feeds.conf
     ./scripts/feeds update -a && ./scripts/feeds install -a
 
@@ -80,7 +85,7 @@ if [ "$1" == "--clone" ]; then
 
     wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/${OPENWRT_CONFIG} -O .config
     yes "" | make oldconfig
-    make V=s IGNORE_ERRORS=m
+    make -j${CORE_NUM} V=s IGNORE_ERRORS=m || make V=s IGNORE_ERRORS=m
     exit $?
 fi
 
@@ -100,7 +105,7 @@ fi
 
 ## Rebuild cgminer
 cd avalon
-make -C ${OPENWRT_PATH} package/cgminer/{clean,compile} V=s
+make -j${CORE_NUM} -C ${OPENWRT_PATH} package/cgminer/{clean,compile} V=s || make -C ${OPENWRT_PATH} package/cgminer/{clean,compile} V=s
 RET="$?"
 if [ "${RET}" != "0" ] || [ "$1" == "--cgminer" ]; then
     if [ "${RET}" == "0" ]; then
@@ -131,13 +136,13 @@ if [ ! -z "`cd cgminer-openwrt-packages && git status -s -uno`" ]; then
 fi
 
 rm -rf ${LUCI_PATH}/applications/luci-cgminer/dist                                                && \
-make -C ${LUCI_PATH}                                                                              && \
+( make -j${CORE_NUM} -C ${LUCI_PATH} || make -C ${LUCI_PATH} )                                    && \
 cp -a  ${LUCI_PATH}/applications/luci-cgminer/dist/* ${OPENWRT_PATH}/files/                       && \
 echo "$DATE"		                              > ${OPENWRT_PATH}/files/etc/avalon_version  && \
 echo "cgminer: $GIT_VERSION$GIT_STATUS"               >> ${OPENWRT_PATH}/files/etc/avalon_version && \
 echo "cgminer-openwrt-packages: $OW_GIT_VERSION$OW_GIT_STATUS" >> ${OPENWRT_PATH}/files/etc/avalon_version && \
 echo "luci: $LUCI_GIT_VERSION$LUCI_GIT_STATUS"        >> ${OPENWRT_PATH}/files/etc/avalon_version && \
-make -C ${OPENWRT_PATH} V=s IGNORE_ERRORS=m                  && \
+( make -j${CORE_NUM} -C ${OPENWRT_PATH} V=s IGNORE_ERRORS=m || make -C ${OPENWRT_PATH} V=s IGNORE_ERRORS=m ) && \
 mkdir -p bin/${DATE}/                                     && \
 cp -a ${OPENWRT_PATH}/bin/${HOST_TARGET}/*  bin/${DATE}/
 
