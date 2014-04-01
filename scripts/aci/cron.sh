@@ -6,6 +6,9 @@
 #00 * * * * ~/aci/cron.sh
 #30 * * * * ~/aci/cron.sh
 
+umask 0022
+export LC_ALL=en_US.UTF-8
+
 export PATH=~/bin:$PATH
 BASEDIR=$(readlink -e $(dirname $0))
 
