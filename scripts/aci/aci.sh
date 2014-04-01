@@ -77,7 +77,7 @@ sort $REVISION_NEW > $REVISION_TMP
 mv $REVISION_TMP $REVISION_NEW
 
 # Revision compare
-[ ! -d $WORKDIR/$BUILD_DIR ] && mkdir -p $WORKDIR/$BUILD_DIR
+[ ! -d $WORKDIR/$BUILD_DIR ] && mkdir -p $WORKDIR/$BUILD_DIR && chmod 0700 $WORKDIR/$BUILD_DIR
 BUILD_LOG=$WORKDIR/$BUILD_DIR/$BUILD_DIR.log
 
 cd $WORKDIR
@@ -122,6 +122,7 @@ if ! diff $REVISION_NEW $REVISION_LOG > $BUILD_LOG 2>&1; then
         echo                                                                    >> $BUILD_LOG
 
         cd $WORKDIR
+        chmod 0755 $WORKDIR/$BUILD_DIR
         my_mail "Avalon Build End $BUILD_DIR" "`echo --DIFF-- && echo && diff $REVISION_NEW $REVISION_LOG` `echo && echo --NEW-- && cat $REVISION_NEW && echo && echo --OLD-- && cat $REVISION_LOG` `echo && echo --BUILD-- && tail -6 $BUILD_LOG`"
         mv $REVISION_NEW $REVISION_LOG
         rm -rf $WORKDIR/$BUILD_DIR/avalon/[cdlo]* $WORKDIR/$BUILD_DIR/build-avalon-image.sh
