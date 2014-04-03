@@ -3,27 +3,16 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "sha2.h"
+#include "hexdump.c"
 
-extern void sha256_init(sha256_ctx *ctx, uint8_t *buf);
-extern void sha256_update(sha256_ctx *ctx, const unsigned char *message,
-			  unsigned int len);
-extern void sha256_final(sha256_ctx *ctx, unsigned char *digest);
+extern void data_pkg(const uint8_t *data, uint8_t *out);
 int main()
 {
-	sha256_ctx ctx;
-	unsigned char digest[32];
-	unsigned char buf[64];
+	uint8_t data[64];
+	uint8_t out[88];
 
-	sha256_init(&ctx, buf);
+	data_pkg(data, out);
 
-	memcpy(digest + 0, buf + 32 + 8, 4);
-	memcpy(digest + 4, buf + 32 + 4, 4);
-	memcpy(digest + 8, buf + 32 + 0, 4);
-
-	sha256_update(&ctx, digest, 12);
-	sha256_final(&ctx, digest);
-
-
+	hexdump(out, 88);
 	return 0;
 }

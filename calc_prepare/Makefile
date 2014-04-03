@@ -36,7 +36,7 @@ main: ${OBJS}
 
 # Clean rules
 clean:
-	rm -f $(OBJS) $(OBJS:.o=.d)
+	rm -f $(OBJS) $(OBJS:.o=.d) main
 
 # ----- Dependencies ----------------------------------------------------------
 MKDEP =									\

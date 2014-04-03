@@ -34,6 +34,7 @@
 
 #include <stdint.h>
 #include <string.h>
+
 #include "sha2.h"
 
 #define UNPACK32(x, str)                      \
@@ -131,30 +132,6 @@ void sha256_transf(sha256_ctx *ctx, const unsigned char *message,
     }
 }
 
-#ifndef bswap_16
-#define	bswap_16(value)  \
-	((((value) & 0xff) << 8) | ((value) >> 8))
-
-#define	bswap_32(value)	\
-	(((uint32_t)bswap_16((uint16_t)((value) & 0xffff)) << 16) | \
-	(uint32_t)bswap_16((uint16_t)((value) >> 16)))
-
-#define	bswap_64(value)	\
-	(((uint64_t)bswap_32((uint32_t)((value) & 0xffffffff)) \
-	    << 32) | \
-	(uint64_t)bswap_32((uint32_t)((value) >> 32)))
-#endif
-
-static void flip32(void *dest_p, const void *src_p)
-{
-	uint32_t *dest = dest_p;
-	const uint32_t *src = src_p;
-	int i;
-
-	for (i = 0; i < 8; i++)
-		dest[i] = bswap_32(src[i]);
-}
-
 void sha256_init(sha256_ctx *ctx, uint8_t *buf)
 {
     int i;
@@ -225,8 +202,7 @@ void sha256_final(sha256_ctx *ctx, unsigned char *digest)
     }
 }
 
-#if 0
-void calc_prepare1(struct work *work, uint8_t *buf)
+void calc_prepare(const uint8_t *buf, uint8_t *calc)
 {
 	sha256_ctx ctx;
 	unsigned char digest[32];
@@ -240,12 +216,57 @@ void calc_prepare1(struct work *work, uint8_t *buf)
 	sha256_update(&ctx, digest, 12);
 	sha256_final(&ctx, digest);
 
-	memcpy(work->a0, digest + 8, 4);
-	memcpy(work->a1, digest + 4, 4);
-	memcpy(work->a2, digest + 0, 4);
-	memcpy(work->e0, digest + 24, 4);
-	memcpy(work->e1, digest + 20, 4);
-	memcpy(work->e2, digest + 16, 4);
-	flip32(digest, digest);
+	memcpy(calc + 0, digest + 8, 4); /* a0 */
+	memcpy(calc + 4, digest + 4, 4); /* a1 */
+	memcpy(calc + 8, digest + 0, 4); /* a2 */
+	memcpy(calc + 12, digest + 24, 4); /* e0 */
+	memcpy(calc + 16, digest + 20, 4); /* e1 */
+	memcpy(calc + 20, digest + 16, 4); /* e2 */
 }
-#endif
+
+void data_pkg(const uint8_t *data, uint8_t *out)
+{
+	uint8_t work[44];
+	uint8_t calc[24];
+	uint8_t *t;
+
+	memcpy(work, data, 32);
+	memcpy(work + 32, data + 52, 12); /* Parser the Icarus protocl data */
+
+	calc_prepare(work, calc);
+
+	t = out + 12;
+	memcpy(t, work + 32, 12); /* Task data */
+	memcpy(t + 12 + 0, calc + 4, 4);	/* a1 */
+	memcpy(t + 12 + 4, calc + 0, 4);	/* a0 */
+	memcpy(t + 12 + 8, calc + 20, 4);	/* e2 */
+	memcpy(t + 12 + 12, calc + 16, 4);	/* e1 */
+	memcpy(t + 12 + 16, calc + 12, 4);	/* e0 */
+	memcpy(t + 12 + 20, work, 32);	/* Midstate */
+	memcpy(t + 12 + 52, calc + 8, 4);	/* a2 */
+
+	out[0] = 0x11;
+	out[1] = 0x11;
+	out[2] = 0x11;
+	out[3] = 0x11;		/* Head */
+
+	out[4] = 0x1;
+	out[5] = 0x0;
+	out[6] = 0x0;
+	out[7] = 0x0;		/* PLL CFG0 */
+
+	out[8] = 0x0;
+	out[9] = 0x0;
+	out[10] = 0x0;
+	out[11] = 0x0;		/* PLL CFG1 */
+
+	out[80] = 0x0;
+	out[81] = 0x0;
+	out[82] = 0x0;
+	out[83] = 0x0;		/* Nonce */
+
+	out[84] = 0xaa;
+	out[85] = 0xaa;
+	out[86] = 0xaa;
+	out[87] = 0xaa;		/* Tail */
+}
