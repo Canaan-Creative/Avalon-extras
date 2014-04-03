@@ -26,6 +26,7 @@ OBJS       := $(addsuffix .o,$(basename $(CSRCS) $(SSRCS)))
 
 # C rules
 all: main
+	./$^
 
 main: ${OBJS}
 
