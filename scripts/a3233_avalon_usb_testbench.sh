@@ -1,10 +1,10 @@
 #!/bin/sh 
 
-DELAY=0.1
+DELAY=0
 
 for i in `seq 1 100`
 do
-    echo "test $i"
+    echo "==== $i ===="
     ./a3233_avalon_usb_test.py -d 178ab19c1e0dc9651d37418fbbf44b976dfd4571c09241c49564141267eff8d8000000000000000000000000000000000000000001d0c14a507051881a057e08
     sleep ${DELAY}
     # R:  010f0eb6

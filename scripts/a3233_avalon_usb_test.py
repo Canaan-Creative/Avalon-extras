@@ -10,7 +10,7 @@ parser.add_option("-d", "--data", dest="data", default="178ab19c1e0dc9651d37418f
 
 (options, args) = parser.parse_args()
 
-ser = Serial(options.serial_port, 115200, 8, timeout=10)
+ser = Serial(options.serial_port, 115200, 8, timeout=0.6) # 0.6 second
 payload = options.data
 
 print("Push payload to device: " + payload)
