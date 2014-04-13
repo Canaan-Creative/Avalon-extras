@@ -1,8 +1,23 @@
 #!/bin/sh 
-for i in `seq 1 100` 
+
+DELAY=0.1
+
+for i in `seq 1 100`
 do
     echo "test $i"
-    sleep 0.1
-    ./a3233_avalon_usb_test.py
-    echo "==========================="
+    ./a3233_avalon_usb_test.py -d 178ab19c1e0dc9651d37418fbbf44b976dfd4571c09241c49564141267eff8d8000000000000000000000000000000000000000001d0c14a507051881a057e08
+    sleep ${DELAY}
+    # R:  010f0eb6
+
+    ./a3233_avalon_usb_test.py -d 178ab19c1e0dc9651d37418fbbf44b976dfd4571c09241c49564141267eff8d8000000000000000000000000000000000000000001d0c14a507051891a057e08
+    # ERROR NEVER RETURN
+    sleep ${DELAY}
+
+    ./a3233_avalon_usb_test.py -d 178ab19c1e0dc9651d37418fbbf44b976dfd4571c09241c49564141267eff8d8000000000000000000000000000000000000000001d0c14a5070518c1a057e08
+    sleep ${DELAY}
+    # R:  c95d88ca
+
+    ./a3233_avalon_usb_test.py -d 178ab19c1e0dc9651d37418fbbf44b976dfd4571c09241c49564141267eff8d8000000000000000000000000000000000000000001d0c14a5070518f1a057e08
+    sleep ${DELAY}
+    # R:  daa48ad5
 done
