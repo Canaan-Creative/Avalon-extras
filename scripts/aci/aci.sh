@@ -100,9 +100,25 @@ if ! diff $REVISION_NEW $REVISION_LOG > $BUILD_LOG 2>&1; then
 
         TIME_BEGIN=`date +"%Y%m%d %H:%M:%S"`
         BUILD_BEGIN=`date +%s`
-        ./build-avalon-image.sh --clone >> $BUILD_LOG 2>&1 \
-                && ./build-avalon-image.sh >> $BUILD_LOG 2>&1 \
-                && ./build-avalon-image.sh --cgminer >> $BUILD_LOG 2>&1
+        AVA_TARGET_BOARD=tl-wr1043nd-v2 ./build-avalon-image.sh --build >> $BUILD_LOG 2>&1      && \
+                AVA_TARGET_BOARD=tl-wr1043nd-v2 ./build-avalon-image.sh >> $BUILD_LOG 2>&1              && \
+                AVA_TARGET_BOARD=tl-wr1043nd-v2 ./build-avalon-image.sh --cgminer >> $BUILD_LOG 2>&1    && \
+                echo "===========================================================" >> $BUILD_LOG 2>&1   && \
+                echo "=================== tl-wr1043nd-v2 DONE ===================" >> $BUILD_LOG 2>&1   && \
+                echo "===========================================================" >> $BUILD_LOG 2>&1   && \
+                AVA_TARGET_BOARD=tl-wr703n-v1 ./build-avalon-image.sh --build >> $BUILD_LOG 2>&1        && \
+                AVA_TARGET_BOARD=tl-wr703n-v1 ./build-avalon-image.sh >> $BUILD_LOG 2>&1                && \
+                AVA_TARGET_BOARD=tl-wr703n-v1 ./build-avalon-image.sh --cgminer >> $BUILD_LOG 2>&1      && \
+                echo "===========================================================" >> $BUILD_LOG 2>&1   && \
+                echo "==================== tl-wr703n-v1 DONE ====================" >> $BUILD_LOG 2>&1   && \
+                echo "===========================================================" >> $BUILD_LOG 2>&1   && \
+                AVA_TARGET_BOARD=pi-modelb-v2 ./build-avalon-image.sh --build >> $BUILD_LOG 2>&1        && \
+                AVA_TARGET_BOARD=pi-modelb-v2 ./build-avalon-image.sh >> $BUILD_LOG 2>&1                && \
+                AVA_TARGET_BOARD=pi-modelb-v2 ./build-avalon-image.sh --cgminer >> $BUILD_LOG 2>&1      && \
+                echo "===========================================================" >> $BUILD_LOG 2>&1   && \
+                echo "==================== pi-modelb-v2 DONE ====================" >> $BUILD_LOG 2>&1   && \
+                echo "===========================================================" >> $BUILD_LOG 2>&1
+        RET="$?"
         TIME_END=`date +"%Y%m%d %H:%M:%S"`
         BUILD_END=`date +%s`
         BUILD_COST=0
@@ -117,15 +133,25 @@ if ! diff $REVISION_NEW $REVISION_LOG > $BUILD_LOG 2>&1; then
         echo                                                                    >> $BUILD_LOG
         echo "############################################################"     >> $BUILD_LOG
         echo " FROM  ${TIME_BEGIN}  TO  ${TIME_END}"                            >> $BUILD_LOG
+        echo " BUILD RETURN : ${RET}"                                           >> $BUILD_LOG
         echo " TIME COST ${BUILD_H}:${BUILD_M}:${BUILD_S}"                      >> $BUILD_LOG
         echo "############################################################"     >> $BUILD_LOG
         echo                                                                    >> $BUILD_LOG
 
         cd $WORKDIR
         chmod 0755 $WORKDIR/$BUILD_DIR
-        my_mail "Avalon Build End $BUILD_DIR" "`echo --DIFF-- && echo && diff $REVISION_NEW $REVISION_LOG` `echo && echo --NEW-- && cat $REVISION_NEW && echo && echo --OLD-- && cat $REVISION_LOG` `echo && echo --BUILD-- && tail -6 $BUILD_LOG`"
-        mv $REVISION_NEW $REVISION_LOG
+        my_mail "Avalon Build End ${BUILD_DIR}$([ $RET != 0 ] && echo -FAILED-${RET})" \
+                "`echo ============================================================ && echo` \
+                 `echo  FROM  ${TIME_BEGIN}  TO  ${TIME_END} && echo` \
+                 `echo  BUILD RETURN : ${RET} && echo` \
+                 `echo  TIME COST ${BUILD_H}:${BUILD_M}:${BUILD_S} && echo` \
+                 `echo ============================================================ && echo` \
+                 `echo && echo && echo --DIFF-- && diff $REVISION_NEW $REVISION_LOG` \
+                 `echo && echo && echo --NEW-- && cat $REVISION_NEW && echo && echo --OLD-- && cat $REVISION_LOG` \
+                 `echo && echo && echo --ls-- && ls -lR $WORKDIR/$BUILD_DIR/avalon/bin/`"
         rm -rf $WORKDIR/$BUILD_DIR/avalon/[cdlo]* $WORKDIR/$BUILD_DIR/build-avalon-image.sh
+        [ "$RET" != "0" ] && mv $WORKDIR/$BUILD_DIR $WORKDIR/$BUILD_DIR_failed
+        mv $REVISION_NEW $REVISION_LOG
         exit 0
 else
         cd $WORKDIR
