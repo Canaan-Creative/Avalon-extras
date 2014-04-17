@@ -29,7 +29,7 @@ while (1):
 			print(str(count) + ": Something is wrong or modular id not correct")
 		else :
 			result = binascii.hexlify(res_s)
-			for i in range(0, 8):
+			for i in range(0, 11):
 				number = '{:03}'.format(int(result[10 + i * 2:12 + i * 2], 16))
 				if (i == 0):
 					sys.stdout.write(number + ":\t")
