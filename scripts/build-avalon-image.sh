@@ -14,6 +14,8 @@ OPENWRT_CONFIG=""
 [ "${AVA_TARGET_BOARD}" == "pi-modelb-v2" ] && AVA_TARGET_PLATFORM=brcm2708 && OPENWRT_CONFIG=config.${MACHINE}.raspberry-pi
 [ -z "${OPENWRT_CONFIG}" ] && echo "[ERROR]: Target board not suported" && exit 1
 
+which wget > /dev/null && DL_PROG=wget && DL_PARA="-nv -O"
+which curl > /dev/null && DL_PROG=curl && DL_PARA="-L -o"
 
 VERSION=20140415
 OPENWRT_PATH=./openwrt
@@ -83,12 +85,12 @@ if [ "$1" == "--clone" ]; then
     else
         git clone git://github.com/BitSyncom/luci.git && (cd luci && git checkout -b cgminer-webui origin/cgminer-webui)
     fi
-     
+
     cd openwrt
     [ -d ../../dl ] && ln -sf ../dl ../dl
     [ ! -e ../dl ] && mkdir ../dl
     ln -sf ../dl
-    wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/feeds.conf
+    $DL_PROG https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/feeds.conf $DL_PARA feeds.conf
     ./scripts/feeds update -a && ./scripts/feeds install -a
 
     ln -s feeds/cgminer/cgminer/root-files files
@@ -103,7 +105,7 @@ if [ "$1" == "--build" ]; then
     fi
     cd avalon/openwrt/
     make clean
-    wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/${OPENWRT_CONFIG} -O .config
+    $DL_PROG https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/${OPENWRT_CONFIG} $DL_PARA .config
     yes "" | make oldconfig
     make -j${CORE_NUM} V=s IGNORE_ERRORS=m || make V=s IGNORE_ERRORS=m
     exit $?
@@ -117,7 +119,7 @@ if [ "$1" == "--update" ]; then
     (cd avalon/cgminer-openwrt-packages && git pull)
     cd avalon/openwrt
     ./scripts/feeds update cgminer; ./scripts/feeds install -a -p cgminer
-    wget https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/${OPENWRT_CONFIG} -O .config
+    $DL_PROG https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/${OPENWRT_CONFIG} $DL_PARA .config
     yes "" | make oldconfig
     exit $?
 fi
@@ -166,4 +168,3 @@ echo "luci: $LUCI_GIT_VERSION$LUCI_GIT_STATUS"                  >> ${OPENWRT_PAT
 ( make -j${CORE_NUM} -C ${OPENWRT_PATH} V=s IGNORE_ERRORS=m || make -C ${OPENWRT_PATH} V=s IGNORE_ERRORS=m )    && \
 mkdir -p bin/${AVA_TARGET_BOARD}/${DATE}/                                                                       && \
 cp -a ${OPENWRT_PATH}/bin/${AVA_TARGET_PLATFORM}/*  bin/${AVA_TARGET_BOARD}/${DATE}/
-
