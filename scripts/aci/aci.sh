@@ -14,11 +14,14 @@ REVISION_NEW=$REVISION_LOG.new
 REVISION_TMP=$REVISION_LOG.tmp
 BUILD_DIR=`date +%Y%m%d_%H%M`
 
+which wget > /dev/null && DL_PROG=wget && DL_PARA="-nv -O"
+which curl > /dev/null && DL_PROG=curl && DL_PARA="-L -o"
+
 [ ! -d $REPO ] && mkdir $REPO
 echo -ne > $REVISION_NEW
 
 cd $WORKDIR
-wget -nv https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/feeds.conf -O $WORKDIR/feeds.conf
+$DL_PROG https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/feeds.conf $DL_PARA feeds.conf
 
 # Check all repos
 cat $WORKDIR/feeds.conf $BASEDIR/feeds-extra.conf | sed "s/^ *//;s/ *$//;s/ \{1,\}/ /g;/^$/d;/^#.*$/d" | sort | uniq | grep -E '^src-' | while read line; do
@@ -92,7 +95,7 @@ if ! diff $REVISION_NEW $REVISION_LOG > $BUILD_LOG 2>&1; then
         echo                                                    >> $BUILD_LOG
 
         cd $WORKDIR/$BUILD_DIR
-        wget https://github.com/BitSyncom/avalon-extras/raw/master/scripts/build-avalon-image.sh -O build-avalon-image.sh
+        $DL_PROG https://github.com/BitSyncom/avalon-extras/raw/master/scripts/build-avalon-image.sh $DL_PARA build-avalon-image.sh
         chmod 0755 build-avalon-image.sh
         mkdir -p avalon/bin
         [ ! -d $WORKDIR/dl ] && mkdir -p $WORKDIR/dl
@@ -160,4 +163,3 @@ else
         echo "Revision has not been changed"
         exit 0
 fi
-

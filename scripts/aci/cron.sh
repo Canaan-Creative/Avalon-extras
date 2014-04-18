@@ -36,4 +36,3 @@ RET="$?"
 [ "$RET" == "0" ] && grep "Revision has not been changed" $LOG > /dev/null 2>&1 && rm $LOG
 
 rm -f $FLAG
-

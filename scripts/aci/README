@@ -12,7 +12,7 @@
 30 * * * * ~/aci/cron.sh
 
 ================ ToDo ================
-1. push binaries to Web server if build successes
+
 
 ================ Files ================
 cron.sh                 Called by cron every half an hour
@@ -36,4 +36,3 @@ log/*                   output by build_check.sh
 YYYYMMDD_hhmm/          build directory
 YYYYMMDD_hhmm/*.log     build log, output by build-avalon-image.sh
 YYYYMMDD_hhmm/avalon    build directory, keep only bin if build succeeded
-

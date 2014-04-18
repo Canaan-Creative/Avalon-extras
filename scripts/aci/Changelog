@@ -1,5 +1,7 @@
 Known Issue
 	1. "Timed out" maill wil be sent during build
 
+20140417
+	Change use curl if it is avaiable
 20140326
 	First Release
