@@ -11,3 +11,47 @@ index ef63e95..52d2091 100644
  
  // Number of requests to queue - normally would be small
  // However lots of PGA's may mean more
+diff --git a/driver-avalon2.c b/driver-avalon2.c
+index 5261054..96e948a 100644
+--- a/driver-avalon2.c
++++ b/driver-avalon2.c
+@@ -429,7 +429,7 @@ static int avalon2_stratum_pkgs(int fd, struct pool *pool, struct thr_info *thr)
+ 	while (avalon2_send_pkg(fd, &pkg, thr) != AVA2_SEND_OK)
+ 		;
+ 
+-	set_target(target, pool->swork.diff);
++	set_target(target, pool->sdiff);
+ 	memcpy(pkg.data, target, 32);
+ 	if (opt_debug) {
+ 		char *target_str;
+diff --git a/util.c b/util.c
+index 65692f2..94e28a7 100644
+--- a/util.c
++++ b/util.c
+@@ -1685,6 +1685,26 @@ static bool parse_notify(struct pool *pool, json_t *val)
+ 	ntime = __json_array_string(val, 7);
+ 	clean = json_is_true(json_array_get(val, 8));
+ 
++#ifdef USE_AVALON2
++	static struct timeval tv_last, tv_now;
++
++	cgtime(&tv_now);
++	applog(LOG_DEBUG, "Stratum: Clean %d: (Now: %ld, Last: %ld) tdiff: %ld",
++	       clean,
++	       (long)tv_now.tv_sec, (long)tv_last.tv_sec,
++	       (long)tdiff(&tv_now, &tv_last));
++
++	if (pool == current_pool() && clean == false) {
++		if ((long)tdiff(&tv_now, &tv_last) < (long)30) {
++			applog(LOG_ERR, "Ignore job_id: %s", job_id);
++			ret = true;
++			goto out;
++		}
++	}
++
++	tv_last.tv_sec = tv_now.tv_sec;
++	tv_last.tv_usec = tv_now.tv_usec;
++#endif
+ 	if (!job_id || !prev_hash || !coinbase1 || !coinbase2 || !bbversion || !nbit || !ntime) {
+ 		/* Annoying but we must not leak memory */
+ 		if (job_id)
