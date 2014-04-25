@@ -103,7 +103,7 @@ if ! diff $REVISION_NEW $REVISION_LOG > $BUILD_LOG 2>&1; then
 
         TIME_BEGIN=`date +"%Y%m%d %H:%M:%S"`
         BUILD_BEGIN=`date +%s`
-        AVA_TARGET_BOARD=tl-wr1043nd-v2 ./build-avalon-image.sh --build >> $BUILD_LOG 2>&1      && \
+        AVA_TARGET_BOARD=tl-wr1043nd-v2 ./build-avalon-image.sh --build >> $BUILD_LOG 2>&1              && \
                 AVA_TARGET_BOARD=tl-wr1043nd-v2 ./build-avalon-image.sh >> $BUILD_LOG 2>&1              && \
                 AVA_TARGET_BOARD=tl-wr1043nd-v2 ./build-avalon-image.sh --cgminer >> $BUILD_LOG 2>&1    && \
                 echo "===========================================================" >> $BUILD_LOG 2>&1   && \
@@ -142,7 +142,6 @@ if ! diff $REVISION_NEW $REVISION_LOG > $BUILD_LOG 2>&1; then
         echo                                                                    >> $BUILD_LOG
 
         cd $WORKDIR
-        chmod 0755 $WORKDIR/$BUILD_DIR
         my_mail "Avalon Build End ${BUILD_DIR}$([ $RET != 0 ] && echo -FAILED-${RET})" \
                 "`echo ============================================================ && echo` \
                  `echo  FROM  ${TIME_BEGIN}  TO  ${TIME_END} && echo` \
@@ -152,9 +151,14 @@ if ! diff $REVISION_NEW $REVISION_LOG > $BUILD_LOG 2>&1; then
                  `echo && echo && echo --DIFF-- && diff $REVISION_NEW $REVISION_LOG` \
                  `echo && echo && echo --NEW-- && cat $REVISION_NEW && echo && echo --OLD-- && cat $REVISION_LOG` \
                  `echo && echo && echo --ls-- && ls -lR $WORKDIR/$BUILD_DIR/avalon/bin/`"
-        rm -rf $WORKDIR/$BUILD_DIR/avalon/[cdlo]* $WORKDIR/$BUILD_DIR/build-avalon-image.sh
-        [ "$RET" != "0" ] && mv $WORKDIR/$BUILD_DIR $WORKDIR/$BUILD_DIR_failed
-        mv $REVISION_NEW $REVISION_LOG
+        if [ "$RET" == "0" ]; then
+                rm -rf $WORKDIR/$BUILD_DIR/avalon/[cdlo]* $WORKDIR/$BUILD_DIR/build-avalon-image.sh
+                chmod 0755 $WORKDIR/$BUILD_DIR
+                mv $REVISION_NEW $REVISION_LOG
+        else
+                mv $WORKDIR/$BUILD_DIR $WORKDIR/"${BUILD_DIR}"_failed
+                touch $WORKDIR/.fail
+        fi
         exit 0
 else
         cd $WORKDIR

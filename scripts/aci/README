@@ -26,6 +26,7 @@ email.conf              configuration for email, [NOTICE]: it should NOT be publ
 
 ---- generated ----
 .check                  Check flag, wait if it exists
+.fail                   Failed flag, block all check and mails. It should be removed manually
 feeds.conf              https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/feeds.conf
 revision.log            Revision records
 revision.log.new        New revision records, rename to revision.txt after succeeded build

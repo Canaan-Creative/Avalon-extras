@@ -99,7 +99,7 @@ fi
 
 if [ "$1" == "--build" ]; then
     if [ ! -d avalon/openwrt ]; then
-        rm -rf avalon/*
+        "$0" --removeall
         "$0" --clone
         [ "$?" != "0" ] && echo "[ERROR]: clone failed" && exit 1
     fi
