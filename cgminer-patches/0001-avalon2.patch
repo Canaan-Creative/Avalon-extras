@@ -11,11 +11,52 @@ index ef63e95..52d2091 100644
  
  // Number of requests to queue - normally would be small
  // However lots of PGA's may mean more
+diff --git a/cgminer.c b/cgminer.c
+index f044b1d..035ad04 100644
+--- a/cgminer.c
++++ b/cgminer.c
+@@ -1109,6 +1109,9 @@ static struct opt_table opt_config_table[] = {
+ 	OPT_WITH_CBARG("--avalon2-voltage",
+ 		     set_avalon2_voltage, NULL, &opt_set_avalon2_voltage,
+ 		     "Set Avalon2 core voltage, in millivolts"),
++	OPT_WITH_ARG("--avalon2-cutoff",
++		     set_int_0_to_100, opt_show_intval, &opt_avalon2_overheat,
++		     "Set Avalon2 overheat cut off temperature"),
+ #endif
+ #ifdef USE_BAB
+ 	OPT_WITH_ARG("--bab-options",
 diff --git a/driver-avalon2.c b/driver-avalon2.c
-index 5261054..96e948a 100644
+index 5261054..7b8b7ad 100644
 --- a/driver-avalon2.c
 +++ b/driver-avalon2.c
-@@ -429,7 +429,7 @@ static int avalon2_stratum_pkgs(int fd, struct pool *pool, struct thr_info *thr)
+@@ -51,6 +51,8 @@ int opt_avalon2_fan_max = AVA2_DEFAULT_FAN_MAX;
+ int opt_avalon2_voltage_min = AVA2_DEFAULT_VOLTAGE;
+ int opt_avalon2_voltage_max = AVA2_DEFAULT_VOLTAGE_MAX;
+ 
++int opt_avalon2_overheat = AVALON2_TEMP_OVERHEAT;
++
+ static inline uint8_t rev8(uint8_t d)
+ {
+     int i;
+@@ -163,6 +165,17 @@ static inline int get_temp_max(struct avalon2_info *info)
+ 	return info->temp_max;
+ }
+ 
++static inline int get_currect_temp_max(struct avalon2_info *info)
++{
++	int i;
++	int t = 0;
++	for (i = 0; i < 2 * AVA2_DEFAULT_MODULARS; i++) {
++		if (t <= info->temp[i])
++			t = info->temp[i];
++	}
++	return t;
++}
++
+ /* http://www.onsemi.com/pub_link/Collateral/ADP3208D.PDF */
+ static inline uint32_t encode_voltage(uint32_t v)
+ {
+@@ -429,7 +442,7 @@ static int avalon2_stratum_pkgs(int fd, struct pool *pool, struct thr_info *thr)
  	while (avalon2_send_pkg(fd, &pkg, thr) != AVA2_SEND_OK)
  		;
  
@@ -24,6 +65,60 @@ index 5261054..96e948a 100644
  	memcpy(pkg.data, target, 32);
  	if (opt_debug) {
  		char *target_str;
+@@ -696,10 +709,14 @@ static int64_t avalon2_scanhash(struct thr_info *thr)
+ 		pool = current_pool();
+ 		if (!pool->has_stratum)
+ 			quit(1, "Avalon2: Miner Manager have to use stratum pool");
+-		if (pool->coinbase_len > AVA2_P_COINBASE_SIZE)
+-			quit(1, "Avalon2: Miner Manager pool coinbase length have to less then %d", AVA2_P_COINBASE_SIZE);
+-		if (pool->merkles > AVA2_P_MERKLES_COUNT)
+-			quit(1, "Avalon2: Miner Manager merkles have to less then %d", AVA2_P_MERKLES_COUNT);
++		if (pool->coinbase_len > AVA2_P_COINBASE_SIZE) {
++			applog(LOG_ERR, "Avalon2: Miner Manager pool coinbase length have to less then %d", AVA2_P_COINBASE_SIZE);
++			return 0;
++		}
++		if (pool->merkles > AVA2_P_MERKLES_COUNT) {
++			applog(LOG_ERR, "Avalon2: Miner Manager merkles have to less then %d", AVA2_P_MERKLES_COUNT);
++			return 0;
++		}
+ 
+ 		info->diff = (int)pool->swork.diff - 1;
+ 		info->pool_no = pool->pool_no;
+@@ -719,7 +736,12 @@ static int64_t avalon2_scanhash(struct thr_info *thr)
+ 		tmp = be32toh(info->fan_pwm);
+ 		memcpy(send_pkg.data, &tmp, 4);
+ 
+-		tmp = encode_voltage(info->set_voltage);
++		applog(LOG_ERR, "Avalon2: Temp max: %d, Cut off temp: %d",
++		       get_currect_temp_max(info), opt_avalon2_overheat);
++		if (get_currect_temp_max(info) >= opt_avalon2_overheat)
++			tmp = encode_voltage(0);
++		else
++			tmp = encode_voltage(info->set_voltage);
+ 		tmp = be32toh(tmp);
+ 		memcpy(send_pkg.data + 4, &tmp, 4);
+ 
+diff --git a/driver-avalon2.h b/driver-avalon2.h
+index ca2e2df..40f11ca 100644
+--- a/driver-avalon2.h
++++ b/driver-avalon2.h
+@@ -37,6 +37,8 @@
+ #define AVA2_DEFAULT_FREQUENCY_MIN	300
+ #define AVA2_DEFAULT_FREQUENCY_MAX	2000
+ 
++#define AVALON2_TEMP_OVERHEAT	88
++
+ /* Avalon2 protocol package type */
+ #define AVA2_H1	'A'
+ #define AVA2_H2	'V'
+@@ -132,6 +134,7 @@ struct avalon2_info {
+ extern char *set_avalon2_fan(char *arg);
+ extern char *set_avalon2_freq(char *arg);
+ extern char *set_avalon2_voltage(char *arg);
++extern int opt_avalon2_overheat;
+ 
+ #endif /* USE_AVALON2 */
+ #endif	/* _AVALON2_H_ */
 diff --git a/util.c b/util.c
 index 65692f2..94e28a7 100644
 --- a/util.c
