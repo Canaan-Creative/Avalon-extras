@@ -14,6 +14,7 @@ REVISION_NEW=$REVISION_LOG.new
 REVISION_TMP=$REVISION_LOG.tmp
 BUILD_DIR=`date +%Y%m%d_%H%M`
 
+# We prefer curl because of wget bugs
 which wget > /dev/null && DL_PROG=wget && DL_PARA="-nv -O"
 which curl > /dev/null && DL_PROG=curl && DL_PARA="-L -o"
 
@@ -82,10 +83,14 @@ mv $REVISION_TMP $REVISION_NEW
 # Revision compare
 [ ! -d $WORKDIR/$BUILD_DIR ] && mkdir -p $WORKDIR/$BUILD_DIR && chmod 0700 $WORKDIR/$BUILD_DIR
 BUILD_LOG=$WORKDIR/$BUILD_DIR/$BUILD_DIR.log
-
 cd $WORKDIR
-if ! diff $REVISION_NEW $REVISION_LOG > $BUILD_LOG 2>&1; then
-        my_mail "Avalon Build Start: $BUILD_DIR" "`echo --DIFF-- && echo && diff $REVISION_NEW $REVISION_LOG && echo` `echo --NEW-- && cat $REVISION_NEW` `echo --OLD-- && cat $REVISION_LOG`"
+if diff $REVISION_NEW $REVISION_LOG 2>&1 > $BUILD_LOG; then
+        rm $REVISION_NEW
+        rm -rf $WORKDIR/$BUILD_DIR
+        echo "Revision has not been changed"
+        exit 0
+else
+        my_mail "Avalon Build Start: $BUILD_DIR" "`echo --DIFF-- && echo && diff $REVISION_NEW $REVISION_LOG && echo` `echo --NEW-- && echo && cat $REVISION_NEW` `echo --OLD-- && echo && cat $REVISION_LOG`"
 
         echo "---------------- OLD REVISION ----------------"   >> $BUILD_LOG
         [ -r $REVISION_LOG ] && cat $REVISION_LOG               >> $BUILD_LOG
@@ -148,8 +153,8 @@ if ! diff $REVISION_NEW $REVISION_LOG > $BUILD_LOG 2>&1; then
                  `echo  BUILD RETURN : ${RET} && echo` \
                  `echo  TIME COST ${BUILD_H}:${BUILD_M}:${BUILD_S} && echo` \
                  `echo ============================================================ && echo` \
-                 `echo && echo && echo --DIFF-- && diff $REVISION_NEW $REVISION_LOG` \
-                 `echo && echo && echo --NEW-- && cat $REVISION_NEW && echo && echo --OLD-- && cat $REVISION_LOG` \
+                 `echo && echo && echo --DIFF-- && echo && diff $REVISION_NEW $REVISION_LOG` \
+                 `echo && echo && echo --NEW-- && echo && cat $REVISION_NEW && echo && echo --OLD-- && echo && cat $REVISION_LOG` \
                  `echo && echo && echo --ls-- && ls -lR $WORKDIR/$BUILD_DIR/avalon/bin/`"
         if [ "$RET" == "0" ]; then
                 rm -rf $WORKDIR/$BUILD_DIR/avalon/[cdlo]* $WORKDIR/$BUILD_DIR/build-avalon-image.sh
@@ -158,12 +163,7 @@ if ! diff $REVISION_NEW $REVISION_LOG > $BUILD_LOG 2>&1; then
         else
                 mv $WORKDIR/$BUILD_DIR $WORKDIR/"${BUILD_DIR}"_failed
                 touch $WORKDIR/.fail
+                exit 1
         fi
-        exit 0
-else
-        cd $WORKDIR
-        rm $REVISION_NEW
-        rm -rf $WORKDIR/$BUILD_DIR
-        echo "Revision has not been changed"
         exit 0
 fi
