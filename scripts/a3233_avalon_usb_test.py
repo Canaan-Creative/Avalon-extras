@@ -6,7 +6,7 @@ import binascii
 
 parser = OptionParser()
 parser.add_option("-s", "--serial", dest="serial_port", default="/dev/ttyACM0", help="Serial port")
-parser.add_option("-d", "--data", dest="data", default="178ab19c1e0dc9651d37418fbbf44b976dfd4571c09241c49564141267eff8d8000000000000000000000000000000000000000001d0c14a507051881a057e08", help="Testing data")
+parser.add_option("-d", "--data", dest="data", default="d8f8ef6712146495c44192c07145fd6d974bf4bb8f41371d65c90d1e9cb18a170000000000000000000000000000000000000000087e051a885170504ac1d001", help="Testing data")
 parser.add_option("-n", "--nonce", dest="nonce", default="null", help="nonce")
 
 (options, args) = parser.parse_args()
