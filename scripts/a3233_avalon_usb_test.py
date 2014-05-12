@@ -3,6 +3,7 @@
 from serial import Serial
 from optparse import OptionParser
 import binascii
+import sys
 
 parser = OptionParser()
 parser.add_option("-s", "--serial", dest="serial_port", default="/dev/ttyACM0", help="Serial port")
@@ -18,6 +19,22 @@ print("Push payload to device: " + payload)
 ser.flushInput()
 ser.write(payload.decode('hex'))
 
-res=ser.read(4)
-print("Result: " + binascii.hexlify(res))
-print("Nonce:  " + options.nonce)
+#read more data(nonce and test dat)
+res=ser.read(100)
+
+ret=1
+if binascii.hexlify(res)[0:8] == options.nonce:
+    ret=0
+else:
+    if binascii.hexlify(res)[0:8] == "" and options.nonce == "null":
+	ret=0
+
+if ret == 0:
+    print("Result: " + binascii.hexlify(res))
+    print("Nonce:  " + options.nonce)
+    sys.exit(0)
+else:
+    print("\033[0;31mResult: " + binascii.hexlify(res) + "\033[0m")
+    print("Nonce:  " + options.nonce)
+    sys.exit(1)
+
