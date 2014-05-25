@@ -56,7 +56,7 @@ index c3da2de..a2be32a 100644
  	submit_nonce(thr, work, nonce);
  	free_work(work);
 diff --git a/driver-avalon2.c b/driver-avalon2.c
-index 1a318ab..685d537 100644
+index 1a318ab..5994501 100644
 --- a/driver-avalon2.c
 +++ b/driver-avalon2.c
 @@ -42,6 +42,8 @@
@@ -481,7 +481,7 @@ index 1a318ab..685d537 100644
  
 +	/* Stop polling the device if there is no stratum in 3 minutes, network is down */
 +	cgtime(&current_stratum);
-+	if (tdiff(&current_stratum, &(info->last_stratum)) > (3.0 * 60.0))
++	if (tdiff(&current_stratum, &(info->last_stratum)) > (double)(3.0 * 60.0))
 +		return 0;
 +
  	polling(thr);
