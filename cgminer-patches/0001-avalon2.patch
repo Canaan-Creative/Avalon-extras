@@ -1,405 +1,797 @@
-[1mdiff --git a/cgminer.c b/cgminer.c[m
-[1mindex c3da2de..54d2a5a 100644[m
-[1m--- a/cgminer.c[m
-[1m+++ b/cgminer.c[m
-[36m@@ -6765,6 +6765,8 @@[m [mvoid set_target(unsigned char *dest_target, double diff)[m
- #ifdef USE_AVALON2[m
- void submit_nonce2_nonce(struct thr_info *thr, uint32_t pool_no, uint32_t nonce2, uint32_t nonce)[m
- {[m
-[32m+[m	[32mconst int thr_id = thr->id;[m
-[32m+[m
- 	struct cgpu_info *cgpu = thr->cgpu;[m
- 	struct device_drv *drv = cgpu->drv;[m
- [m
-[36m@@ -6774,6 +6776,13 @@[m [mvoid submit_nonce2_nonce(struct thr_info *thr, uint32_t pool_no, uint32_t nonce2[m
- 	pool->nonce2 = nonce2;[m
- 	gen_stratum_work(pool, work);[m
- [m
-[32m+[m	[32mwork->thr_id = thr_id;[m
-[32m+[m	[32mwork->work_block = work_block;[m
-[32m+[m	[32mwork->pool->works++;[m
-[32m+[m
-[32m+[m	[32mwork->mined = true;[m
-[32m+[m	[32mwork->device_diff = MIN(cgpu->drv->max_diff, work->work_difficulty);[m
-[32m+[m
- 	submit_nonce(thr, work, nonce);[m
- 	free_work(work);[m
- }[m
-[1mdiff --git a/driver-avalon2.c b/driver-avalon2.c[m
-[1mindex 1a318ab..b7dbcd2 100644[m
-[1m--- a/driver-avalon2.c[m
-[1m+++ b/driver-avalon2.c[m
-[36m@@ -147,12 +147,24 @@[m [mstatic int avalon2_init_pkg(struct avalon2_pkg *pkg, uint8_t type, uint8_t idx,[m
- [m
- static int job_idcmp(uint8_t *job_id, char *pool_job_id)[m
- {[m
-[31m-	int i = 0;[m
-[31m-	for (i = 0; i < 4; i++) {[m
-[31m-		if (job_id[i] != *(pool_job_id + strlen(pool_job_id) - 4 + i))[m
-[31m-			return 1;[m
-[31m-	}[m
-[31m-	return 0;[m
-[32m+[m	[32mint job_id_len;[m
-[32m+[m	[32munsigned short crc, crc_expect;[m
-[32m+[m
-[32m+[m	[32mif (!pool_job_id)[m
-[32m+[m		[32mreturn 1;[m
-[32m+[m
-[32m+[m	[32mjob_id_len = strlen(pool_job_id);[m
-[32m+[m	[32mcrc_expect = crc16(pool_job_id, job_id_len);[m
-[32m+[m
-[32m+[m	[32mcrc = job_id[0] << 8 | job_id[1];[m
-[32m+[m
-[32m+[m	[32mif (crc_expect == crc)[m
-[32m+[m		[32mreturn 0;[m
-[32m+[m
-[32m+[m	[32mapplog(LOG_ERR, "Avalon2: Result job_id not match! [%04x:%04x (%s)]",[m
-[32m+[m	[32m       crc, crc_expect, pool_job_id);[m
-[32m+[m
-[32m+[m	[32mreturn 1;[m
- }[m
- [m
- static inline int get_temp_max(struct avalon2_info *info)[m
-[36m@@ -198,7 +210,7 @@[m [mstatic int decode_pkg(struct thr_info *thr, struct avalon2_ret *ar, uint8_t *pkg[m
- 	unsigned int actual_crc;[m
- 	uint32_t nonce, nonce2, miner, modular_id;[m
- 	int pool_no;[m
-[31m-	uint8_t job_id[5];[m
-[32m+[m	[32muint8_t job_id[4];[m
- 	int tmp;[m
- [m
- 	int type = AVA2_GETS_ERROR;[m
-[36m@@ -232,7 +244,6 @@[m [mstatic int decode_pkg(struct thr_info *thr, struct avalon2_ret *ar, uint8_t *pkg[m
- 			memcpy(&nonce2, ar->data + 8, 4);[m
- 			/* Calc time    ar->data + 12 */[m
- 			memcpy(&nonce, ar->data + 16, 4);[m
-[31m-			memset(job_id, 0, 5);[m
- 			memcpy(job_id, ar->data + 20, 4);[m
- [m
- 			miner = be32toh(miner);[m
-[36m@@ -249,15 +260,15 @@[m [mstatic int decode_pkg(struct thr_info *thr, struct avalon2_ret *ar, uint8_t *pkg[m
- 			nonce = be32toh(nonce);[m
- 			nonce -= 0x180;[m
- [m
-[31m-			applog(LOG_DEBUG, "Avalon2: Found! [%s] %d:(%08x) (%08x)",[m
-[31m-			       job_id, pool_no, nonce2, nonce);[m
-[32m+[m			[32mapplog(LOG_DEBUG, "Avalon2: Found! %d: (%08x) (%08x)",[m
-[32m+[m			[32m       pool_no, nonce2, nonce);[m
- 			/* FIXME:[m
- 			 * We need remember the pre_pool. then submit the stale work */[m
- 			pool = pools[pool_no];[m
- 			if (job_idcmp(job_id, pool->swork.job_id))[m
- 				break;[m
- [m
-[31m-			if (thr && !info->new_stratum)[m
-[32m+[m			[32mif (thr)[m
- 				submit_nonce2_nonce(thr, pool_no, nonce2, nonce);[m
- 			break;[m
- 		case AVA2_P_STATUS:[m
-[36m@@ -278,6 +289,8 @@[m [mstatic int decode_pkg(struct thr_info *thr, struct avalon2_ret *ar, uint8_t *pkg[m
- 			memcpy(&(info->power_good[modular_id]), ar->data + 24, 4);[m
- [m
- 			info->get_frequency[modular_id] = be32toh(info->get_frequency[modular_id]);[m
-[32m+[m			[32mif (info->dev_type[modular_id] == AVA2_ID_AVA3)[m
-[32m+[m				[32minfo->get_frequency[modular_id] = info->get_frequency[modular_id] * 768 / 65;[m
- 			info->get_voltage[modular_id] = be32toh(info->get_voltage[modular_id]);[m
- 			info->local_work[modular_id] = be32toh(info->local_work[modular_id]);[m
- 			info->hw_work[modular_id] = be32toh(info->hw_work[modular_id]);[m
-[36m@@ -408,6 +421,7 @@[m [mstatic int avalon2_stratum_pkgs(int fd, struct pool *pool, struct thr_info *thr)[m
- 	int i, a, b, tmp;[m
- 	unsigned char target[32];[m
- 	int job_id_len;[m
-[32m+[m	[32munsigned short crc;[m
- [m
- 	/* Send out the first stratum message STATIC */[m
- 	applog(LOG_DEBUG, "Avalon2: Pool stratum message STATIC: %d, %d, %d, %d, %d",[m
-[36m@@ -460,10 +474,9 @@[m [mstatic int avalon2_stratum_pkgs(int fd, struct pool *pool, struct thr_info *thr)[m
- 	memset(pkg.data, 0, AVA2_P_DATA_LEN);[m
- [m
- 	job_id_len = strlen(pool->swork.job_id);[m
-[31m-	job_id_len = job_id_len >= 4 ? 4 : job_id_len;[m
-[31m-	for (i = 0; i < job_id_len; i++) {[m
-[31m-		pkg.data[i] = *(pool->swork.job_id + strlen(pool->swork.job_id) - 4 + i);[m
-[31m-	}[m
-[32m+[m	[32mcrc = crc16(pool->swork.job_id, job_id_len);[m
-[32m+[m	[32mpkg.data[0] = (crc & 0xff00) >> 8;[m
-[32m+[m	[32mpkg.data[1] = crc & 0x00ff;[m
- 	avalon2_init_pkg(&pkg, AVA2_P_JOB_ID, 1, 1);[m
- 	while (avalon2_send_pkg(fd, &pkg, thr) != AVA2_SEND_OK)[m
- 		;[m
-[36m@@ -576,6 +589,7 @@[m [mstatic bool avalon2_detect_one(const char *devpath)[m
- 		memcpy(mm_version[i], ret_pkg.data, 15);[m
- 		mm_version[i][15] = '\0';[m
- 	}[m
-[32m+[m	[32mavalon2_close(fd);[m
- 	if (!modular[0] && !modular[1] && !modular[2] && !modular[3])[m
- 		return false;[m
- [m
-[36m@@ -595,27 +609,23 @@[m [mstatic bool avalon2_detect_one(const char *devpath)[m
- [m
- 	info = avalon2->device_data;[m
- [m
-[31m-	strcpy(info->mm_version[0], mm_version[0]);[m
-[31m-	strcpy(info->mm_version[1], mm_version[1]);[m
-[31m-	strcpy(info->mm_version[2], mm_version[2]);[m
-[31m-	strcpy(info->mm_version[3], mm_version[3]);[m
-[31m-[m
-[32m+[m	[32minfo->fd = -1;[m
- 	info->baud = AVA2_IO_SPEED;[m
- 	info->fan_pwm = AVA2_DEFAULT_FAN_PWM;[m
- 	info->set_voltage = AVA2_DEFAULT_VOLTAGE_MIN;[m
- 	info->set_frequency = AVA2_DEFAULT_FREQUENCY;[m
- 	info->temp_max = 0;[m
-[31m-	info->temp_history_index = 0;[m
-[31m-	info->temp_sum = 0;[m
-[31m-	info->temp_old = 0;[m
-[31m-	info->modulars[0] = modular[0];[m
-[31m-	info->modulars[1] = modular[1];[m
-[31m-	info->modulars[2] = modular[2];	/* Enable modular */[m
-[31m-	info->modulars[3] = modular[3];	/* Enable modular */[m
- [m
-[31m-	info->fd = -1;[m
-[31m-	/* Set asic to idle mode after detect */[m
-[31m-	avalon2_close(fd);[m
-[32m+[m	[32mfor (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {[m
-[32m+[m		[32mstrcpy(info->mm_version[i], mm_version[i]);[m
-[32m+[m		[32minfo->modulars[i] = modular[i];	/* Enable modular */[m
-[32m+[m		[32minfo->dev_type[i] = AVA2_ID_AVAX;[m
-[32m+[m
-[32m+[m		[32mif (!strncmp((char *)&(info->mm_version[i]), AVA2_FW2_PREFIXSTR, 2))[m
-[32m+[m			[32minfo->dev_type[i] = AVA2_ID_AVA2;[m
-[32m+[m		[32mif (!strncmp((char *)&(info->mm_version[i]), AVA2_FW3_PREFIXSTR, 2))[m
-[32m+[m			[32minfo->dev_type[i] = AVA2_ID_AVA3;[m
-[32m+[m	[32m}[m
- [m
- 	return true;[m
- }[m
-[36m@@ -654,7 +664,6 @@[m [mstatic bool avalon2_prepare(struct thr_info *thr)[m
- 		avalon2_init(avalon2);[m
- [m
- 	info->first = true;[m
-[31m-[m
- 	return true;[m
- }[m
- [m
-[36m@@ -696,9 +705,7 @@[m [mstatic int64_t avalon2_scanhash(struct thr_info *thr)[m
- 	uint32_t tmp, range, start;[m
- 	int i;[m
- [m
-[31m-	if (thr->work_restart || thr->work_update ||[m
-[31m-	    info->first) {[m
-[31m-		info->new_stratum = true;[m
-[32m+[m	[32mif (thr->work_restart || thr->work_update || info->first) {[m
- 		applog(LOG_DEBUG, "Avalon2: New stratum: restart: %d, update: %d, first: %d",[m
- 		       thr->work_restart, thr->work_update, info->first);[m
- 		thr->work_update = false;[m
-[36m@@ -764,7 +771,6 @@[m [mstatic int64_t avalon2_scanhash(struct thr_info *thr)[m
- 		avalon2_init_pkg(&send_pkg, AVA2_P_SET, 1, 1);[m
- 		while (avalon2_send_pkg(info->fd, &send_pkg, thr) != AVA2_SEND_OK)[m
- 			;[m
-[31m-		info->new_stratum = false;[m
- 	}[m
- [m
- 	polling(thr);[m
-[36m@@ -783,18 +789,11 @@[m [mstatic struct api_data *avalon2_api_stats(struct cgpu_info *cgpu)[m
- 	int i, j, a, b;[m
- 	char buf[24];[m
- 	double hwp;[m
-[31m-	int devtype[AVA2_DEFAULT_MODULARS];[m
- 	int minerindex, minercount;[m
- [m
- 	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {[m
-[31m-		devtype[i] = AVA2_ID_AVAX;[m
-[31m-		if (!strncmp((char *)&(info->mm_version[i]), AVA2_MM_VERNULL, 4))[m
-[32m+[m		[32mif(info->dev_type[i] == AVA2_ID_AVAX)[m
- 			continue;[m
-[31m-		if (!strncmp((char *)&(info->mm_version[i]), AVA2_FW2_PREFIXSTR, 2))[m
-[31m-			devtype[i] = AVA2_ID_AVA2;[m
-[31m-		if (!strncmp((char *)&(info->mm_version[i]), AVA2_FW3_PREFIXSTR, 2))[m
-[31m-			devtype[i] = AVA2_ID_AVA3;[m
-[31m-[m
- 		sprintf(buf, "ID%d MM Version", i + 1);[m
- 		root = api_add_string(root, buf, &(info->mm_version[i]), false);[m
- 	}[m
-[36m@@ -802,15 +801,15 @@[m [mstatic struct api_data *avalon2_api_stats(struct cgpu_info *cgpu)[m
- 	minerindex = 0;[m
- 	minercount = 0;[m
- 	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {[m
-[31m-		if (devtype[i] == AVA2_ID_AVAX) {[m
-[32m+[m		[32mif (info->dev_type[i] == AVA2_ID_AVAX) {[m
- 			minerindex += AVA2_DEFAULT_MINERS;[m
- 			continue;[m
- 		}[m
- [m
-[31m-		if (devtype[i] == AVA2_ID_AVA2)[m
-[32m+[m		[32mif (info->dev_type[i] == AVA2_ID_AVA2)[m
- 			minercount = AVA2_DEFAULT_MINERS;[m
- [m
-[31m-		if (devtype[i] == AVA2_ID_AVA3)[m
-[32m+[m		[32mif (info->dev_type[i] == AVA2_ID_AVA3)[m
- 			minercount = AVA2_AVA3_MINERS;[m
- [m
- 		for (j = minerindex; j < (minerindex + minercount); j++) {[m
-[36m@@ -821,19 +820,19 @@[m [mstatic struct api_data *avalon2_api_stats(struct cgpu_info *cgpu)[m
- 	}[m
- [m
- 	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {[m
-[31m-		if(devtype[i] == AVA2_ID_AVAX)[m
-[32m+[m		[32mif(info->dev_type[i] == AVA2_ID_AVAX)[m
- 			continue;[m
- 		sprintf(buf, "Local works%d", i + 1);[m
- 		root = api_add_int(root, buf, &(info->local_works[i]), false);[m
- 	}[m
- 	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {[m
-[31m-		if(devtype[i] == AVA2_ID_AVAX)[m
-[32m+[m		[32mif(info->dev_type[i] == AVA2_ID_AVAX)[m
- 			continue;[m
- 		sprintf(buf, "Hardware error works%d", i + 1);[m
- 		root = api_add_int(root, buf, &(info->hw_works[i]), false);[m
- 	}[m
- 	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {[m
-[31m-		if(devtype[i] == AVA2_ID_AVAX)[m
-[32m+[m		[32mif(info->dev_type[i] == AVA2_ID_AVAX)[m
- 			continue;[m
- 		a = info->hw_works[i];[m
- 		b = info->local_works[i];[m
-[36m@@ -843,31 +842,31 @@[m [mstatic struct api_data *avalon2_api_stats(struct cgpu_info *cgpu)[m
- 		root = api_add_percent(root, buf, &hwp, true);[m
- 	}[m
- 	for (i = 0; i < 2 * AVA2_DEFAULT_MODULARS; i++) {[m
-[31m-		if(devtype[i/2] == AVA2_ID_AVAX)[m
-[32m+[m		[32mif(info->dev_type[i/2] == AVA2_ID_AVAX)[m
- 			continue;[m
- 		sprintf(buf, "Temperature%d", i + 1);[m
- 		root = api_add_int(root, buf, &(info->temp[i]), false);[m
- 	}[m
- 	for (i = 0; i < 2 * AVA2_DEFAULT_MODULARS; i++) {[m
-[31m-		if(devtype[i/2] == AVA2_ID_AVAX)[m
-[32m+[m		[32mif(info->dev_type[i/2] == AVA2_ID_AVAX)[m
- 			continue;[m
- 		sprintf(buf, "Fan%d", i + 1);[m
- 		root = api_add_int(root, buf, &(info->fan[i]), false);[m
- 	}[m
- 	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {[m
-[31m-		if(devtype[i] == AVA2_ID_AVAX)[m
-[32m+[m		[32mif(info->dev_type[i] == AVA2_ID_AVAX)[m
- 			continue;[m
- 		sprintf(buf, "Voltage%d", i + 1);[m
- 		root = api_add_int(root, buf, &(info->get_voltage[i]), false);[m
- 	}[m
- 	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {[m
-[31m-		if(devtype[i] == AVA2_ID_AVAX)[m
-[32m+[m		[32mif(info->dev_type[i] == AVA2_ID_AVAX)[m
- 			continue;[m
- 		sprintf(buf, "Frequency%d", i + 1);[m
- 		root = api_add_int(root, buf, &(info->get_frequency[i]), false);[m
- 	}[m
- 	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {[m
-[31m-		if(devtype[i] == AVA2_ID_AVAX)[m
-[32m+[m		[32mif(info->dev_type[i] == AVA2_ID_AVAX)[m
- 			continue;[m
- 		sprintf(buf, "Power good %02x", i + 1);[m
- 		root = api_add_int(root, buf, &(info->power_good[i]), false);[m
-[1mdiff --git a/driver-avalon2.h b/driver-avalon2.h[m
-[1mindex ee1fb61..d847134 100644[m
-[1m--- a/driver-avalon2.h[m
-[1m+++ b/driver-avalon2.h[m
-[36m@@ -21,8 +21,6 @@[m
- #define AVA2_RESET_FAULT_DECISECONDS	10[m
- #define AVA2_IO_SPEED		115200[m
- [m
-[31m-#define AVA2_DEFAULT_MINERS	10[m
-[31m-#define AVA2_AVA3_MINERS	5[m
- #define AVA2_DEFAULT_MODULARS	4[m
- [m
- #define AVA2_PWM_MAX	0x3FF[m
-[36m@@ -30,15 +28,23 @@[m
- #define AVA2_DEFAULT_FAN_MIN	0[m
- #define AVA2_DEFAULT_FAN_MAX	100[m
- [m
-[31m-#define AVA2_DEFAULT_VOLTAGE	10000 /* V * 10000 */[m
-[32m+[m[32m#define AVALON2_TEMP_OVERHEAT	88[m
-[32m+[m
- #define AVA2_DEFAULT_VOLTAGE_MIN	6000[m
- #define AVA2_DEFAULT_VOLTAGE_MAX	11000[m
- [m
-[31m-#define AVA2_DEFAULT_FREQUENCY	1500 /* In MH/s */[m
- #define AVA2_DEFAULT_FREQUENCY_MIN	300[m
- #define AVA2_DEFAULT_FREQUENCY_MAX	2000[m
- [m
-[31m-#define AVALON2_TEMP_OVERHEAT	88[m
-[32m+[m[32m/* Avalon2 default values */[m
-[32m+[m[32m#define AVA2_DEFAULT_MINERS	10[m
-[32m+[m[32m#define AVA2_DEFAULT_VOLTAGE	10000 /* v * 10000 */[m
-[32m+[m[32m#define AVA2_DEFAULT_FREQUENCY	1500 /* In MHs */[m
-[32m+[m
-[32m+[m[32m/* Avalon3 default values */[m
-[32m+[m[32m#define AVA2_AVA3_MINERS	5[m
-[32m+[m[32m#define AVA2_AVA3_VOLTAGE	6625 /* 0.6625v */[m
-[32m+[m[32m#define AVA2_AVA3_FREQUENCY	400  /* MHz * 11.8 = MHs: 400MHz means ~4.7GHs */[m
- [m
- /* Avalon2 protocol package type */[m
- #define AVA2_H1	'A'[m
-[36m@@ -91,6 +97,7 @@[m [mstruct avalon2_pkg {[m
- #define avalon2_ret avalon2_pkg[m
- [m
- struct avalon2_info {[m
-[32m+[m	[32mbool first;[m
- 	int fd;[m
- 	int baud;[m
- [m
-[36m@@ -105,15 +112,7 @@[m [mstruct avalon2_info {[m
- [m
- 	int fan[2 * AVA2_DEFAULT_MODULARS];[m
- 	int temp[2 * AVA2_DEFAULT_MODULARS];[m
-[31m-[m
- 	int temp_max;[m
-[31m-	int temp_history_count;[m
-[31m-	int temp_history_index;[m
-[31m-	int temp_sum;[m
-[31m-	int temp_old;[m
-[31m-[m
-[31m-	bool first;[m
-[31m-	bool new_stratum;[m
- [m
- 	int pool_no;[m
- 	int diff;[m
-[36m@@ -126,6 +125,7 @@[m [mstruct avalon2_info {[m
- [m
- 	int modulars[AVA2_DEFAULT_MODULARS];[m
- 	char mm_version[AVA2_DEFAULT_MODULARS][16];[m
-[32m+[m	[32mint dev_type[AVA2_DEFAULT_MODULARS];[m
- };[m
- [m
- #define AVA2_WRITE_SIZE (sizeof(struct avalon2_pkg))[m
-[1mdiff --git a/util.c b/util.c[m
-[1mindex 0317adc..c389574 100644[m
-[1m--- a/util.c[m
-[1m+++ b/util.c[m
-[36m@@ -1685,6 +1685,26 @@[m [mstatic bool parse_notify(struct pool *pool, json_t *val)[m
- 	ntime = __json_array_string(val, 7);[m
- 	clean = json_is_true(json_array_get(val, 8));[m
- [m
-[32m+[m[32m#ifdef USE_AVALON2[m
-[32m+[m	[32mstatic struct timeval tv_last, tv_now;[m
-[32m+[m
-[32m+[m	[32mcgtime(&tv_now);[m
-[32m+[m	[32mapplog(LOG_DEBUG, "Stratum: Clean %d: (Now: %ld, Last: %ld) tdiff: %ld",[m
-[32m+[m	[32m       clean,[m
-[32m+[m	[32m       (long)tv_now.tv_sec, (long)tv_last.tv_sec,[m
-[32m+[m	[32m       (long)tdiff(&tv_now, &tv_last));[m
-[32m+[m
-[32m+[m	[32mif (pool == current_pool() && clean == false) {[m
-[32m+[m		[32mif ((long)tdiff(&tv_now, &tv_last) < (long)30) {[m
-[32m+[m			[32mapplog(LOG_ERR, "Ignore job_id: %s", job_id);[m
-[32m+[m			[32mret = true;[m
-[32m+[m			[32mgoto out;[m
-[32m+[m		[32m}[m
-[32m+[m	[32m}[m
-[32m+[m
-[32m+[m	[32mtv_last.tv_sec = tv_now.tv_sec;[m
-[32m+[m	[32mtv_last.tv_usec = tv_now.tv_usec;[m
-[32m+[m[32m#endif[m
- 	if (!job_id || !prev_hash || !coinbase1 || !coinbase2 || !bbversion || !nbit || !ntime) {[m
- 		/* Annoying but we must not leak memory */[m
- 		if (job_id)[m
+diff --git a/cgminer.c b/cgminer.c
+index c3da2de..a2be32a 100644
+--- a/cgminer.c
++++ b/cgminer.c
+@@ -1111,15 +1111,18 @@ static struct opt_table opt_config_table[] = {
+ 	OPT_WITH_CBARG("--avalon2-freq",
+ 		     set_avalon2_freq, NULL, &opt_set_avalon2_freq,
+ 		     "Set frequency range for Avalon2, single value or range"),
+-	OPT_WITH_CBARG("--avalon2-fan",
+-		     set_avalon2_fan, NULL, &opt_set_avalon2_fan,
+-		     "Set Avalon2 target fan speed"),
+ 	OPT_WITH_CBARG("--avalon2-voltage",
+ 		     set_avalon2_voltage, NULL, &opt_set_avalon2_voltage,
+ 		     "Set Avalon2 core voltage, in millivolts"),
++	OPT_WITH_CBARG("--avalon2-fan",
++		     set_avalon2_fan, NULL, &opt_set_avalon2_fan,
++		     "Set Avalon2 target fan speed"),
+ 	OPT_WITH_ARG("--avalon2-cutoff",
+ 		     set_int_0_to_100, opt_show_intval, &opt_avalon2_overheat,
+ 		     "Set Avalon2 overheat cut off temperature"),
++	OPT_WITHOUT_ARG("--avalon2-fixed-speed",
++		     set_avalon2_fixed_speed, &opt_avalon2_fan_fixed,
++		     "Set Avalon2 fan to fixed speed"),
+ #endif
+ #ifdef USE_BAB
+ 	OPT_WITH_ARG("--bab-options",
+@@ -6763,16 +6766,27 @@ void set_target(unsigned char *dest_target, double diff)
+ }
+ 
+ #ifdef USE_AVALON2
+-void submit_nonce2_nonce(struct thr_info *thr, uint32_t pool_no, uint32_t nonce2, uint32_t nonce)
++void submit_nonce2_nonce(struct thr_info *thr, struct pool *pool, struct pool *real_pool,
++			 uint32_t nonce2, uint32_t nonce)
+ {
++	const int thr_id = thr->id;
+ 	struct cgpu_info *cgpu = thr->cgpu;
+ 	struct device_drv *drv = cgpu->drv;
+-
+-	struct pool *pool = pools[pool_no];
+ 	struct work *work = make_work();
+ 
++	cg_wlock(&pool->data_lock);
+ 	pool->nonce2 = nonce2;
++	cg_wunlock(&pool->data_lock);
++
+ 	gen_stratum_work(pool, work);
++	work->pool = real_pool;
++
++	work->thr_id = thr_id;
++	work->work_block = work_block;
++	work->pool->works++;
++
++	work->mined = true;
++	work->device_diff = MIN(cgpu->drv->max_diff, work->work_difficulty);
+ 
+ 	submit_nonce(thr, work, nonce);
+ 	free_work(work);
+diff --git a/driver-avalon2.c b/driver-avalon2.c
+index 1a318ab..3da93ce 100644
+--- a/driver-avalon2.c
++++ b/driver-avalon2.c
+@@ -42,6 +42,8 @@
+ #define ASSERT1(condition) __maybe_unused static char sizeof_uint32_t_must_be_4[(condition)?1:-1]
+ ASSERT1(sizeof(uint32_t) == 4);
+ 
++#define get_fan_pwm(v)	(AVA2_PWM_MAX - (v) * AVA2_PWM_MAX / 100)
++
+ int opt_avalon2_freq_min = AVA2_DEFAULT_FREQUENCY;
+ int opt_avalon2_freq_max = AVA2_DEFAULT_FREQUENCY_MAX;
+ 
+@@ -52,6 +54,9 @@ int opt_avalon2_voltage_min = AVA2_DEFAULT_VOLTAGE;
+ int opt_avalon2_voltage_max = AVA2_DEFAULT_VOLTAGE_MAX;
+ 
+ int opt_avalon2_overheat = AVALON2_TEMP_OVERHEAT;
++enum avalon2_fan_fixed opt_avalon2_fan_fixed = FAN_AUTO;
++
++static struct pool pool_stratum;
+ 
+ static inline uint8_t rev8(uint8_t d)
+ {
+@@ -79,9 +84,15 @@ char *set_avalon2_fan(char *arg)
+ 	if (val1 < 0 || val1 > 100 || val2 < 0 || val2 > 100 || val2 < val1)
+ 		return "Invalid value passed to avalon2-fan";
+ 
+-	opt_avalon2_fan_min = AVA2_PWM_MAX - val1 * AVA2_PWM_MAX / 100;
+-	opt_avalon2_fan_max = AVA2_PWM_MAX - val2 * AVA2_PWM_MAX / 100;
++	opt_avalon2_fan_min = get_fan_pwm(val1);
++	opt_avalon2_fan_max = get_fan_pwm(val2);
++
++	return NULL;
++}
+ 
++char *set_avalon2_fixed_speed(enum avalon2_fan_fixed *f)
++{
++	*f = FAN_FIXED;
+ 	return NULL;
+ }
+ 
+@@ -147,12 +158,24 @@ static int avalon2_init_pkg(struct avalon2_pkg *pkg, uint8_t type, uint8_t idx,
+ 
+ static int job_idcmp(uint8_t *job_id, char *pool_job_id)
+ {
+-	int i = 0;
+-	for (i = 0; i < 4; i++) {
+-		if (job_id[i] != *(pool_job_id + strlen(pool_job_id) - 4 + i))
+-			return 1;
+-	}
+-	return 0;
++	int job_id_len;
++	unsigned short crc, crc_expect;
++
++	if (!pool_job_id)
++		return 1;
++
++	job_id_len = strlen(pool_job_id);
++	crc_expect = crc16(pool_job_id, job_id_len);
++
++	crc = job_id[0] << 8 | job_id[1];
++
++	if (crc_expect == crc)
++		return 0;
++
++	applog(LOG_DEBUG, "Avalon2: job_id not match! [%04x:%04x (%s)]",
++	       crc, crc_expect, pool_job_id);
++
++	return 1;
+ }
+ 
+ static inline int get_temp_max(struct avalon2_info *info)
+@@ -165,12 +188,13 @@ static inline int get_temp_max(struct avalon2_info *info)
+ 	return info->temp_max;
+ }
+ 
+-static inline int get_currect_temp_max(struct avalon2_info *info)
++static inline int get_current_temp_max(struct avalon2_info *info)
+ {
+ 	int i;
+-	int t = 0;
+-	for (i = 0; i < 2 * AVA2_DEFAULT_MODULARS; i++) {
+-		if (t <= info->temp[i])
++	int t = info->temp[0];
++
++	for (i = 1; i < 2 * AVA2_DEFAULT_MODULARS; i++) {
++		if (info->temp[i] > t)
+ 			t = info->temp[i];
+ 	}
+ 	return t;
+@@ -187,18 +211,49 @@ static inline uint32_t decode_voltage(uint32_t v)
+ 	return (0x78 - (rev8(v >> 8) >> 1)) * 125;
+ }
+ 
+-extern void submit_nonce2_nonce(struct thr_info *thr, uint32_t pool_no, uint32_t nonce2, uint32_t nonce);
++static void adjust_fan(struct avalon2_info *info)
++{
++	int t;
++
++	if (unlikely(info->first < 2) || opt_avalon2_fan_fixed == FAN_FIXED) {
++		info->fan_pwm = opt_avalon2_fan_min;
++		return;
++	}
++
++	t = get_current_temp_max(info);
++
++	/* TODO: Add options for temperature range and fan adjust function */
++	if (t < 50) {
++		info->fan_pwm = get_fan_pwm(40);
++		return;
++	}
++
++	if (t > 70) {
++		info->fan_pwm = get_fan_pwm(100);
++		return;
++	}
++
++	info->fan_pwm = get_fan_pwm(3 * t - 110);
++}
++
++static inline int mm_cmp_1204(struct avalon2_info *info, int modular)
++{
++	char *mm_1204 = "1204";
++	return strncmp(info->mm_version[modular] + 2, mm_1204, 4) >= 0 ? 1 : 0;
++}
++
++extern void submit_nonce2_nonce(struct thr_info *thr, struct pool *pool, struct pool *real_pool, uint32_t nonce2, uint32_t nonce);
+ static int decode_pkg(struct thr_info *thr, struct avalon2_ret *ar, uint8_t *pkg)
+ {
+ 	struct cgpu_info *avalon2;
+ 	struct avalon2_info *info;
+-	struct pool *pool;
++	struct pool *pool, *real_pool;
+ 
+ 	unsigned int expected_crc;
+ 	unsigned int actual_crc;
+ 	uint32_t nonce, nonce2, miner, modular_id;
+ 	int pool_no;
+-	uint8_t job_id[5];
++	uint8_t job_id[4];
+ 	int tmp;
+ 
+ 	int type = AVA2_GETS_ERROR;
+@@ -232,7 +287,6 @@ static int decode_pkg(struct thr_info *thr, struct avalon2_ret *ar, uint8_t *pkg
+ 			memcpy(&nonce2, ar->data + 8, 4);
+ 			/* Calc time    ar->data + 12 */
+ 			memcpy(&nonce, ar->data + 16, 4);
+-			memset(job_id, 0, 5);
+ 			memcpy(job_id, ar->data + 20, 4);
+ 
+ 			miner = be32toh(miner);
+@@ -249,16 +303,22 @@ static int decode_pkg(struct thr_info *thr, struct avalon2_ret *ar, uint8_t *pkg
+ 			nonce = be32toh(nonce);
+ 			nonce -= 0x180;
+ 
+-			applog(LOG_DEBUG, "Avalon2: Found! [%s] %d:(%08x) (%08x)",
+-			       job_id, pool_no, nonce2, nonce);
+-			/* FIXME:
+-			 * We need remember the pre_pool. then submit the stale work */
+-			pool = pools[pool_no];
+-			if (job_idcmp(job_id, pool->swork.job_id))
+-				break;
++			applog(LOG_DEBUG, "Avalon2: Found! %d: (%08x) (%08x)",
++			       pool_no, nonce2, nonce);
++
++			real_pool = pool = pools[pool_no];
++			if (job_idcmp(job_id, pool->swork.job_id)) {
++				if (!job_idcmp(job_id, pool_stratum.swork.job_id)) {
++					applog(LOG_ERR, "Avalon2: Match to previous stratum! (%s)", pool_stratum.swork.job_id);
++					pool = &pool_stratum;
++				} else {
++					applog(LOG_ERR, "Avalon2: Cannot match to any stratum! (%s)", pool->swork.job_id);
++					break;
++				}
++			}
+ 
+-			if (thr && !info->new_stratum)
+-				submit_nonce2_nonce(thr, pool_no, nonce2, nonce);
++			if (thr && info->first)
++				submit_nonce2_nonce(thr, pool, real_pool, nonce2, nonce);
+ 			break;
+ 		case AVA2_P_STATUS:
+ 			memcpy(&tmp, ar->data, 4);
+@@ -278,6 +338,8 @@ static int decode_pkg(struct thr_info *thr, struct avalon2_ret *ar, uint8_t *pkg
+ 			memcpy(&(info->power_good[modular_id]), ar->data + 24, 4);
+ 
+ 			info->get_frequency[modular_id] = be32toh(info->get_frequency[modular_id]);
++			if (info->dev_type[modular_id] == AVA2_ID_AVA3)
++				info->get_frequency[modular_id] = info->get_frequency[modular_id] * 768 / 65;
+ 			info->get_voltage[modular_id] = be32toh(info->get_voltage[modular_id]);
+ 			info->local_work[modular_id] = be32toh(info->local_work[modular_id]);
+ 			info->hw_work[modular_id] = be32toh(info->hw_work[modular_id]);
+@@ -408,6 +470,7 @@ static int avalon2_stratum_pkgs(int fd, struct pool *pool, struct thr_info *thr)
+ 	int i, a, b, tmp;
+ 	unsigned char target[32];
+ 	int job_id_len;
++	unsigned short crc;
+ 
+ 	/* Send out the first stratum message STATIC */
+ 	applog(LOG_DEBUG, "Avalon2: Pool stratum message STATIC: %d, %d, %d, %d, %d",
+@@ -460,10 +523,9 @@ static int avalon2_stratum_pkgs(int fd, struct pool *pool, struct thr_info *thr)
+ 	memset(pkg.data, 0, AVA2_P_DATA_LEN);
+ 
+ 	job_id_len = strlen(pool->swork.job_id);
+-	job_id_len = job_id_len >= 4 ? 4 : job_id_len;
+-	for (i = 0; i < job_id_len; i++) {
+-		pkg.data[i] = *(pool->swork.job_id + strlen(pool->swork.job_id) - 4 + i);
+-	}
++	crc = crc16(pool->swork.job_id, job_id_len);
++	pkg.data[0] = (crc & 0xff00) >> 8;
++	pkg.data[1] = crc & 0x00ff;
+ 	avalon2_init_pkg(&pkg, AVA2_P_JOB_ID, 1, 1);
+ 	while (avalon2_send_pkg(fd, &pkg, thr) != AVA2_SEND_OK)
+ 		;
+@@ -576,6 +638,7 @@ static bool avalon2_detect_one(const char *devpath)
+ 		memcpy(mm_version[i], ret_pkg.data, 15);
+ 		mm_version[i][15] = '\0';
+ 	}
++	avalon2_close(fd);
+ 	if (!modular[0] && !modular[1] && !modular[2] && !modular[3])
+ 		return false;
+ 
+@@ -595,28 +658,27 @@ static bool avalon2_detect_one(const char *devpath)
+ 
+ 	info = avalon2->device_data;
+ 
+-	strcpy(info->mm_version[0], mm_version[0]);
+-	strcpy(info->mm_version[1], mm_version[1]);
+-	strcpy(info->mm_version[2], mm_version[2]);
+-	strcpy(info->mm_version[3], mm_version[3]);
+-
++	info->fd = -1;
+ 	info->baud = AVA2_IO_SPEED;
+ 	info->fan_pwm = AVA2_DEFAULT_FAN_PWM;
+ 	info->set_voltage = AVA2_DEFAULT_VOLTAGE_MIN;
+ 	info->set_frequency = AVA2_DEFAULT_FREQUENCY;
+ 	info->temp_max = 0;
+-	info->temp_history_index = 0;
+-	info->temp_sum = 0;
+-	info->temp_old = 0;
+-	info->modulars[0] = modular[0];
+-	info->modulars[1] = modular[1];
+-	info->modulars[2] = modular[2];	/* Enable modular */
+-	info->modulars[3] = modular[3];	/* Enable modular */
+ 
+-	info->fd = -1;
+-	/* Set asic to idle mode after detect */
+-	avalon2_close(fd);
++	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {
++		strcpy(info->mm_version[i], mm_version[i]);
++		info->modulars[i] = modular[i];	/* Enable modular */
++		info->enable[i] = modular[i];
++		info->dev_type[i] = AVA2_ID_AVAX;
++
++		if (!strncmp((char *)&(info->mm_version[i]), AVA2_FW2_PREFIXSTR, 2))
++			info->dev_type[i] = AVA2_ID_AVA2;
++		if (!strncmp((char *)&(info->mm_version[i]), AVA2_FW3_PREFIXSTR, 2))
++			info->dev_type[i] = AVA2_ID_AVA3;
++	}
+ 
++	pool_stratum.swork.job_id = NULL;
++	pool_stratum.merkles = 0;
+ 	return true;
+ }
+ 
+@@ -653,7 +715,9 @@ static bool avalon2_prepare(struct thr_info *thr)
+ 	if (info->fd == -1)
+ 		avalon2_init(avalon2);
+ 
+-	info->first = true;
++	info->first = 0;
++
++	cglock_init(&(pool_stratum.data_lock));
+ 
+ 	return true;
+ }
+@@ -668,12 +732,25 @@ static int polling(struct thr_info *thr)
+ 	struct cgpu_info *avalon2 = thr->cgpu;
+ 	struct avalon2_info *info = avalon2->device_data;
+ 
++	static int pre_led_red[AVA2_DEFAULT_MODULARS];
+ 	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {
+-		if (info->modulars[i]) {
++		if (info->modulars[i] && info->enable[i]) {
++			cgsleep_ms(20);
+ 			memset(send_pkg.data, 0, AVA2_P_DATA_LEN);
+-			tmp = be32toh(i);
++
++			tmp = be32toh(info->led_red[i]); /* RED LED */
++			memcpy(send_pkg.data + 12, &tmp, 4);
++
++			tmp = be32toh(i); /* ID */
+ 			memcpy(send_pkg.data + 28, &tmp, 4);
+-			avalon2_init_pkg(&send_pkg, AVA2_P_POLLING, 1, 1);
++			if (info->led_red[i] && mm_cmp_1204(info, i)) {
++				avalon2_init_pkg(&send_pkg, AVA2_P_TEST, 1, 1);
++				while (avalon2_send_pkg(info->fd, &send_pkg, thr) != AVA2_SEND_OK)
++					;
++				info->enable[i] = 0;
++				continue;
++			} else
++				avalon2_init_pkg(&send_pkg, AVA2_P_POLLING, 1, 1);
+ 
+ 			while (avalon2_send_pkg(info->fd, &send_pkg, thr) != AVA2_SEND_OK)
+ 				;
+@@ -684,9 +761,58 @@ static int polling(struct thr_info *thr)
+ 	return 0;
+ }
+ 
++static void copy_pool_stratum(struct pool *pool)
++{
++	int i;
++	int merkles = pool->merkles;
++	size_t coinbase_len = pool->coinbase_len;
++
++	if (!job_idcmp(pool->swork.job_id, pool_stratum.swork.job_id))
++		return;
++
++	cg_wlock(&(pool_stratum.data_lock));
++	free(pool_stratum.swork.job_id);
++	free(pool_stratum.nonce1);
++	free(pool_stratum.coinbase);
++
++	align_len(&coinbase_len);
++	pool_stratum.coinbase = calloc(coinbase_len, 1);
++	if (unlikely(!pool_stratum.coinbase))
++		quit(1, "Failed to calloc pool_stratum coinbase in avalon2");
++	memcpy(pool_stratum.coinbase, pool->coinbase, coinbase_len);
++
++
++	for (i = 0; i < pool_stratum.merkles; i++)
++		free(pool_stratum.swork.merkle_bin[i]);
++	if (merkles) {
++		pool_stratum.swork.merkle_bin = realloc(pool_stratum.swork.merkle_bin,
++						 sizeof(char *) * merkles + 1);
++		for (i = 0; i < merkles; i++) {
++			pool_stratum.swork.merkle_bin[i] = malloc(32);
++			if (unlikely(!pool_stratum.swork.merkle_bin[i]))
++				quit(1, "Failed to malloc pool_stratum swork merkle_bin");
++			memcpy(pool_stratum.swork.merkle_bin[i], pool->swork.merkle_bin[i], 32);
++		}
++	}
++
++	pool_stratum.sdiff = pool->sdiff;
++	pool_stratum.coinbase_len = pool->coinbase_len;
++	pool_stratum.nonce2_offset = pool->nonce2_offset;
++	pool_stratum.n2size = pool->n2size;
++	pool_stratum.merkles = pool->merkles;
++
++	pool_stratum.swork.job_id = strdup(pool->swork.job_id);
++	pool_stratum.nonce1 = strdup(pool->nonce1);
++
++	memcpy(pool_stratum.ntime, pool->ntime, sizeof(pool_stratum.ntime));
++	memcpy(pool_stratum.header_bin, pool->header_bin, sizeof(pool_stratum.header_bin));
++	cg_wunlock(&(pool_stratum.data_lock));
++}
++
+ static int64_t avalon2_scanhash(struct thr_info *thr)
+ {
+ 	struct avalon2_pkg send_pkg;
++	struct timeval current_stratum;
+ 
+ 	struct pool *pool;
+ 	struct cgpu_info *avalon2 = thr->cgpu;
+@@ -696,16 +822,11 @@ static int64_t avalon2_scanhash(struct thr_info *thr)
+ 	uint32_t tmp, range, start;
+ 	int i;
+ 
+-	if (thr->work_restart || thr->work_update ||
+-	    info->first) {
+-		info->new_stratum = true;
++	if (thr->work_restart || thr->work_update || !info->first) {
+ 		applog(LOG_DEBUG, "Avalon2: New stratum: restart: %d, update: %d, first: %d",
+ 		       thr->work_restart, thr->work_update, info->first);
+ 		thr->work_update = false;
+ 		thr->work_restart = false;
+-		if (unlikely(info->first))
+-			info->first = false;
+-
+ 		get_work(thr, thr->id); /* Make sure pool is ready */
+ 
+ 		pool = current_pool();
+@@ -720,15 +841,15 @@ static int64_t avalon2_scanhash(struct thr_info *thr)
+ 			return 0;
+ 		}
+ 
+-		info->diff = (int)pool->swork.diff - 1;
++		cgtime(&info->last_stratum);
++		cg_rlock(&pool->data_lock);
+ 		info->pool_no = pool->pool_no;
+-
+-		cg_wlock(&pool->data_lock);
++		copy_pool_stratum(pool);
+ 		avalon2_stratum_pkgs(info->fd, pool, thr);
+-		cg_wunlock(&pool->data_lock);
++		cg_runlock(&pool->data_lock);
+ 
+ 		/* Configuer the parameter from outside */
+-		info->fan_pwm = opt_avalon2_fan_min;
++		adjust_fan(info);
+ 		info->set_voltage = opt_avalon2_voltage_min;
+ 		info->set_frequency = opt_avalon2_freq_min;
+ 
+@@ -739,8 +860,8 @@ static int64_t avalon2_scanhash(struct thr_info *thr)
+ 		memcpy(send_pkg.data, &tmp, 4);
+ 
+ 		applog(LOG_ERR, "Avalon2: Temp max: %d, Cut off temp: %d",
+-		       get_currect_temp_max(info), opt_avalon2_overheat);
+-		if (get_currect_temp_max(info) >= opt_avalon2_overheat)
++		       get_current_temp_max(info), opt_avalon2_overheat);
++		if (get_current_temp_max(info) >= opt_avalon2_overheat)
+ 			tmp = encode_voltage(0);
+ 		else
+ 			tmp = encode_voltage(info->set_voltage);
+@@ -764,14 +885,21 @@ static int64_t avalon2_scanhash(struct thr_info *thr)
+ 		avalon2_init_pkg(&send_pkg, AVA2_P_SET, 1, 1);
+ 		while (avalon2_send_pkg(info->fd, &send_pkg, thr) != AVA2_SEND_OK)
+ 			;
+-		info->new_stratum = false;
++
++		if (unlikely(info->first < 2))
++			info->first++;
+ 	}
+ 
++	/* Stop polling the device if there is no stratum in 3 minutes, network is down */
++	cgtime(&current_stratum);
++	if (tdiff(&current_stratum, &(info->last_stratum)) > (3.0 * 60.0))
++		return 0;
++
+ 	polling(thr);
+ 
+ 	h = 0;
+ 	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {
+-		h += info->local_work[i];
++		h += info->enable[i] ? info->local_work[i] : 0;
+ 	}
+ 	return h * 0xffffffff;
+ }
+@@ -783,18 +911,11 @@ static struct api_data *avalon2_api_stats(struct cgpu_info *cgpu)
+ 	int i, j, a, b;
+ 	char buf[24];
+ 	double hwp;
+-	int devtype[AVA2_DEFAULT_MODULARS];
+ 	int minerindex, minercount;
+ 
+ 	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {
+-		devtype[i] = AVA2_ID_AVAX;
+-		if (!strncmp((char *)&(info->mm_version[i]), AVA2_MM_VERNULL, 4))
++		if(info->dev_type[i] == AVA2_ID_AVAX)
+ 			continue;
+-		if (!strncmp((char *)&(info->mm_version[i]), AVA2_FW2_PREFIXSTR, 2))
+-			devtype[i] = AVA2_ID_AVA2;
+-		if (!strncmp((char *)&(info->mm_version[i]), AVA2_FW3_PREFIXSTR, 2))
+-			devtype[i] = AVA2_ID_AVA3;
+-
+ 		sprintf(buf, "ID%d MM Version", i + 1);
+ 		root = api_add_string(root, buf, &(info->mm_version[i]), false);
+ 	}
+@@ -802,15 +923,15 @@ static struct api_data *avalon2_api_stats(struct cgpu_info *cgpu)
+ 	minerindex = 0;
+ 	minercount = 0;
+ 	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {
+-		if (devtype[i] == AVA2_ID_AVAX) {
++		if (info->dev_type[i] == AVA2_ID_AVAX) {
+ 			minerindex += AVA2_DEFAULT_MINERS;
+ 			continue;
+ 		}
+ 
+-		if (devtype[i] == AVA2_ID_AVA2)
++		if (info->dev_type[i] == AVA2_ID_AVA2)
+ 			minercount = AVA2_DEFAULT_MINERS;
+ 
+-		if (devtype[i] == AVA2_ID_AVA3)
++		if (info->dev_type[i] == AVA2_ID_AVA3)
+ 			minercount = AVA2_AVA3_MINERS;
+ 
+ 		for (j = minerindex; j < (minerindex + minercount); j++) {
+@@ -821,19 +942,19 @@ static struct api_data *avalon2_api_stats(struct cgpu_info *cgpu)
+ 	}
+ 
+ 	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {
+-		if(devtype[i] == AVA2_ID_AVAX)
++		if(info->dev_type[i] == AVA2_ID_AVAX)
+ 			continue;
+ 		sprintf(buf, "Local works%d", i + 1);
+ 		root = api_add_int(root, buf, &(info->local_works[i]), false);
+ 	}
+ 	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {
+-		if(devtype[i] == AVA2_ID_AVAX)
++		if(info->dev_type[i] == AVA2_ID_AVAX)
+ 			continue;
+ 		sprintf(buf, "Hardware error works%d", i + 1);
+ 		root = api_add_int(root, buf, &(info->hw_works[i]), false);
+ 	}
+ 	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {
+-		if(devtype[i] == AVA2_ID_AVAX)
++		if(info->dev_type[i] == AVA2_ID_AVAX)
+ 			continue;
+ 		a = info->hw_works[i];
+ 		b = info->local_works[i];
+@@ -843,31 +964,31 @@ static struct api_data *avalon2_api_stats(struct cgpu_info *cgpu)
+ 		root = api_add_percent(root, buf, &hwp, true);
+ 	}
+ 	for (i = 0; i < 2 * AVA2_DEFAULT_MODULARS; i++) {
+-		if(devtype[i/2] == AVA2_ID_AVAX)
++		if(info->dev_type[i/2] == AVA2_ID_AVAX)
+ 			continue;
+ 		sprintf(buf, "Temperature%d", i + 1);
+ 		root = api_add_int(root, buf, &(info->temp[i]), false);
+ 	}
+ 	for (i = 0; i < 2 * AVA2_DEFAULT_MODULARS; i++) {
+-		if(devtype[i/2] == AVA2_ID_AVAX)
++		if(info->dev_type[i/2] == AVA2_ID_AVAX)
+ 			continue;
+ 		sprintf(buf, "Fan%d", i + 1);
+ 		root = api_add_int(root, buf, &(info->fan[i]), false);
+ 	}
+ 	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {
+-		if(devtype[i] == AVA2_ID_AVAX)
++		if(info->dev_type[i] == AVA2_ID_AVAX)
+ 			continue;
+ 		sprintf(buf, "Voltage%d", i + 1);
+ 		root = api_add_int(root, buf, &(info->get_voltage[i]), false);
+ 	}
+ 	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {
+-		if(devtype[i] == AVA2_ID_AVAX)
++		if(info->dev_type[i] == AVA2_ID_AVAX)
+ 			continue;
+ 		sprintf(buf, "Frequency%d", i + 1);
+ 		root = api_add_int(root, buf, &(info->get_frequency[i]), false);
+ 	}
+ 	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {
+-		if(devtype[i] == AVA2_ID_AVAX)
++		if(info->dev_type[i] == AVA2_ID_AVAX)
+ 			continue;
+ 		sprintf(buf, "Power good %02x", i + 1);
+ 		root = api_add_int(root, buf, &(info->power_good[i]), false);
+@@ -876,6 +997,46 @@ static struct api_data *avalon2_api_stats(struct cgpu_info *cgpu)
+ 	return root;
+ }
+ 
++static char *avalon2_set_device(struct cgpu_info *avalon2, char *option, char *setting, char *replybuf)
++{
++	int val;
++	struct avalon2_info *info;
++
++	if (strcasecmp(option, "help") == 0) {
++		sprintf(replybuf, "led: module_id");
++		return replybuf;
++	}
++
++	if (strcasecmp(option, "led") == 0) {
++		if (!setting || !*setting) {
++			sprintf(replybuf, "missing module_id setting");
++			return replybuf;
++		}
++
++		val = atoi(setting);
++		if (val < 1 || val > AVA2_DEFAULT_MODULARS) {
++			sprintf(replybuf, "invalid module_id: %d, valid range 1-%d", val, AVA2_DEFAULT_MODULARS);
++			return replybuf;
++		}
++
++		val -= 1;
++
++		info = avalon2->device_data;
++		info->led_red[val] = !info->led_red[val];
++		if (!info->led_red[val] && mm_cmp_1204(info, val)) {
++			applog(LOG_ERR, "Avalon2: MM early then MM_XX1204, enable module:%d", val + 1);
++			info->enable[val] = 1;
++		}
++
++		applog(LOG_ERR, "Avalon2: Module:%d, LED: %s", val + 1, info->led_red[val] ? "on" : "off");
++		return NULL;
++	}
++	/* TODO: Add other commands */
++
++	sprintf(replybuf, "Unknown option: %s", option);
++	return replybuf;
++}
++
+ static void avalon2_shutdown(struct thr_info *thr)
+ {
+ 	struct cgpu_info *avalon = thr->cgpu;
+@@ -889,6 +1050,7 @@ struct device_drv avalon2_drv = {
+ 	.dname = "avalon2",
+ 	.name = "AV2",
+ 	.get_api_stats = avalon2_api_stats,
++	.set_device = avalon2_set_device,
+ 	.drv_detect = avalon2_detect,
+ 	.reinit_device = avalon2_init,
+ 	.thread_prepare = avalon2_prepare,
+diff --git a/driver-avalon2.h b/driver-avalon2.h
+index ee1fb61..bd6340d 100644
+--- a/driver-avalon2.h
++++ b/driver-avalon2.h
+@@ -21,8 +21,6 @@
+ #define AVA2_RESET_FAULT_DECISECONDS	10
+ #define AVA2_IO_SPEED		115200
+ 
+-#define AVA2_DEFAULT_MINERS	10
+-#define AVA2_AVA3_MINERS	5
+ #define AVA2_DEFAULT_MODULARS	4
+ 
+ #define AVA2_PWM_MAX	0x3FF
+@@ -30,15 +28,23 @@
+ #define AVA2_DEFAULT_FAN_MIN	0
+ #define AVA2_DEFAULT_FAN_MAX	100
+ 
+-#define AVA2_DEFAULT_VOLTAGE	10000 /* V * 10000 */
++#define AVALON2_TEMP_OVERHEAT	88
++
+ #define AVA2_DEFAULT_VOLTAGE_MIN	6000
+ #define AVA2_DEFAULT_VOLTAGE_MAX	11000
+ 
+-#define AVA2_DEFAULT_FREQUENCY	1500 /* In MH/s */
+ #define AVA2_DEFAULT_FREQUENCY_MIN	300
+ #define AVA2_DEFAULT_FREQUENCY_MAX	2000
+ 
+-#define AVALON2_TEMP_OVERHEAT	88
++/* Avalon2 default values */
++#define AVA2_DEFAULT_MINERS	10
++#define AVA2_DEFAULT_VOLTAGE	10000 /* v * 10000 */
++#define AVA2_DEFAULT_FREQUENCY	1500 /* In MHs */
++
++/* Avalon3 default values */
++#define AVA2_AVA3_MINERS	5
++#define AVA2_AVA3_VOLTAGE	6625 /* 0.6625v */
++#define AVA2_AVA3_FREQUENCY	400  /* MHz * 11.8 = MHs: 400MHz means ~4.7GHs */
+ 
+ /* Avalon2 protocol package type */
+ #define AVA2_H1	'A'
+@@ -80,6 +86,11 @@
+ #define AVA2_ID_AVA3		3233
+ #define AVA2_ID_AVAX		3200
+ 
++enum avalon2_fan_fixed {
++	FAN_FIXED,
++	FAN_AUTO,
++};
++
+ struct avalon2_pkg {
+ 	uint8_t head[2];
+ 	uint8_t type;
+@@ -91,9 +102,19 @@ struct avalon2_pkg {
+ #define avalon2_ret avalon2_pkg
+ 
+ struct avalon2_info {
++	int first;
++	struct timeval last_stratum;
++
+ 	int fd;
+ 	int baud;
+ 
++	int pool_no;
++
++	int modulars[AVA2_DEFAULT_MODULARS];
++	char mm_version[AVA2_DEFAULT_MODULARS][16];
++	int dev_type[AVA2_DEFAULT_MODULARS];
++	bool enable[AVA2_DEFAULT_MODULARS];
++
+ 	int set_frequency;
+ 	int set_voltage;
+ 
+@@ -102,30 +123,19 @@ struct avalon2_info {
+ 	int power_good[AVA2_DEFAULT_MODULARS];
+ 
+ 	int fan_pwm;
++	int temp_max;
+ 
+ 	int fan[2 * AVA2_DEFAULT_MODULARS];
+ 	int temp[2 * AVA2_DEFAULT_MODULARS];
+ 
+-	int temp_max;
+-	int temp_history_count;
+-	int temp_history_index;
+-	int temp_sum;
+-	int temp_old;
+-
+-	bool first;
+-	bool new_stratum;
+-
+-	int pool_no;
+-	int diff;
+-
+ 	int local_works[AVA2_DEFAULT_MODULARS];
+ 	int hw_works[AVA2_DEFAULT_MODULARS];
+-	int matching_work[AVA2_DEFAULT_MINERS * AVA2_DEFAULT_MODULARS];
++
+ 	int local_work[AVA2_DEFAULT_MODULARS];
+ 	int hw_work[AVA2_DEFAULT_MODULARS];
++	int matching_work[AVA2_DEFAULT_MINERS * AVA2_DEFAULT_MODULARS];
+ 
+-	int modulars[AVA2_DEFAULT_MODULARS];
+-	char mm_version[AVA2_DEFAULT_MODULARS][16];
++	int led_red[AVA2_DEFAULT_MODULARS];
+ };
+ 
+ #define AVA2_WRITE_SIZE (sizeof(struct avalon2_pkg))
+@@ -145,7 +155,8 @@ struct avalon2_info {
+ extern char *set_avalon2_fan(char *arg);
+ extern char *set_avalon2_freq(char *arg);
+ extern char *set_avalon2_voltage(char *arg);
++extern char *set_avalon2_fixed_speed(enum avalon2_fan_fixed *f);
++extern enum avalon2_fan_fixed opt_avalon2_fan_fixed;
+ extern int opt_avalon2_overheat;
+-
+ #endif /* USE_AVALON2 */
+ #endif	/* _AVALON2_H_ */
+diff --git a/util.c b/util.c
+index 0317adc..c389574 100644
+--- a/util.c
++++ b/util.c
+@@ -1685,6 +1685,26 @@ static bool parse_notify(struct pool *pool, json_t *val)
+ 	ntime = __json_array_string(val, 7);
+ 	clean = json_is_true(json_array_get(val, 8));
+ 
++#ifdef USE_AVALON2
++	static struct timeval tv_last, tv_now;
++
++	cgtime(&tv_now);
++	applog(LOG_DEBUG, "Stratum: Clean %d: (Now: %ld, Last: %ld) tdiff: %ld",
++	       clean,
++	       (long)tv_now.tv_sec, (long)tv_last.tv_sec,
++	       (long)tdiff(&tv_now, &tv_last));
++
++	if (pool == current_pool() && clean == false) {
++		if ((long)tdiff(&tv_now, &tv_last) < (long)30) {
++			applog(LOG_ERR, "Ignore job_id: %s", job_id);
++			ret = true;
++			goto out;
++		}
++	}
++
++	tv_last.tv_sec = tv_now.tv_sec;
++	tv_last.tv_usec = tv_now.tv_usec;
++#endif
+ 	if (!job_id || !prev_hash || !coinbase1 || !coinbase2 || !bbversion || !nbit || !ntime) {
+ 		/* Annoying but we must not leak memory */
+ 		if (job_id)
