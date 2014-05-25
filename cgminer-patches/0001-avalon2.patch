@@ -765,15 +765,16 @@ index ee1fb61..bd6340d 100644
  #endif /* USE_AVALON2 */
  #endif	/* _AVALON2_H_ */
 diff --git a/util.c b/util.c
-index 0317adc..c389574 100644
+index 0317adc..4ae01e4 100644
 --- a/util.c
 +++ b/util.c
-@@ -1685,6 +1685,26 @@ static bool parse_notify(struct pool *pool, json_t *val)
+@@ -1685,6 +1685,27 @@ static bool parse_notify(struct pool *pool, json_t *val)
  	ntime = __json_array_string(val, 7);
  	clean = json_is_true(json_array_get(val, 8));
  
 +#ifdef USE_AVALON2
-+	static struct timeval tv_last, tv_now;
++	static struct timeval tv_last;
++	struct timeval tv_now;
 +
 +	cgtime(&tv_now);
 +	applog(LOG_DEBUG, "Stratum: Clean %d: (Now: %ld, Last: %ld) tdiff: %ld",
