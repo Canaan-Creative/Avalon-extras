@@ -765,7 +765,7 @@ index ee1fb61..bd6340d 100644
  #endif /* USE_AVALON2 */
  #endif	/* _AVALON2_H_ */
 diff --git a/util.c b/util.c
-index 0317adc..4ae01e4 100644
+index 0317adc..1f61ac9 100644
 --- a/util.c
 +++ b/util.c
 @@ -1685,6 +1685,27 @@ static bool parse_notify(struct pool *pool, json_t *val)
@@ -777,21 +777,21 @@ index 0317adc..4ae01e4 100644
 +	struct timeval tv_now;
 +
 +	cgtime(&tv_now);
-+	applog(LOG_DEBUG, "Stratum: Clean %d: (Now: %ld, Last: %ld) tdiff: %ld",
-+	       clean,
++	applog(LOG_DEBUG, "Stratum pool %p: Clean %d: (Now: %ld, Last: %ld) tdiff: %ld",
++	       pool, clean,
 +	       (long)tv_now.tv_sec, (long)tv_last.tv_sec,
 +	       (long)tdiff(&tv_now, &tv_last));
-+
-+	if (pool == current_pool() && clean == false) {
-+		if ((long)tdiff(&tv_now, &tv_last) < (long)30) {
++	if (pool == current_pool()) {
++		if ((double)tdiff(&tv_now, &tv_last) < (double)30 &&
++		    clean == false) {
 +			applog(LOG_ERR, "Ignore job_id: %s", job_id);
 +			ret = true;
 +			goto out;
 +		}
-+	}
 +
-+	tv_last.tv_sec = tv_now.tv_sec;
-+	tv_last.tv_usec = tv_now.tv_usec;
++		tv_last.tv_sec = tv_now.tv_sec;
++		tv_last.tv_usec = tv_now.tv_usec;
++	}
 +#endif
  	if (!job_id || !prev_hash || !coinbase1 || !coinbase2 || !bbversion || !nbit || !ntime) {
  		/* Annoying but we must not leak memory */
