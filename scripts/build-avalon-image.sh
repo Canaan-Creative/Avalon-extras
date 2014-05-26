@@ -81,6 +81,7 @@ if [ "$1" == "--clone" ]; then
     git clone git://github.com/BitSyncom/cgminer-openwrt-packages.git
 
     if [ "${MACHINE}" == "avalon2" ]; then
+        (cd cgminer && git checkout -b avalon2 origin/avalon2)
         git clone git://github.com/BitSyncom/luci.git && (cd luci && git checkout -b cgminer-webui-avalon2 origin/cgminer-webui-avalon2)
     else
         git clone git://github.com/BitSyncom/luci.git && (cd luci && git checkout -b cgminer-webui origin/cgminer-webui)
