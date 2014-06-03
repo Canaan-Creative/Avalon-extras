@@ -56,7 +56,7 @@ index c3da2de..a2be32a 100644
  	submit_nonce(thr, work, nonce);
  	free_work(work);
 diff --git a/driver-avalon2.c b/driver-avalon2.c
-index 1a318ab..64ae3ca 100644
+index 1a318ab..4d15cf4 100644
 --- a/driver-avalon2.c
 +++ b/driver-avalon2.c
 @@ -42,6 +42,8 @@
@@ -539,7 +539,7 @@ index 1a318ab..64ae3ca 100644
  	h = 0;
  	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {
 -		h += info->local_work[i];
-+		h += info->enable[i] ? (info->local_work[i] - info->hw_works[i]) : 0;
++		h += info->enable[i] ? (info->local_work[i] - info->hw_work[i]) : 0;
  	}
  	return h * 0xffffffff;
  }
