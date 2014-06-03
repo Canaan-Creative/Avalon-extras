@@ -56,7 +56,7 @@ index c3da2de..a2be32a 100644
  	submit_nonce(thr, work, nonce);
  	free_work(work);
 diff --git a/driver-avalon2.c b/driver-avalon2.c
-index 1a318ab..5994501 100644
+index 1a318ab..64ae3ca 100644
 --- a/driver-avalon2.c
 +++ b/driver-avalon2.c
 @@ -42,6 +42,8 @@
@@ -78,7 +78,7 @@ index 1a318ab..5994501 100644
  
  static inline uint8_t rev8(uint8_t d)
  {
-@@ -79,9 +84,15 @@ char *set_avalon2_fan(char *arg)
+@@ -79,12 +84,18 @@ char *set_avalon2_fan(char *arg)
  	if (val1 < 0 || val1 > 100 || val2 < 0 || val2 > 100 || val2 < val1)
  		return "Invalid value passed to avalon2-fan";
  
@@ -86,16 +86,19 @@ index 1a318ab..5994501 100644
 -	opt_avalon2_fan_max = AVA2_PWM_MAX - val2 * AVA2_PWM_MAX / 100;
 +	opt_avalon2_fan_min = get_fan_pwm(val1);
 +	opt_avalon2_fan_max = get_fan_pwm(val2);
-+
-+	return NULL;
-+}
+ 
+ 	return NULL;
+ }
  
 +char *set_avalon2_fixed_speed(enum avalon2_fan_fixed *f)
 +{
 +	*f = FAN_FIXED;
- 	return NULL;
- }
- 
++	return NULL;
++}
++
+ char *set_avalon2_freq(char *arg)
+ {
+ 	int val1, val2, ret;
 @@ -147,12 +158,24 @@ static int avalon2_init_pkg(struct avalon2_pkg *pkg, uint8_t type, uint8_t idx,
  
  static int job_idcmp(uint8_t *job_id, char *pool_job_id)
@@ -269,15 +272,62 @@ index 1a318ab..5994501 100644
  	avalon2_init_pkg(&pkg, AVA2_P_JOB_ID, 1, 1);
  	while (avalon2_send_pkg(fd, &pkg, thr) != AVA2_SEND_OK)
  		;
-@@ -576,6 +638,7 @@ static bool avalon2_detect_one(const char *devpath)
- 		memcpy(mm_version[i], ret_pkg.data, 15);
- 		mm_version[i][15] = '\0';
+@@ -542,7 +604,7 @@ static bool avalon2_detect_one(const char *devpath)
+ 	struct avalon2_info *info;
+ 	int ackdetect;
+ 	int fd;
+-	int tmp, i, modular[AVA2_DEFAULT_MODULARS];
++	int tmp, i, j, modular[AVA2_DEFAULT_MODULARS];
+ 	char mm_version[AVA2_DEFAULT_MODULARS][16];
+ 
+ 	struct cgpu_info *avalon2;
+@@ -558,24 +620,29 @@ static bool avalon2_detect_one(const char *devpath)
+ 	}
+ 	tcflush(fd, TCIOFLUSH);
+ 
+-	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {
++	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++)
+ 		modular[i] = 0;
+-		strcpy(mm_version[i], AVA2_MM_VERNULL);
+-		/* Send out detect pkg */
+-		memset(detect_pkg.data, 0, AVA2_P_DATA_LEN);
+-		tmp = be32toh(i);
+-		memcpy(detect_pkg.data + 28, &tmp, 4);
+-
+-		avalon2_init_pkg(&detect_pkg, AVA2_P_DETECT, 1, 1);
+-		avalon2_send_pkg(fd, &detect_pkg, NULL);
+-		ackdetect = avalon2_get_result(NULL, fd, &ret_pkg);
+-		applog(LOG_DEBUG, "Avalon2 Detect ID[%d]: %d", i, ackdetect);
+-		if (ackdetect != AVA2_P_ACKDETECT)
+-			continue;
+-		modular[i] = 1;
+-		memcpy(mm_version[i], ret_pkg.data, 15);
+-		mm_version[i][15] = '\0';
++
++	for (j = 0; j < 2; j++) {
++		for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {
++			strcpy(mm_version[i], AVA2_MM_VERNULL);
++			/* Send out detect pkg */
++			memset(detect_pkg.data, 0, AVA2_P_DATA_LEN);
++			tmp = be32toh(i);
++			memcpy(detect_pkg.data + 28, &tmp, 4);
++
++			avalon2_init_pkg(&detect_pkg, AVA2_P_DETECT, 1, 1);
++			avalon2_send_pkg(fd, &detect_pkg, NULL);
++			ackdetect = avalon2_get_result(NULL, fd, &ret_pkg);
++			applog(LOG_DEBUG, "Avalon2 Detect ID[%d]: %d", i, ackdetect);
++			if (ackdetect != AVA2_P_ACKDETECT && modular[i] == 0)
++				continue;
++			modular[i] = 1;
++			memcpy(mm_version[i], ret_pkg.data, 15);
++			mm_version[i][15] = '\0';
++		}
  	}
 +	avalon2_close(fd);
  	if (!modular[0] && !modular[1] && !modular[2] && !modular[3])
  		return false;
  
-@@ -595,28 +658,27 @@ static bool avalon2_detect_one(const char *devpath)
+@@ -595,28 +662,27 @@ static bool avalon2_detect_one(const char *devpath)
  
  	info = avalon2->device_data;
  
@@ -320,7 +370,7 @@ index 1a318ab..5994501 100644
  	return true;
  }
  
-@@ -653,7 +715,9 @@ static bool avalon2_prepare(struct thr_info *thr)
+@@ -653,7 +719,9 @@ static bool avalon2_prepare(struct thr_info *thr)
  	if (info->fd == -1)
  		avalon2_init(avalon2);
  
@@ -331,7 +381,7 @@ index 1a318ab..5994501 100644
  
  	return true;
  }
-@@ -668,12 +732,25 @@ static int polling(struct thr_info *thr)
+@@ -668,12 +736,25 @@ static int polling(struct thr_info *thr)
  	struct cgpu_info *avalon2 = thr->cgpu;
  	struct avalon2_info *info = avalon2->device_data;
  
@@ -360,7 +410,7 @@ index 1a318ab..5994501 100644
  
  			while (avalon2_send_pkg(info->fd, &send_pkg, thr) != AVA2_SEND_OK)
  				;
-@@ -684,9 +761,58 @@ static int polling(struct thr_info *thr)
+@@ -684,9 +765,58 @@ static int polling(struct thr_info *thr)
  	return 0;
  }
  
@@ -419,7 +469,7 @@ index 1a318ab..5994501 100644
  
  	struct pool *pool;
  	struct cgpu_info *avalon2 = thr->cgpu;
-@@ -696,16 +822,11 @@ static int64_t avalon2_scanhash(struct thr_info *thr)
+@@ -696,16 +826,11 @@ static int64_t avalon2_scanhash(struct thr_info *thr)
  	uint32_t tmp, range, start;
  	int i;
  
@@ -437,7 +487,7 @@ index 1a318ab..5994501 100644
  		get_work(thr, thr->id); /* Make sure pool is ready */
  
  		pool = current_pool();
-@@ -720,15 +841,15 @@ static int64_t avalon2_scanhash(struct thr_info *thr)
+@@ -720,15 +845,15 @@ static int64_t avalon2_scanhash(struct thr_info *thr)
  			return 0;
  		}
  
@@ -458,7 +508,7 @@ index 1a318ab..5994501 100644
  		info->set_voltage = opt_avalon2_voltage_min;
  		info->set_frequency = opt_avalon2_freq_min;
  
-@@ -739,8 +860,8 @@ static int64_t avalon2_scanhash(struct thr_info *thr)
+@@ -739,8 +864,8 @@ static int64_t avalon2_scanhash(struct thr_info *thr)
  		memcpy(send_pkg.data, &tmp, 4);
  
  		applog(LOG_ERR, "Avalon2: Temp max: %d, Cut off temp: %d",
@@ -469,7 +519,7 @@ index 1a318ab..5994501 100644
  			tmp = encode_voltage(0);
  		else
  			tmp = encode_voltage(info->set_voltage);
-@@ -764,14 +885,21 @@ static int64_t avalon2_scanhash(struct thr_info *thr)
+@@ -764,14 +889,21 @@ static int64_t avalon2_scanhash(struct thr_info *thr)
  		avalon2_init_pkg(&send_pkg, AVA2_P_SET, 1, 1);
  		while (avalon2_send_pkg(info->fd, &send_pkg, thr) != AVA2_SEND_OK)
  			;
@@ -489,11 +539,11 @@ index 1a318ab..5994501 100644
  	h = 0;
  	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {
 -		h += info->local_work[i];
-+		h += info->enable[i] ? info->local_work[i] : 0;
++		h += info->enable[i] ? (info->local_work[i] - info->hw_works[i]) : 0;
  	}
  	return h * 0xffffffff;
  }
-@@ -783,18 +911,11 @@ static struct api_data *avalon2_api_stats(struct cgpu_info *cgpu)
+@@ -783,18 +915,11 @@ static struct api_data *avalon2_api_stats(struct cgpu_info *cgpu)
  	int i, j, a, b;
  	char buf[24];
  	double hwp;
@@ -513,7 +563,7 @@ index 1a318ab..5994501 100644
  		sprintf(buf, "ID%d MM Version", i + 1);
  		root = api_add_string(root, buf, &(info->mm_version[i]), false);
  	}
-@@ -802,15 +923,15 @@ static struct api_data *avalon2_api_stats(struct cgpu_info *cgpu)
+@@ -802,15 +927,15 @@ static struct api_data *avalon2_api_stats(struct cgpu_info *cgpu)
  	minerindex = 0;
  	minercount = 0;
  	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {
@@ -532,7 +582,7 @@ index 1a318ab..5994501 100644
  			minercount = AVA2_AVA3_MINERS;
  
  		for (j = minerindex; j < (minerindex + minercount); j++) {
-@@ -821,19 +942,19 @@ static struct api_data *avalon2_api_stats(struct cgpu_info *cgpu)
+@@ -821,19 +946,19 @@ static struct api_data *avalon2_api_stats(struct cgpu_info *cgpu)
  	}
  
  	for (i = 0; i < AVA2_DEFAULT_MODULARS; i++) {
@@ -555,7 +605,7 @@ index 1a318ab..5994501 100644
  			continue;
  		a = info->hw_works[i];
  		b = info->local_works[i];
-@@ -843,31 +964,31 @@ static struct api_data *avalon2_api_stats(struct cgpu_info *cgpu)
+@@ -843,31 +968,31 @@ static struct api_data *avalon2_api_stats(struct cgpu_info *cgpu)
  		root = api_add_percent(root, buf, &hwp, true);
  	}
  	for (i = 0; i < 2 * AVA2_DEFAULT_MODULARS; i++) {
@@ -592,7 +642,7 @@ index 1a318ab..5994501 100644
  			continue;
  		sprintf(buf, "Power good %02x", i + 1);
  		root = api_add_int(root, buf, &(info->power_good[i]), false);
-@@ -876,6 +997,46 @@ static struct api_data *avalon2_api_stats(struct cgpu_info *cgpu)
+@@ -876,6 +1001,46 @@ static struct api_data *avalon2_api_stats(struct cgpu_info *cgpu)
  	return root;
  }
  
@@ -639,7 +689,7 @@ index 1a318ab..5994501 100644
  static void avalon2_shutdown(struct thr_info *thr)
  {
  	struct cgpu_info *avalon = thr->cgpu;
-@@ -889,6 +1050,7 @@ struct device_drv avalon2_drv = {
+@@ -889,6 +1054,7 @@ struct device_drv avalon2_drv = {
  	.dname = "avalon2",
  	.name = "AV2",
  	.get_api_stats = avalon2_api_stats,
