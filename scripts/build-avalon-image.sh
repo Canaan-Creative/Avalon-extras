@@ -76,7 +76,7 @@ fi
 if [ "$1" == "--clone" ]; then
     [ ! -d avalon ] && mkdir -p avalon/bin
     cd avalon
-    svn co svn://svn.openwrt.org/openwrt/trunk@40859 openwrt
+    svn co svn://svn.openwrt.org/openwrt/trunk@41224 openwrt
     git clone git://github.com/BitSyncom/cgminer.git
     git clone git://github.com/BitSyncom/cgminer-openwrt-packages.git
 
