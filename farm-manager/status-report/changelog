@@ -1,0 +1,161 @@
+2014.06.23 #2
+  Fix error at first time running when no previous T map has been plotted.
+
+2014.06.23 #1
+  Modify:
+    tmplot.py           :	add notification of single miner modules# & hash-rate changes in T map. 
+    email.template      :	extend html width from 600 to 768
+
+
+
+
+2014.06.20 #2
+  Fix error when balance data cannot be fetched.
+
+2014.06.20 #1
+  Add each miner's 15min hash rate to T map.
+
+
+
+
+2014.06.19 #2
+  Merge modules num info into T map.
+
+2014.06.19 #1
+  Match T map layout to factory position: IP increase from top to bottom level.
+
+
+
+
+2014.06.18 #1
+  Add screen output when some miner is alive with no modules running.
+
+
+
+
+2014.06.17 #1
+  Bugs fixed; slightly change email format.
+
+
+
+
+2014.06.16 #1
+  Modify:
+    tmplot.py           :	subplotting when more shelves added.
+    sendmail.py         :	add section to fetch balance data.
+
+
+    
+
+2014.06.13 #2
+  Modify:
+    chkstat.py          :	use multi threads to speed up telnetting
+
+2014.06.13 #1
+  Modify:
+    tmplot.py           :	change plotting method; fix plotting error when some miners are down.
+
+
+
+
+2014.06.12 #3
+  Slight modify temperature map format
+
+2014.06.12 #2
+  Add:
+    tmplot.py           :	plot temperature map.
+  Modify:
+    statreport.py       :	'-t' to plot tm.
+    
+2014.06.12 #1
+  Add:
+    email.template      :	django html template
+  Modify:
+    sendmail.py         :	reading template file and render html email.
+
+
+
+    
+2014.06.11 #3
+  Modify:
+    statreport.py       :	'-n' to skip writing xml log.
+
+2014.06.11 #2
+  Add img folder setting in cfg file.
+
+2014.06.11 #1
+  Modify:
+    hsplot.py           :	edit plotting setting.
+    sendmail.py         :	img can be attched, new email html format
+
+
+    
+    
+2014.06.10 #1
+  Simplify main file by adding sendmail.py & readconfig.py;
+  More lovely plotted png;
+  Bug fixed, new exception considered.
+  Add:
+    readconfig.py       :	read configuration file.
+    sendmail.py         :	rename from send_email.py, add function to format email content.
+    statreport_example.conf
+                        :	example configuration file.
+  Modify:
+    statreport.py       :	'-c' to choose custom cfg file; '-p' to switch plotting on.
+    hsplot.py           :	plot much more beautiful png file.
+  Remove:
+    minerlist.txt
+    email_example.conf  :	merge into statreport_example.conf
+
+
+    
+    
+2014.06.09 #2
+  Add:
+    hsplot.py           :	funtion to plot hash speed graph
+
+2014.06.09 #1
+  Fix error when cannot connect to some miner.
+
+
+  
+  
+2014.06.07 #4
+  Fix error when log directory does not exist.
+  
+2014.06.07 #3
+  Modify:
+    statreport.py       :	add argument '-m' to switch sending email.
+
+2014.06.07 #2
+  Add:
+    log/log-example.xml :	XML example log file, storing miner status.
+  Modify:
+    statlogging.py      :	add function to read log file.
+  
+2014.06.07 #1
+  Add:
+    statlogging.py      :	write miner status log file
+
+
+    
+    
+2014.06.06 #2
+  Consider one new condition: multi modules(mod) linked to one device(dev)
+  Modify:
+    chkstat.py          :	new data structure deployed, fetching data needed for log files.
+
+2014.06.06 #1
+  Change status data aquired, email struct.
+
+
+	
+	
+2014.06.05 #1
+  First edition, check err devs/pools and send email
+  Add:
+    statreport.py       :	main file
+    chkstat.py          :	telnet into echo miner host to fetch miner status
+    send_email.py       :	send_email
+
+    email_example.conf  :	example configuration file, contain email from/to address, passwd, server, etc.			

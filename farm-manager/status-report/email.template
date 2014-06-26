@@ -1,0 +1,113 @@
+<html>
+  <head>
+    <meta content="text/html; charset=gbk" http-equiv="content-type">
+    <base target="_blank">
+  </head>
+  <body style="           margin-bottom: 0px; margin-top: 0px; padding-bottom: 0px; padding-top: 0px;">
+    <div style="background-color: #f5f5f5;width:100%;-webkit-text-size-adjust:none !important;margin:0;padding: 70px 0 70px 0;">
+      <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%">
+          <tr>
+            <td align="center" valign="top">
+              <table id="template_container" style="-webkit-box-shadow:0 0 0 3px rgba(0,0,0,0.025) !important;box-shadow:0 0 0 3px rgba(0,0,0,0.025) !important;-webkit-border-radius:6px !important;border-radius:6px !important;	background-color: #fdfdfd;border: 1px solid #dcdcdc;-webkit-border-radius:6px !important;border-radius:6px !important;"
+                border="0" cellpadding="0" cellspacing="0" width="768">
+                  <tr>
+                    <td align="center" valign="top">
+                      <table id="template_header" style="background-color: #557da1; color: white; border-top-left-radius: 6px ! important; border-top-right-radius: 6px ! important; border-bottom: 0px none; font-family: Arial; font-weight: bold; line-height: 100%; vertical-align: middle; width: 768px; height: 102px;"
+                        border="0" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <td>
+                              <h1 style="color: white; margin: 0px; padding: 28px 24px; text-shadow: 0px 1px 0px #7797b4; display: block; font-family: Arial; font-size: 30px; font-weight: bold; text-align: left; line-height: 10%;">Miner
+                                Status Report</h1>
+                            </td>
+                          </tr>
+                          <tr align="right">
+                            <td style="margin-left: -200px;"><span style="font-weight: normal; font-size: smaller;">Server:
+                              {{ server_code }}&nbsp;&nbsp;&nbsp;&nbsp; {{ time }}&nbsp;&nbsp;&nbsp;&nbsp; </span></td>
+                          </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="center" valign="top">
+                      <table id="template_body" border="0" cellpadding="0" cellspacing="0"
+                        width="768">
+                          <tr>
+                            <td style="background-color: #fdfdfd;	-webkit-border-radius:6px !important;border-radius:6px !important;"
+                              valign="top">
+                              <table border="0" cellpadding="20" cellspacing="0"
+                                width="100%">     
+                                  <tr>
+                                    <td valign="top">
+                                      <div style="color: #737373;	font-family:Arial;	font-size:14px;	line-height:150%;text-align:left;">
+                                        <p style="text-align: center;"><a href="https://cex.io/r/0/canaan/0/"
+                                            title="CEX.IO - Trade Ghashes while they mine you Bitcoins!"
+                                            target="_blank"> <img src="{{ img_url }}"
+                                              border="0" height="35" width="500"></a></p>
+                                        <p>
+                                          <meta http-equiv="content-type" content="text/html; charset=utf-8">
+                                        </p>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td><span style="font-weight: bold; color: black; font-size: large;">Final Balance:</span><span style="font-weight: bold; color: black; font-size: large;"><br>
+                                      </span>
+                                      <table style="width: 100%; border: 1px solid #eeeeee;"
+                                        border="1" bordercolor="#eee" cellpadding="6"
+                                        cellspacing="0">
+                                          <tr>
+                                            <th scope="col" style="text-align: left; border: 1px solid #eeeeee; width: 264px;">Address</th>
+                                            <th scope="col" style="text-align: left; border: 1px solid #eeeeee; margin-left: -169px;">Final Balance<br>
+                                            </th>
+                                          </tr>  
+                                        {% for balance in balance_list %}
+                                          <tr>
+                                            <th scope="row" colspan="1" style="text-align:left; border: 1px solid #eee; border-top-width: 4px;"><span
+                                              style="font-weight: normal;"><a href="{{ balance.url }}">{{ balance.addr }}</a></span>
+                                            </th>
+                                            <td style="text-align:left; border: 1px solid #eee;	border-top-width: 4px;"><span class="amount">{{ balance.num }}</span></td>
+                                          </tr>
+                                        {% endfor %}
+                                          <tr>
+                                            <th scope="col" style="text-align: left; border: 1px solid #eeeeee; width: 264px;">Sum</th>
+                                            <td style="text-align:left; border: 1px solid #eee;	border-top-width: 4px;"><span class="amount">{{ sum_balance }}</span></td>
+                                            </th>
+                                          </tr> 
+                                      </table>
+                                    </td>
+                                  </tr>
+                                  {% if hsimg %}
+                                   <tr>
+                                     <td><img alt="" src=cid:{{ hsimg_cid }}><br>
+                                    </td>
+                                  </tr>
+                                  {% endif %}
+                                  {% if tmimg %}
+                                   <tr>
+                                     <td><img alt="" src=cid:{{ tmimg_cid }}><br>
+                                    </td>
+                                  </tr>
+                                  {% endif %}  
+                                  <tr>
+                                    <td><span style="color: black; font-size: large;"><span
+                                          style="font-weight: bold;">Active IP:</span>
+                                      &nbsp;&nbsp;&nbsp; <span style="font-weight: normal;">{{ active_ip_num }}</span></span></td>
+                                  </tr>
+                                  <tr>
+                                    <td><span style="color: black; font-size: large;"><span
+                                          style="font-weight: bold;">Alive Modules:</span>
+                                      &nbsp;&nbsp;&nbsp; <span style="font-weight: normal;">{{ alive_mod_num }}</span></span></td>
+                                  </tr>
+                              </table>
+                            </td>
+                          </tr>
+                      </table>
+                    </td>
+                  </tr>
+              </table>
+            </td>
+          </tr>
+      </table>
+    </div>
+  </body>
+</html>
