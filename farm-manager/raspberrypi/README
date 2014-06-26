@@ -1,0 +1,21 @@
+Network information
+Network: 192.168.1.x
+Gateway: 192.168.1.1
+Config Host: 192.168.1.3
+
+Scripts
+change_raspberrypi.sh:
+ 	change raspberrypi's config to host config.
+
+check_raspberrypi.sh:
+	change zombie miners under raspberrypi.
+reboot_cgminer.sh:
+	reboot cgminer process.
+
+reboot_raspberrypi.sh:
+	reboot raspberrypi.
+
+update_rasberrypi.sh:
+	firmware tools(burn,change ip,modify config)
+
+
