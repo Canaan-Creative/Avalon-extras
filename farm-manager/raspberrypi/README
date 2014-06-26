@@ -8,7 +8,8 @@ change_raspberrypi.sh:
  	change raspberrypi's config to host config.
 
 check_raspberrypi.sh:
-	change zombie miners under raspberrypi.
+	check zombie miners under raspberrypi.
+
 reboot_cgminer.sh:
 	reboot cgminer process.
 
@@ -17,5 +18,4 @@ reboot_raspberrypi.sh:
 
 update_rasberrypi.sh:
 	firmware tools(burn,change ip,modify config)
-
 
