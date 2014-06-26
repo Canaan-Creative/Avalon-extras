@@ -1,0 +1,5 @@
+#!/bin/sh
+echo "0 2  *   *   *     reboot -f" >> /etc/crontabs/root
+/etc/init.d/cron stop
+/etc/init.d/cron start
+
