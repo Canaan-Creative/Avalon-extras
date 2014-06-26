@@ -1,0 +1,34 @@
+Depends: 
+	python >= 2.7.3 <=2.7.6
+	python-scipy >= 0.10.1 <= 0.12.0
+	python-numpy >= 1.6.2 <= 1.7.1
+	python-matplotlib >= 1.1.1 <= 1.3.0
+	python-django >= 1.4.5 <= 1.5.5
+	
+	upper or lower version packages are not tested.
+
+Debian-based Linux distributions:
+	apt-get install python2.7 python-scipy python-numpy python-matplotlib python-django
+	
+usage: statreport.py [-h] [-n] [-m] [-p] [-t] [-c CONFIG]
+
+Generate miner status report.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -n, --nolog           do not write xml log; will use former generated log
+                        files to plot hashrate graph if '-p' is selected.
+  -m, --email           send email.
+  -p, --hsplot          plot hash speed graph.
+  -t, --tmplot          plot temperature map.
+  -c CONFIG, --config CONFIG
+                        use another config file rather than ./statreport.conf.
+                        
+                        
+in crontab:
+# devices restart at 2:00, so write log at 1:57
+# m h  dom mon dow   command
+0   1-23/2 * * * cd ~/bin/statreport;./statreport.py
+57       1 * * * cd ~/bin/statreport;./statreport.py
+0        2 * * * cd ~/bin/statreport;./statreport.py -ntmp
+0 0,4-22/2 * * * cd ~/bin/statreport;./statreport.py -mt

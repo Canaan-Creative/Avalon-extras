@@ -1,0 +1,7 @@
+./old/*
+./old/
+statreport.conf
+*.pyc
+*.png
+tags
+.directory
