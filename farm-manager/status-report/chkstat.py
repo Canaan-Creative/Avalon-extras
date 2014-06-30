@@ -1,6 +1,8 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import telnetlib
 import re
+import sys
 import time
 import threading
 import Queue
@@ -25,9 +27,9 @@ def telnetthread(miner_queue,data0,lock,retry):
 						tn.close()
 						lock.acquire()
 						if k < retry -1:
-							print '\033[1m\033[33mCannot connect to ' + miner_ip + '. Try Again.\033[0m'
+							print('\033[1m\033[33mCannot connect to ' + miner_ip + '. Try Again.\033[0m')
 						else:
-							print '\033[31mCannot connect to ' + miner_ip + '. Skip.\033[0m'
+							print('\033[31mCannot connect to ' + miner_ip + '. Skip.\033[0m')
 						lock.release()
 						err_conn_flag = True
 				if err_conn_flag:
@@ -59,7 +61,7 @@ def telnetthread(miner_queue,data0,lock,retry):
 				except:
 					tn.close()
 					lock.acquire()
-					print "\033[31mConnection to " + miner_ip + " lost. Extend time-out and try again.\033[0m"
+					print("\033[31mConnection to " + miner_ip + " lost. Extend time-out and try again.\033[0m")
 					lock.release()
 					continue
 
@@ -73,7 +75,7 @@ def telnetthread(miner_queue,data0,lock,retry):
 				data0[1][miner_id] = tmp[-3]
 				data0[2][miner_id] = tmp[-2]
 				data0[3][miner_id] = tmp[-1]
-				print "Complete fetching data from " + miner_ip + "."
+				print("Complete fetching data from " + miner_ip + ".")
 				lock.release()
 				break
 		except Queue.Empty:
@@ -96,13 +98,13 @@ def chkstat(cfg):
 
 	miner_queue = Queue.Queue()
 	lock = threading.Lock()
-	for i in range(0,len(cfg['Miner']['miner_list'])):
-		miner_queue.put((cfg['Miner']['miner_list'][i],i))
+	for i in range(0,len(cfg['miner_list'])):
+		miner_queue.put((cfg['miner_list'][i],i))
 	## data0[0]: -o summary
 	## data0[1]: -o devs
 	## data0[2]: -o stats
 	## data0[3]: -o pools
-	data0 = [['' for i in range(0,len(cfg['Miner']['miner_list']))]for i in range(0,4)]
+	data0 = [['' for i in range(0,len(cfg['miner_list']))]for i in range(0,4)]
 
 	threads = []
 	for i in range(0,int(cfg['Telnet']['threads_num'])):
@@ -111,18 +113,20 @@ def chkstat(cfg):
 		t.start()
 	for t in threads:
 		t.join()
-	print "Analyzing data ...",
+	print("Analyzing data ...",end="")
+	sys.stdout.flush()
 	data=[]
 	i = 0
-	while i < len(cfg['Miner']['miner_list']):
+	while i < len(cfg['miner_list']):
 		miner = []
-		miner.append(cfg['Miner']['miner_list'][i])
+		miner.append(cfg['miner_list'][i])
 		if data0[1][i] == '':
 			miner.append('Dead')
 			miner.append('0')
 			miner.append('0')
 			miner.append([])
 			miner.append([])
+			miner.append('0')
 		else:
 			dev = []
 			pool = []
@@ -138,7 +142,6 @@ def chkstat(cfg):
 				if stat_pool_flag.search(sd) != None:
 					#ignore pool stat in ' -o stats'
 					break
-
 				dev[j].append(len(module_id_flag.findall(sd)))
 
 				temp = []
@@ -153,6 +156,19 @@ def chkstat(cfg):
 
 				j += 1
 
+			## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			## '-o stats' ignore info after a size of 818x chars. We cannot read these crap dev-info. Set mod#, T & Fan Speed to 0 & null for convinence.
+			## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			while j < len(dev):
+				print(cfg['miner_list'][i])
+				## mod num
+				dev[j].append('0')
+				## temperature list
+				dev[j].append([])
+				## fan speed list
+				dev[j].append([])
+				j += 1
+
 			for pd in data0[3][i].split('|')[1:-1]:
 				pool_stat = []
 				pool_stat.append(pool_url_flag.search(pd).group(1))
@@ -163,11 +179,6 @@ def chkstat(cfg):
 			try:
 				miner.append(re.search(r'Elapsed=([^,]*),',data0[0][i]).group(1))
 			except AttributeError:
-				print cfg['Miner']['miner_list'][i]
-				print data0[0][i]
-				print data0[1][i]
-				print data0[2][i]
-				print data0[3][i]
 				miner.append('0')
 			try:
 				miner.append(total_Mh_flag.search(data0[0][i]).group(1))
@@ -181,33 +192,30 @@ def chkstat(cfg):
 				miner.append('0')
 		data.append(miner)
 		i += 1
-	print " Done."
+	print(" Done.")
 	return data
 
 if __name__ == '__main__':
-	cfg = readconfig("./statreport.conf")
-	if cfg['Log']['directory'][-1] == '/':
-		cfg['Log']['directory'] += '/'
-	cfg['Miner']['miner_list'] = list(filter(None, (x.strip() for x in cfg['Miner']['miner_list'].splitlines())))
+	exit()
 	data = chkstat(cfg)
 	for miner in data:
-		print miner[0] + ': ' + miner[1] + ' ' + miner[2] + ' ' + miner[3]
+		print(miner[0] + ': ' + miner[1] + ' ' + miner[2] + ' ' + miner[3])
 		i = 1
 		for dev_stat in miner[4]:
-			print '\tDevice #' + str(i) + ':'
-			print '\t\tDevice Elapsed: ' + dev_stat[0]
-			print '\t\tTotal MH: ' + dev_stat[1]
-			print '\t\tTemperature: ' + dev_stat[2]
-			print '\t\tModules Number: ' + str(dev_stat[3])
-			print '\t\tTemperature List: ' + ','.join(dev_stat[4])
-			print '\t\tFan Speed List: ' + ','.join(dev_stat[5])
+			print('\tDevice #' + str(i) + ':')
+			print('\t\tDevice Elapsed: ' + dev_stat[0])
+			print('\t\tTotal MH: ' + dev_stat[1])
+			print('\t\tTemperature: ' + dev_stat[2])
+			print('\t\tModules Number: ' + str(dev_stat[3]))
+			print('\t\tTemperature List: ' + ','.join(dev_stat[4]))
+			print('\t\tFan Speed List: ' + ','.join(dev_stat[5]))
 			i += 1
 
 		i = 1
 		for pool_stat in miner[5]:
-			print '\tPool #' + str(i) + ':'
-			print '\t\tURL: ' + pool_stat[0]
-			print '\t\tStatus: ' + pool_stat[1]
+			print('\tPool #' + str(i) + ':')
+			print('\t\tURL: ' + pool_stat[0])
+			print('\t\tStatus: ' + pool_stat[1])
 			i += 1
-		print "------------------------------------------------------------------------------"
+		print("------------------------------------------------------------------------------")
 

@@ -25,27 +25,12 @@ if __name__ == '__main__':
 		cfg = readconfig(args.config)
 	else:
 		cfg = readconfig("./statreport.conf")
-	if cfg['Log']['directory'][-1] != '/':
-		cfg['Log']['directory'] += '/'
-	if cfg['HSplot']['img_dir'][-1] != '/':
-		cfg['HSplot']['img_dir'] += '/'
-	if cfg['TMplot']['img_dir'][-1] != '/':
-		cfg['TMplot']['img_dir'] += '/'
-	if not os.path.isdir(cfg['Log']['directory']):
-		os.makedirs(cfg['Log']['directory'])
-	if not os.path.isdir(cfg['HSplot']['img_dir']):
-		os.makedirs(cfg['HSplot']['img_dir'])
-	if not os.path.isdir(cfg['TMplot']['img_dir']):
-		os.makedirs(cfg['TMplot']['img_dir'])
-	cfg['Miner']['miner_list'] = list(filter(None, (x.strip() for x in cfg['Miner']['miner_list'].splitlines())))
-
-
 
 	time_now = datetime.datetime.now()
 
 	if not args.nolog:
 		data = chkstat(cfg)
-		writelog(data,cfg['Log']['directory'],"log-" + time_now.strftime("%Y_%m_%d_%H_%M") + ".xml")
+		writelog(data,cfg,"log-" + time_now.strftime("%Y_%m_%d_%H_%M") + ".xml")
 
 	if args.hsplot:
 		hspng = hsplot(time_now,cfg)
@@ -55,18 +40,18 @@ if __name__ == '__main__':
 
 	if args.tmplot:
 		if args.nolog:
-			for logfile in sorted(os.listdir(cfg['Log']['directory']),reverse=True):
+			for logfile in sorted(os.listdir(cfg['General']['log_dir']),reverse=True):
 				if re.match(r'log-(\d+_){4}\d+\.xml',logfile):
-					(data , time_now) = readlog(cfg['Log']['directory'], logfile)
+					(data , time_now) = readlog(cfg['General']['log_dir'], logfile)
 					break
 		tmpng = tmplot(time_now,data,cfg)
 		cfg['Email']['tmimg_dir'] = cfg['TMplot']['img_dir']
 		cfg['Email']['tmimg'] = tmpng
 	if args.email:
 		if args.nolog:
-			for logfile in sorted(os.listdir(cfg['Log']['directory']),reverse=True):
+			for logfile in sorted(os.listdir(cfg['General']['log_dir']),reverse=True):
 				if re.match(r'log-(\d+_){4}\d+\.xml',logfile):
-					(data , time_now) = readlog(cfg['Log']['directory'], logfile)
+					(data , time_now) = readlog(cfg['General']['log_dir'], logfile)
 					break
 		sendmail(time_now.strftime("%Y-%m-%d %H:%M"),data,cfg)
 

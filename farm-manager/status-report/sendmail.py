@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import smtplib
 import uuid
 import urllib2
@@ -6,6 +7,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text      import MIMEText
 from email.mime.image     import MIMEImage
 import os
+import sys
 from django.template import loader, Context
 from django.conf import settings
 
@@ -51,43 +53,46 @@ def post(mail,template_var):
 		s.close()
 		return True
 	except Exception, e:
-		print str(e)
+		print(str(e))
 		return False
 
 
 def sendmail(time,data,cfg):
 
-	print "Sending email to " + cfg['Email']['to_list'].replace(';',' & ') + ' ...',
+	print("Sending email to " + cfg['Email']['to_list'].replace(';',' & ') + ' ...',end="")
+	sys.stdout.flush()
 	mail = cfg['Email']
 
 	mail['user'] = mail['from_address'].split('@')[0]
-	mail['subject'] = "[Miner Status " + cfg['Miner']['server_code'] + "] Report " + time
+	mail['subject'] = "[Miner Status " + cfg['General']['server_code'] + "] Report " + time
 
 	template_var={}
-	template_var['server_code'] = cfg['Miner']['server_code']
+	template_var['server_code'] = cfg['General']['server_code']
 	template_var['time'] = time
 	alivenum = 0
 	for miner in data:
 		if miner[1] == "Alive":
 			alivenum += 1
-	template_var['active_ip_num'] = str(alivenum) + '/' + str(len(cfg['Miner']['miner_list']))
+	template_var['active_ip_num'] = str(alivenum) + '/' + str(len(cfg['miner_list']))
 
 	template_var['err_miner_list']=[]
 	sum_mod_num = 0
 	for miner in data:
 		for dev_stat in miner[4]:
 			sum_mod_num += int(dev_stat[3])
-	template_var['alive_mod_num'] = str(sum_mod_num) + '/' + str(len(cfg['Miner']['miner_list']) * int(cfg['Miner']['module_number']))
+	sum_mod_num0 = 0
+	for mod_num in cfg['mod_num_list']:
+		sum_mod_num0 += int(mod_num)
+	template_var['alive_mod_num'] = str(sum_mod_num) + '/' + str(sum_mod_num0)
 	if 'tmimg' in mail:
 		template_var['tmimg'] = True
 	if 'hsimg' in mail:
 		template_var['hsimg'] = True
 
-	template_var['img_url'] = cfg['Refer']['img_url']
 	proxy_handler = urllib2.ProxyHandler({})
 	opener = urllib2.build_opener(proxy_handler)
 	urllib2.install_opener(opener)
-	url_list = list(filter(None, (x.strip() for x in cfg['Refer']['balance_url'].splitlines())))
+	url_list = list(filter(None, (x.strip() for x in cfg['Pool']['balance_url'].splitlines())))
 	template_var['balance_list']=[]
 
 
@@ -97,7 +102,7 @@ def sendmail(time,data,cfg):
 	for url in url_list:
 		retry = 0
 		fail = 1
-		while retry < 3:
+		while retry < int(cfg['Pool']['retry']):
 			try:
 				s = urllib2.urlopen(url).read()
 				balance = s.split('Final Balance')[1].split(' BTC')[0].split('>')[-1]
@@ -118,10 +123,7 @@ def sendmail(time,data,cfg):
 
 
 	if post(mail,template_var):
-		print " Successed."
+		print(" Successed.")
 	else:
-		print " Failed."
-
-if __name__ == '__main__':
-	print 0
+		print(" Failed.")
 

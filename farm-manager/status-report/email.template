@@ -37,19 +37,6 @@
                               <table border="0" cellpadding="20" cellspacing="0"
                                 width="100%">     
                                   <tr>
-                                    <td valign="top">
-                                      <div style="color: #737373;	font-family:Arial;	font-size:14px;	line-height:150%;text-align:left;">
-                                        <p style="text-align: center;"><a href="https://cex.io/r/0/canaan/0/"
-                                            title="CEX.IO - Trade Ghashes while they mine you Bitcoins!"
-                                            target="_blank"> <img src="{{ img_url }}"
-                                              border="0" height="35" width="500"></a></p>
-                                        <p>
-                                          <meta http-equiv="content-type" content="text/html; charset=utf-8">
-                                        </p>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                  <tr>
                                     <td><span style="font-weight: bold; color: black; font-size: large;">Final Balance:</span><span style="font-weight: bold; color: black; font-size: large;"><br>
                                       </span>
                                       <table style="width: 100%; border: 1px solid #eeeeee;"
@@ -77,13 +64,13 @@
                                     </td>
                                   </tr>
                                   {% if hsimg %}
-                                   <tr>
+                                  <tr>
                                      <td><img alt="" src=cid:{{ hsimg_cid }}><br>
                                     </td>
                                   </tr>
                                   {% endif %}
                                   {% if tmimg %}
-                                   <tr>
+                                  <tr>
                                      <td><img alt="" src=cid:{{ tmimg_cid }}><br>
                                     </td>
                                   </tr>
