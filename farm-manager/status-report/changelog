@@ -1,3 +1,7 @@
+2014.07.01 #2
+  Add T_avg & T_max num to T map.
+  Add api data fetch retries.
+
 2014.07.01 #1
   Use api to fetch data from server instead of telnetting into echo miner.
   Alive module's number corrected.

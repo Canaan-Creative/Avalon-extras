@@ -9,25 +9,34 @@ import socket
 import json
 from readconfig import readconfig
 
-def apiread(ip,command):
-	s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-	s.connect((ip,4028))
-
-	s.send(json.dumps({"command":command}))
-
-	#print(command)
-	response = s.recv(4096)
+def apiread(ip,command,lock,retry):
+	time_out = 0
 	while True:
-		recv = s.recv(4096)
-		if not recv:
-			break
-		else:
-			response += recv
+		time_out += 1
+		if time_out > retry:
+			return None
+		try:
+			s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+			s.settimeout(time_out)
+			s.connect((ip,4028))
 
-	response = response.replace('\x00','')
-	s.close()
-	#print(response)
-	return json.loads(response)
+			s.send(json.dumps({"command":command}))
+
+			response = s.recv(4096)
+			while True:
+				recv = s.recv(4096)
+				if not recv:
+					break
+				else:
+					response += recv
+
+			response = response.replace('\x00','')
+			s.close()
+			return json.loads(response)
+		except ValueError:
+			lock.acquire()
+			print("\033[31mConnection to " + ip + " lost. Extend time-out and try again.\033[0m")
+			lock.release()
 
 
 
@@ -65,10 +74,14 @@ def socketthread(miner_queue,data0,lock,retry):
 
 			else:
 				tmp=[]
-				tmp.append(apiread(miner_ip, 'summary'))
-				tmp.append(apiread(miner_ip, 'devs'))
-				tmp.append(apiread(miner_ip, 'stats'))
-				tmp.append(apiread(miner_ip, 'pools'))
+				tmp.append(apiread(miner_ip, 'summary',lock,retry))
+				tmp.append(apiread(miner_ip, 'devs',lock,retry))
+				tmp.append(apiread(miner_ip, 'stats',lock,retry))
+				tmp.append(apiread(miner_ip, 'pools',lock,retry))
+
+				for ttmp in tmp:
+					if ttmp == None:
+						tmp[0] = None
 
 				lock.acquire()
 				data0[0][miner_id] = tmp[0]

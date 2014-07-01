@@ -21,6 +21,8 @@ def tmplot(time_now,data,cfg):
 	i = 0
 	n = 0
 	T_sum = 0
+	Ta=[]
+	Tm=[]
 	T_err = [[]for j in range(0,cfg['zone_num'])]
 	T_err_255 = [[]for j in range(0,cfg['zone_num'])]
 
@@ -60,6 +62,9 @@ def tmplot(time_now,data,cfg):
 
 		if T_max == 0: T_max = 256
 		if err: T_err_255[z].append([layer_n, shelf_n])
+
+		Tm.append(T_max)
+		Ta.append(T_avg)
 
 		if cfg['TMplot']['method'] == 'max':
 			T[z][layer_n].append(T_max)
@@ -138,9 +143,16 @@ def tmplot(time_now,data,cfg):
 					sum_mod_num += int(dev_stat[3])
 				for dev_stat0 in miner0[4]:
 					sum_mod_num0 += int(dev_stat0[3])
-				text_x = i/int(cfg[zone]['layers']) + .5 + float(cfg[zone]['text_x_shift'])
+				text_x = i/int(cfg[zone]['layers']) + .5
 				text_y = int(cfg[zone]['layers']) - .5 - i % int(cfg[zone]['layers'])
+				text_x1 = i/int(cfg[zone]['layers']) + float(cfg[zone]['text_x1'])
+				text_y1 = int(cfg[zone]['layers']) - 1.0 + float(cfg[zone]['text_y1']) - i % int(cfg[zone]['layers'])
+				text_x2 = i/int(cfg[zone]['layers']) + float(cfg[zone]['text_x2'])
+				text_y2 = int(cfg[zone]['layers']) - 1.0 + float(cfg[zone]['text_y2']) - i % int(cfg[zone]['layers'])
+				text_x3 = i/int(cfg[zone]['layers']) + float(cfg[zone]['text_x3'])
+				text_y3 = int(cfg[zone]['layers']) - 1.0 + float(cfg[zone]['text_y3']) - i % int(cfg[zone]['layers'])
 				if miner[1] == 'Alive':
+
 					l = len(miner[6].split('.')[0])
 					if l > 2 and l < 6:
 						rate = "%.2f" % (float(miner[6])/1000) + 'G'
@@ -148,27 +160,29 @@ def tmplot(time_now,data,cfg):
 						rate = "%.2f" % (float(miner[6])/1000000) + 'T'
 					else:
 						rate = "%.2f" % (float(miner[6])) + 'M'
-					ax.text(text_x, text_y, str(sum_mod_num)+'/'+mod_num, ha='right',va='bottom',fontproperties=ticks_font,color='k')
-					ax.text(text_x, text_y, rate,ha='right',va='top',fontproperties=ticks_font,color='k')
+					ax.text(text_x1, text_y1, str(sum_mod_num)+'/'+mod_num, ha='right',va='center',fontproperties=ticks_font,color='k')
+					ax.text(text_x2, text_y2, rate,ha='right',va='center',fontproperties=ticks_font,color='k')
+					ax.text(text_x3, text_y3, '%.1f' % Ta[i+ii]+'/'+str(Tm[i+ii]),ha='center',va='center',fontproperties=ticks_font,color='k')
 					if sum_mod_num > sum_mod_num0:
-						ax.text(text_x, text_y, r'$\blacktriangle\blacktriangle$',fontproperties=ticks_font,color='k',ha='left',va='bottom')
+						ax.text(text_x1, text_y1, r'$\blacktriangle\blacktriangle$',fontproperties=ticks_font,color='k',ha='left',va='bottom')
 					elif sum_mod_num < sum_mod_num0:
-						ax.text(text_x, text_y, r'$\blacktriangledown\blacktriangledown$',fontproperties=ticks_font,color='m',ha='left',va='bottom')
+						ax.text(text_x1, text_y1, r'$\blacktriangledown\blacktriangledown$',fontproperties=ticks_font,color='m',ha='left',va='center')
 					else:
 						pass
 					if float(miner[6]) > float(miner0[6])*1.5:
-						ax.text(text_x, text_y, r'$\blacktriangle\blacktriangle$',fontproperties=ticks_font,color='k',ha='left',va='top')
+						ax.text(text_x2, text_y2, r'$\blacktriangle\blacktriangle$',fontproperties=ticks_font,color='k',ha='left',va='center')
 					elif float(miner[6]) > float(miner0[6])*1.1:
-						ax.text(text_x, text_y, r'$\blacktriangle$',fontproperties=ticks_font,color='k',ha='left',va='top')
+						ax.text(text_x2, text_y2, r'$\blacktriangle$',fontproperties=ticks_font,color='k',ha='left',va='center')
 					elif float(miner[6]) < float(miner0[6])*0.5:
-						ax.text(text_x, text_y, r'$\blacktriangledown\blacktriangledown$',fontproperties=ticks_font,color='m',ha='left',va='top')
+						ax.text(text_x2, text_y2, r'$\blacktriangledown\blacktriangledown$',fontproperties=ticks_font,color='m',ha='left',va='center')
 					elif float(miner[6]) < float(miner0[6])*0.9:
-						ax.text(text_x, text_y, r'$\blacktriangledown$',fontproperties=ticks_font,color='m',ha='left',va='top')
+						ax.text(text_x2, text_y2, r'$\blacktriangledown$',fontproperties=ticks_font,color='m',ha='left',va='center')
 					else:
 						pass
 
+
 				else:
-					ax.text(text_x - float(cfg[zone]['text_x_shift']), text_y,'N/A',ha='center',va='center',fontproperties=ticks_font,color='k')
+					ax.text(text_x, text_y,'N/A',ha='center',va='center',fontproperties=ticks_font,color='k')
 
 			## single zone may have multi subplots
 			## split according to cfg['Zone#'][plot_split]
