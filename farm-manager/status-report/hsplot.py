@@ -76,6 +76,7 @@ def readhs(time0,cfg):
 
 
 	t = t[1:]
+	h = h[1:]
 
 	return (t,h,v,vp,vps)
 

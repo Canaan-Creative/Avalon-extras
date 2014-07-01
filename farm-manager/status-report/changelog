@@ -1,3 +1,26 @@
+2014.07.01 #1
+  Use api to fetch data from server instead of telnetting into echo miner.
+  Alive module's number corrected.
+
+
+
+
+2014.06.30 #1
+  Fix poolrate.py; improve std printout.
+
+
+
+
+2014.06.27 #1
+  Add zone feature to custom T map plotting: modify cfg, tmplot files.
+  Add pool hashrate plotting, using cex.io api (test needed)
+  Fix bug when cgminer-api fails to provide full info of dev stats:
+    Cgminer-api's output cannot be larger than around 8180 bytes. When this happened, we can only
+    ignore the crapped info, resulting in uncorrect lower actived modules' number.
+    
+    
+
+
 2014.06.23 #2
   Fix error at first time running when no previous T map has been plotted.
 

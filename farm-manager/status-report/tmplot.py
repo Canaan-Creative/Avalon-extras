@@ -70,7 +70,7 @@ def tmplot(time_now,data,cfg):
 	for z in range(0,cfg['zone_num']):
 		T[z] = np.ma.masked_greater(T[z], 254.5)
 	cmap = matplotlib.cm.jet
-	norm = matplotlib.colors.Normalize(vmin=50, vmax=80)
+	norm = matplotlib.colors.Normalize(vmin=60, vmax=90)
 
 	fig = plt.figure(figsize=(float(cfg['TMplot']['width'])/float(cfg['TMplot']['dpi']),float(cfg['TMplot']['height'])/float(cfg['TMplot']['dpi'])), dpi=int(cfg['TMplot']['dpi']), facecolor="white")
 	titlefont = {'family' : cfg['TMplot']['font_family1'],
@@ -210,8 +210,8 @@ def tmplot(time_now,data,cfg):
 	ax = plt.subplot(gs[0:,1])
 	cbar = plt.colorbar(gci, cax = ax)
 	cbar.set_label('Temperature ($^{\circ}C$)',fontdict=labelfont)
-	cbar.set_ticks(np.linspace(50,80,4))
-	cbar.set_ticklabels( ('50', '60', '70', '80'))
+	cbar.set_ticks(np.linspace(60,90,4))
+	cbar.set_ticklabels( ('60', '70', '80', '90'))
 	for tick in cbar.ax.yaxis.majorTicks:
 		tick.label2.set_fontproperties(ticks_font)
 
