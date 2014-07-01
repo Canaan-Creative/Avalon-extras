@@ -42,7 +42,7 @@ if __name__ == '__main__':
 		if args.nolog:
 			for logfile in sorted(os.listdir(cfg['General']['log_dir']),reverse=True):
 				if re.match(r'log-(\d+_){4}\d+\.xml',logfile):
-					(data , time_now) = readlog(cfg['General']['log_dir'], logfile)
+					(data , time_now, vps, vp) = readlog(cfg['General']['log_dir'], logfile)
 					break
 		tmpng = tmplot(time_now,data,cfg)
 		cfg['Email']['tmimg_dir'] = cfg['TMplot']['img_dir']
@@ -51,7 +51,7 @@ if __name__ == '__main__':
 		if args.nolog:
 			for logfile in sorted(os.listdir(cfg['General']['log_dir']),reverse=True):
 				if re.match(r'log-(\d+_){4}\d+\.xml',logfile):
-					(data , time_now) = readlog(cfg['General']['log_dir'], logfile)
+					(data , time_now, vps, vp) = readlog(cfg['General']['log_dir'], logfile)
 					break
 		sendmail(time_now.strftime("%Y-%m-%d %H:%M"),data,cfg)
 
