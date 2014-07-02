@@ -6,6 +6,7 @@ import urllib2
 import hashlib
 import hmac
 import time
+import sys
 
 def getjs(poolcfg,url):
 	i = 0
@@ -18,8 +19,9 @@ def getjs(poolcfg,url):
 			request = urllib2.Request(url, param, {'User-agent': 'bot-cex.io-' + poolcfg['username']})
 			js = urllib2.urlopen(request).read()
 			return json.loads(js)
-		except Exception, e:
-			print(str(e))
+		except Exception,e:
+			print str(e),
+			sys.stdout.flush()
 			time.sleep(1)
 			i += 1
 	return 0

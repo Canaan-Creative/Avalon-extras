@@ -1,3 +1,14 @@
+2014.07.02 #3
+  Add error list to email.
+
+2014.07.02 #2
+  Two methods to plot local hashrate.
+
+2014.07.02 #1
+  Add try-except to chkstat.py 
+
+
+
 2014.07.01 #2
   Add T_avg & T_max num to T map.
   Add api data fetch retries.

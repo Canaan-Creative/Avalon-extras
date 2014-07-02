@@ -85,6 +85,34 @@
                                           style="font-weight: bold;">Alive Modules:</span>
                                       &nbsp;&nbsp;&nbsp; <span style="font-weight: normal;">{{ alive_mod_num }}</span></span></td>
                                   </tr>
+                                  <tr>
+                                    <td><span style="font-weight: bold; color: black; font-size: large;">Error List:</span><span style="font-weight: bold; color: black; font-size: large;"><br>
+                                      </span>
+                                      <table style="width: 100%; border: 1px solid #eeeeee;"
+                                        border="1" bordercolor="#eee" cellpadding="6"
+                                        cellspacing="0">
+                                          <tr>
+                                            <th scope="col" style="text-align: left; border: 1px solid #eeeeee; width: 264px;">IP</th>
+                                            <th scope="col" style="text-align: left; border: 1px solid #eeeeee; margin-left: -169px;">Error<br>
+                                            </th>
+                                          </tr>  
+                                        {% for err_miner in err_miner_list %}
+                                          <tr>
+                                            <th scope="row" colspan="1" style="text-align:left; border: 1px solid #eee; border-top-width: 4px;"><span
+                                              style="font-weight: normal;">{{ err_miner.ip }}</a></span>
+                                            </th>
+                                            <td style="text-align:left; border: 1px solid #eee;	border-top-width: 4px;"><span>{{ err_miner.error }}</span>
+					    </td>
+                                          </tr>
+					{% empty %}
+                                            <th scope="row" colspan="1" style="text-align:left; border: 1px solid #eee; border-top-width: 4px;"><span
+                                              style="font-weight: normal;">None</a></span>
+                                            </th>
+                                            <td style="text-align:left; border: 1px solid #eee;	border-top-width: 4px;"><span>None</span></td>
+                                        {% endfor %}  
+                                      </table>
+                                    </td>
+				  </tr>
                               </table>
                             </td>
                           </tr>

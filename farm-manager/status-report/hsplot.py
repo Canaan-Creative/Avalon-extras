@@ -36,7 +36,8 @@ def readhs(time0,cfg):
 
 	h = []
 	t = []
-	v = []
+	v1 = []
+	v2 = []
 	vp = []
 	vps = []
 
@@ -54,23 +55,29 @@ def readhs(time0,cfg):
 		(data,time,sum_pool_rate,pool_rate) = readlog(cfg['General']['log_dir'],xmllog[k])
 		tt = (time-time0).total_seconds()
 		ht=[]
-		vt=[]
+		vt1=[]
+		vt2=[]
 		print(xmllog[k])
 		for i in range(0,len(data)):
 			if data[i][1] == "Dead":
-				vt.append(0)
+				vt1.append(0)
+				vt2.append(0)
 				ht.append( [0,0] )
 			else:
 				ht.append( [ float(data[i][3]),float(data[i][2]) ] )
 				if ht[i][1] - h[k-1][i][1] > tt - t[k-1] - int(cfg['HSplot']['delay_time']):
-					vt.append((ht[i][0]-h[k-1][i][0])/(ht[i][1]-h[k-1][i][1]))
+					vt1.append((ht[i][0]-h[k-1][i][0])/(ht[i][1]-h[k-1][i][1]))
+					vt2.append((ht[i][0]-h[k-1][i][0])/(ht[i][1]-h[k-1][i][1]))
 				elif data[i][2] != '0':
-					vt.append(ht[i][0]/ht[i][1])
+					vt1.append(ht[i][0]/ht[i][1])
+					vt2.append(ht[i][0]/(tt - t[k-1]))
 				else:
+					vt.append(0)
 					vt.append(0)
 		t.append(tt)
 		h.append(ht)
-		v.append(vt)
+		v1.append(vt1)
+		v2.append(vt2)
 		vp.append(float(pool_rate))
 		vps.append(float(sum_pool_rate))
 
@@ -78,32 +85,36 @@ def readhs(time0,cfg):
 	t = t[1:]
 	h = h[1:]
 
-	return (t,h,v,vp,vps)
+	return (t,h,v1,v2,vp,vps)
 
 def hsplot(time0,cfg):
 
 
 	print("Reading Logs: ")
 	try:
-		(t,h,v,vp,vps) = readhs(time0,cfg)
+		(t,h,v1,v2,vp,vps) = readhs(time0,cfg)
 	except NameError:
 		return 1
 	print("Done.\nPlotting into " + cfg['HSplot']['img_dir'] + "hs-"+time0.strftime("%Y_%m_%d_%H_%M")+".png ... ",end="")
 	sys.stdout.flush()
 
 	#total hash speed
-	vm = []
-	for k in range(0,len(v)):
-		vm.append( sum(v[k]) )
+	vm1 = []
+	vm2 = []
+	for k in range(0,len(v1)):
+		vm1.append( sum(v1[k]) )
+		vm2.append( sum(v2[k]) )
 		t[k] = t[k]/3600.0
 
 
 	x = np.array(t)
-	y1 = np.array(vm)
+	y0 = np.array(vm1)
+	y1 = np.array(vm2)
 	y2 = np.array(vp)
 	y3 = np.array(vps)
-	ymax = np.amax(np.hstack((y1,y2,y3)))
+	ymax = np.amax(np.hstack((y0,y1,y2,y3)))
 
+	f0 = interp1d(x, y0)
 	f1 = interp1d(x, y1)
 	f2 = interp1d(x, y2)
 	f3 = interp1d(x, y3)
@@ -118,10 +129,11 @@ def hsplot(time0,cfg):
 		 }
 	ticks_font = matplotlib.font_manager.FontProperties(family=cfg['HSplot']['font_family2'], style='normal', size=int(cfg['HSplot']['font_size2']), weight='normal', stretch='normal')
 
-	p1, = plt.plot(xnew,f1(xnew),'b-')
+	p0, = plt.plot(xnew,f0(xnew),'b-')
+	p1, = plt.plot(xnew,f1(xnew),'c-')
 	p2, = plt.plot(xnew,f2(xnew),'g-')
 	p3, = plt.plot(xnew,f3(xnew),'r-')
-	plt.legend((p1,p2,p3),('Local','Worker','Pool'), loc = 2, prop = ticks_font)
+	plt.legend((p0,p1,p2,p3),('Local Method 1','Local Method 2','Worker','Pool'), loc = 2, prop = ticks_font)
 	# x axis tick label
 	xticklabel = []
 	xmax = time0 - datetime.timedelta(seconds = (time0.hour - (time0.hour/2)*2)*3600 + time0.minute*60)

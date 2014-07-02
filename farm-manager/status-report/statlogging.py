@@ -10,12 +10,15 @@ from poolrate import poolrate
 def writelog(data,cfg,filename):
 	## write XML log file
 	logdir = cfg['General']['log_dir']
+	print('Fetching pool hashrate data ... ',end="")
+	sys.stdout.flush()
+	sum_pool_rate, pool_rate = poolrate(cfg)
+	print('Done.')
 	print('Logging into ' + logdir + filename + ' ... ',end="")
 	sys.stdout.flush()
 	log = '<?xml version="1.0"?>\n'
 	time = filename.strip("log-").strip(".xml")
 	log += "<data>\n\t<time>" + time + "</time>\n"
-	sum_pool_rate, pool_rate = poolrate(cfg)
 	log += "\t<SumPoolRate>" +sum_pool_rate + "</SumPoolRate>\n"
 	log += "\t<WorkerPoolRate>" + pool_rate + "</WorkerPoolRate>\n"
 	for miner in data:
@@ -41,6 +44,7 @@ def writelog(data,cfg,filename):
 			log += "\t\t\t<Status>" + pool_stat[1] + "</Status>\n"
 			log += "\t\t</pool>\n"
 		log += "\t\t<MHS15min>" + miner[6] + "</MHS15min>\n"
+		log += "\t\t<Error>" + miner[7] + "</Error>\n"
 		log += "\t</miner>\n"
 	log += "</data>"
 
@@ -91,6 +95,10 @@ def readlog(logdir,filename):
 		miner.append(pool)
 		try:
 			miner.append(minerXML.getElementsByTagName("MHS15min")[0].childNodes[0].data)
+		except:
+			miner.append('0')
+		try:
+			miner.append(minerXML.getElementsByTagName("Error")[0].childNodes[0].data)
 		except:
 			miner.append('0')
 		data.append(miner)
