@@ -52,28 +52,42 @@ def readhs(time0,cfg):
 	t.append((time-time0).total_seconds())
 
 	for k in range(1,len(xmllog)):
+		data0 = data
 		(data,time,sum_pool_rate,pool_rate) = readlog(cfg['General']['log_dir'],xmllog[k])
 		tt = (time-time0).total_seconds()
 		ht=[]
 		vt1=[]
 		vt2=[]
 		print(xmllog[k])
-		for i in range(0,len(data)):
-			if data[i][1] == "Dead":
+		i = -1
+		for j in range(0,len(data)):
+			i += 1
+			if data[j][1] == "Dead":
 				vt1.append(0)
 				vt2.append(0)
 				ht.append( [0,0] )
 			else:
-				ht.append( [ float(data[i][3]),float(data[i][2]) ] )
-				if ht[i][1] - h[k-1][i][1] > tt - t[k-1] - int(cfg['HSplot']['delay_time']):
-					vt1.append((ht[i][0]-h[k-1][i][0])/(ht[i][1]-h[k-1][i][1]))
-					vt2.append((ht[i][0]-h[k-1][i][0])/(ht[i][1]-h[k-1][i][1]))
-				elif data[i][2] != '0':
-					vt1.append(ht[i][0]/ht[i][1])
-					vt2.append(ht[i][0]/(tt - t[k-1]))
-				else:
-					vt.append(0)
-					vt.append(0)
+				while data0[i][0] != data[j][0]:
+					i += 1
+				ht.append( [ float(data[j][3]),float(data[j][2]) ] )
+				try:
+					if ht[j] [1] - h[k-1][i][1] > tt - t[k-1] - int(cfg['HSplot']['delay_time']):
+						vt1.append((ht[j][0]-h[k-1][i][0])/(ht[j][1]-h[k-1][i][1]))
+						vt2.append((ht[j][0]-h[k-1][i][0])/(ht[j][1]-h[k-1][i][1]))
+					elif data[i][2] != '0':
+						vt1.append(ht[j][0]/ht[j][1])
+						vt2.append(ht[j][0]/(tt - t[k-1]))
+					else:
+						vt.append(0)
+						vt.append(0)
+				except IndexError:
+					break
+		while j < len(data)-1:
+			ht.append( [ float(data[j][3]),float(data[j][2]) ] )
+			vt1.append(ht[j][0]/ht[j][1])
+			vt2.append(ht[j][0]/(tt - t[k-1]))
+			j += 1
+
 		t.append(tt)
 		h.append(ht)
 		v1.append(vt1)

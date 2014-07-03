@@ -1,3 +1,6 @@
+2014.07.03 #1
+  Fix hsplot bug when miner_list gets changed.
+
 2014.07.02 #3
   Add error list to email.
 

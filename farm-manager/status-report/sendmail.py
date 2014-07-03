@@ -124,7 +124,7 @@ def sendmail(time,data,cfg):
 			if error|2 == error:
 				error_r.append('Temperature 255')
 			if error|1 == error:
-				error_r.append('Too hot')
+				error_r.append('Overheating')
 			template_var['err_miner_list'].append({'ip':miner[0], 'error':'. '.join(error_r)+'.'})
 
 	sum_mod_num = 0
