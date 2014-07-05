@@ -1,3 +1,12 @@
+2014.07.05 #1
+  Add timeout to balance fetching.
+
+2014.07.04 #1
+  Fix incorrect miner error when same error occured multi times.
+
+2014.07.03 #2
+  Add color to error list.
+
 2014.07.03 #1
   Fix hsplot bug when miner_list gets changed.
 

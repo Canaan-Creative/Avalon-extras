@@ -83,7 +83,7 @@ def sendmail(time,data,cfg):
 		fail = 1
 		while retry < int(cfg['Pool']['retry']):
 			try:
-				s = urllib2.urlopen(url).read()
+				s = urllib2.urlopen(url,timeout=10).read()
 				balance = s.split('Final Balance')[1].split(' BTC')[0].split('>')[-1]
 				b += float(balance)
 				fail = 0
@@ -118,14 +118,14 @@ def sendmail(time,data,cfg):
 			error = int(miner[7])
 			error_r = []
 			if error|8 == error:
-				error_r.append('Unable to connect')
+				error_r.append({'msg':'Unable to connect.', 'color':'black'})
 			if error|4 == error:
-				error_r.append('Alive module number too low')
+				error_r.append({'msg':'Alive module number too low.', 'color':'blue'})
 			if error|2 == error:
-				error_r.append('Temperature 255')
+				error_r.append({'msg':'Temperature 255.', 'color':'purple'})
 			if error|1 == error:
-				error_r.append('Overheating')
-			template_var['err_miner_list'].append({'ip':miner[0], 'error':'. '.join(error_r)+'.'})
+				error_r.append({'msg':'Overheating.', 'color':'red'})
+			template_var['err_miner_list'].append({'ip':miner[0], 'error':error_r})
 
 	sum_mod_num = 0
 	for miner in data:

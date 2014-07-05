@@ -151,6 +151,9 @@ def chkstat(cfg):
 
 
 			sum_mn = 0
+			err_255 = 0
+			err_temp = 0
+
 			try:
 				for sd in data0[2][i]['STATS']:
 					if sd['ID'][0:4] == 'POOL':
@@ -160,8 +163,6 @@ def chkstat(cfg):
 					temp = []
 					fan = []
 
-					err_255 = 0
-					err_temp = 0
 
 					for key in sd:
 						if key[-10:] == 'MM Version':
@@ -178,7 +179,6 @@ def chkstat(cfg):
 							fan.append(str(sd[key]))
 						else:
 							pass
-					error += err_255 * 2 + err_temp
 
 					dev[j].append(str(mn))
 					dev[j].append(temp)
@@ -190,6 +190,7 @@ def chkstat(cfg):
 			except:
 				pass
 
+			error += err_255 * 2 + err_temp
 			if sum_mn < .75 * int(cfg['mod_num_list'][i]):
 				error += 4
 
