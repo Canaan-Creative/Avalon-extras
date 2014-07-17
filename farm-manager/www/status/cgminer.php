@@ -1,53 +1,5 @@
 <?php
-function getsock($addr, $port)
-{
- $socket = null;
- $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
- if ($socket === false || $socket === null)
- {
-	$error = socket_strerror(socket_last_error());
-	$msg = "socket create(TCP) failed";
-	echo "ERR: $msg '$error'\n";
-	return null;
- }
-
- $res = socket_connect($socket, $addr, $port);
- if ($res === false)
- {
-	$error = socket_strerror(socket_last_error());
-	$msg = "socket connect($addr,$port) failed";
-	echo "ERR: $msg '$error'\n";
-	socket_close($socket);
-	return null;
- }
- return $socket;
-}
-#
-# Slow ...
-function readsockline($socket)
-{
- $line = '';
- while (true)
- {
-	$byte = socket_read($socket, 1);
-	if ($byte === false || $byte === '')
-		break;
-	if ($byte === "\0")
-		break;
-	$line .= $byte;
- }
- return $line;
-}
-#
-function request($ip,$port,$cmd)
-{
- $socket = getsock($ip, $port);
- if ($socket != null)
- {
-	socket_write($socket, $cmd, strlen($cmd));
-	$line = readsockline($socket);
-	socket_close($socket);
-
+function decode($line){
 	if (strlen($line) == 0)
 	{
 		echo "WARN: '$cmd' returned nothing\n";
@@ -100,26 +52,19 @@ function request($ip,$port,$cmd)
 
 	return $data;
  }
-
- return null;
-}
 #
 $ip   = $_GET['ip'];
 $ports = explode(',',$_GET['port']);
-#
-$summary_l = array();
-$devs_l = array();
-$stats_l = array();
-$pools_l = array();
-#
-foreach($ports as $port){
-# 
-	$summary_l[] = request($ip,$port,'summary');
-	$devs_l[]    = request($ip,$port,'devs');
-	$stats_l[]   = request($ip,$port,'stats');
-	$pools_l[]   = request($ip,$port,'pools');
-}
+$data = json_decode(exec("python chkstat.py " . $ip . " " . join(' ', $ports)),true);
+for($i = 0; $i < 4 ;$i ++)
+	for($j = 0; $j < count($ports);$j++)
+		$data[$i][$j] = decode($data[$i][$j]);
+$summary_l = $data[0];
+$devs_l = $data[1];
+$stats_l = $data[2];
+$pools_l = $data[3];
 ?>
+
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=GBK">
