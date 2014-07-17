@@ -56,7 +56,9 @@
                                           </tr>
                                         {% endfor %}
                                           <tr>
-                                            <th scope="col" style="text-align: left; border: 1px solid #eeeeee; width: 264px;">Sum</th>
+                                            <th scope="row" colspan="1" style="text-align:left; border: 1px solid #eee; border-top-width: 4px;"><span
+                                              style="font-weight: bold;">Sum</span>
+                                            </th>
                                             <td style="text-align:left; border: 1px solid #eee;	border-top-width: 4px;"><span class="amount">{{ sum_balance }}</span></td>
                                             </th>
                                           </tr> 
@@ -99,9 +101,13 @@
                                         {% for err_miner in err_miner_list %}
                                           <tr>
                                             <th scope="row" colspan="1" style="text-align:left; border: 1px solid #eee; border-top-width: 4px;"><span
-                                              style="font-weight: normal;">{{ err_miner.ip }}</a></span>
+                                              style="font-weight: normal;">{{ err_miner.id }}</span>
                                             </th>
-                                            <td style="text-align:left; border: 1px solid #eee;	border-top-width: 4px;"><span>{{ err_miner.error }}</span>
+                                            <td style="text-align:left; border: 1px solid #eee;	border-top-width: 4px;"><span>
+					    {% for err in err_miner.error %}
+					    	<font color='{{ err.color }}'>{{ err.msg }}</font>
+					    {% endfor %}
+					    </span>
 					    </td>
                                           </tr>
 					{% empty %}

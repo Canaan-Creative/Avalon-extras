@@ -1,0 +1,25 @@
+Farm Status Webpage
+
+├── cgminer.php             Display cgminer stauts.
+│                           Usage: cgminer.php?ip=xx.xx.xx.xx&port=yy,yy,yy                     
+├── css
+│   ├── bootstrap.min.css
+│   └── style.css
+├── images                  T-map & hashrate graph auto-genarated by statreport.py.
+│   ├── fox1.png
+│   └── fox2.png
+├── index.php               Main page, containing T-map, hashrate graph, 
+│                           error list and miner-ip map.
+├── js
+│   ├── bootstrap.min.js
+│   ├── comm.js
+│   ├── jquery.js
+│   └── jquery.min.js
+├── json
+│   ├── farm.json           Farm configuration file, containing position and ip info of 
+│   │                       each miner in each zone.
+│   └── status.json         Error list and some other info auto-genarated by statreport.py.
+├── remote-cgminer-api.py   
+├── restart_cgminer.php
+├── restart_cgminer.py
+└── switch_led.php

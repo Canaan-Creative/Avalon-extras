@@ -39,7 +39,8 @@ def post(mail,template_var):
 		msg_hsimage.add_header('Content-ID', '<{}>'.format(hsimg['cid']))
 	tmp = mail['template'].split('/')
 	template_dir = '/'.join(tmp[:-1])
-	settings.configure(TEMPLATE_DIRS = (template_dir if template_dir else './'))
+	try:settings.configure(TEMPLATE_DIRS = (template_dir if template_dir else './'))
+	except:pass
 	t = loader.get_template(tmp[-1])
 	c = Context(template_var)
 	mail['content'] = t.render(c)
@@ -58,7 +59,7 @@ def post(mail,template_var):
 		return False
 
 
-def sendmail(time,data,cfg):
+def sendmail(time,data,err_list,cfg):
 
 	mail = cfg['Email']
 
@@ -83,7 +84,7 @@ def sendmail(time,data,cfg):
 		fail = 1
 		while retry < int(cfg['Pool']['retry']):
 			try:
-				s = urllib2.urlopen(url).read()
+				s = urllib2.urlopen(url,timeout=10).read()
 				balance = s.split('Final Balance')[1].split(' BTC')[0].split('>')[-1]
 				b += float(balance)
 				fail = 0
@@ -107,30 +108,23 @@ def sendmail(time,data,cfg):
 	template_var['server_code'] = cfg['General']['server_code']
 	template_var['time'] = time
 	alivenum = 0
-	for miner in data:
-		if miner[1] == "Alive":
+	for mminer in data:
+		alive_flag = False
+		for miner in mminer[1:]:
+			if miner[1] == "Alive":
+				alive_flag = True
+		if alive_flag:
 			alivenum += 1
+
 	template_var['active_ip_num'] = str(alivenum) + '/' + str(len(cfg['miner_list']))
 
-	template_var['err_miner_list']=[]
-	for miner in data:
-		if miner[7] != '0':
-			error = int(miner[7])
-			error_r = []
-			if error|8 == error:
-				error_r.append('Unable to connect')
-			if error|4 == error:
-				error_r.append('Alive module number too low')
-			if error|2 == error:
-				error_r.append('Temperature 255')
-			if error|1 == error:
-				error_r.append('Overheating')
-			template_var['err_miner_list'].append({'ip':miner[0], 'error':'. '.join(error_r)+'.'})
+	template_var['err_miner_list'] = err_list
 
 	sum_mod_num = 0
-	for miner in data:
-		for dev_stat in miner[4]:
-			sum_mod_num += int(dev_stat[3])
+	for mminer in data:
+		for miner in mminer[1:]:
+			for dev_stat in miner[4]:
+				sum_mod_num += int(dev_stat[3])
 	sum_mod_num0 = 0
 	for mod_num in cfg['mod_num_list']:
 		sum_mod_num0 += int(mod_num)

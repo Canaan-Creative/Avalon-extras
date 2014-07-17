@@ -20,6 +20,7 @@ optional arguments:
                         files to plot hashrate graph if '-p' is selected.
   -m, --email           send email.
   -p, --hsplot          plot hash speed graph.
+  -w, --webpage         render webpage.
   -t, --tmplot          plot temperature map.
   -c CONFIG, --config CONFIG
                         use another config file rather than ./statreport.conf.
@@ -30,5 +31,5 @@ in crontab:
 # m h  dom mon dow   command
 0   1-23/2 * * * cd ~/bin/statreport;./statreport.py
 57       1 * * * cd ~/bin/statreport;./statreport.py
-3        2 * * * cd ~/bin/statreport;./statreport.py -ntmp
-0 0,4-22/2 * * * cd ~/bin/statreport;./statreport.py -mtp
+3        2 * * * cd ~/bin/statreport;./statreport.py -ntmpw
+0 0,4-22/2 * * * cd ~/bin/statreport;./statreport.py -mtpw
