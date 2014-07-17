@@ -1,3 +1,6 @@
+2014.07.16 #2
+  Fix incorrect 15min-hash-rate on T-map. 
+
 2014.07.16 #1
   Hand over web page rendering to PHP.
 

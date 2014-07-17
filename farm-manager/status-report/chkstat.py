@@ -35,7 +35,7 @@ def apiread(ip,port,command,lock,retry):
 			return json.loads(response)
 		except:
 			lock.acquire()
-			print("\033[31mConnection to " + ip + " lost. Extend time-out and try again.\033[0m")
+			print("\033[31mConnection to " + ip + ":" + port + " lost. Extend time-out and try again.\033[0m")
 			lock.release()
 
 

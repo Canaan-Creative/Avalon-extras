@@ -154,15 +154,22 @@ def tmplot(time_now,data,cfg):
 				text_y2 = int(cfg[zone]['layers']) - 1.0 + float(cfg[zone]['text_y2']) - i % int(cfg[zone]['layers'])
 				text_x3 = i/int(cfg[zone]['layers']) + float(cfg[zone]['text_x3'])
 				text_y3 = int(cfg[zone]['layers']) - 1.0 + float(cfg[zone]['text_y3']) - i % int(cfg[zone]['layers'])
-				if miner[1] == 'Alive':
 
-					l = len(miner[6].split('.')[0])
+				flag_alive = False
+				rate_float = 0
+				for miner in mminer[1:]:
+					if miner[1] == 'Alive':
+						flag_alive = True
+						rate_float += float(miner[6])
+				if flag_alive:
+
+					l = len(str(rate_float).split('.')[0])
 					if l > 2 and l < 6:
-						rate = "%.2f" % (float(miner[6])/1000) + 'G'
+						rate = "%.2f" % (rate_float/1000) + 'G'
 					elif l > 5 and l < 9:
-						rate = "%.2f" % (float(miner[6])/1000000) + 'T'
+						rate = "%.2f" % (rate_float/1000000) + 'T'
 					else:
-						rate = "%.2f" % (float(miner[6])) + 'M'
+						rate = "%.2f" % (rate_float) + 'M'
 					ax.text(text_x1, text_y1, str(sum_mod_num)+'/'+mod_num, ha='right',va='center',fontproperties=ticks_font,color='k')
 					ax.text(text_x2, text_y2, rate,ha='right',va='center',fontproperties=ticks_font,color='k')
 					ax.text(text_x3, text_y3, '%.1f' % Ta[i+ii]+'/'+str(Tm[i+ii]),ha='center',va='center',fontproperties=ticks_font,color='k')
