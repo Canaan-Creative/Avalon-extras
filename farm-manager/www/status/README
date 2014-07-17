@@ -1,4 +1,4 @@
-Farm Stauts Webpage
+Farm Status Webpage
 
 ├── cgminer.php             Display cgminer stauts.
 │                           Usage: cgminer.php?ip=xx.xx.xx.xx&port=yy,yy,yy                     
