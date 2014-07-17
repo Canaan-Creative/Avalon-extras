@@ -101,7 +101,7 @@
                                         {% for err_miner in err_miner_list %}
                                           <tr>
                                             <th scope="row" colspan="1" style="text-align:left; border: 1px solid #eee; border-top-width: 4px;"><span
-                                              style="font-weight: normal;">{{ err_miner.ip }}</span>
+                                              style="font-weight: normal;">{{ err_miner.id }}</span>
                                             </th>
                                             <td style="text-align:left; border: 1px solid #eee;	border-top-width: 4px;"><span>
 					    {% for err in err_miner.error %}

@@ -28,24 +28,25 @@ def tmplot(time_now,data,cfg):
 
 	z = 0
 	zone = 'Zone1'
-	for miner_stat in data:
+	for mminer_stat in data:
 		if i == len(cfg[zone]['miner_list']):
 			z += 1
 			i = 0
 		zone = 'Zone'+str(z+1)
 		T_max = 0
 		err = False
-		for dev_stat in miner_stat[4]:
-			for T_single in dev_stat[4]:
-				T_single = int(T_single)
-				if T_single > T_max:
-					if T_single != 255:
-						T_max = T_single
-					else:
-						err = True
-				if T_single > 0 and T_single<255 :
-					T_sum += T_single
-					n += 1
+		for miner_stat in mminer_stat[1:]:
+			for dev_stat in miner_stat[4]:
+				for T_single in dev_stat[4]:
+					T_single = int(T_single)
+					if T_single > T_max:
+						if T_single != 255:
+							T_max = T_single
+						else:
+							err = True
+					if T_single > 0 and T_single<255 :
+						T_sum += T_single
+						n += 1
 		if cfg[zone]['up_first'] == '1':
 			layer_n = int(cfg[zone]['layers']) - 1 - i % int(cfg[zone]['layers'])
 		else:
@@ -95,7 +96,7 @@ def tmplot(time_now,data,cfg):
 		if re.match(r'tm-(\d+_){4}\d+\.png',pngfile):
 			if datetime.datetime.strptime(pngfile,'tm-%Y_%m_%d_%H_%M.png') >= time_now:
 				continue
-			(data0 , time0, hr0,hr1) = readlog(cfg['General']['log_dir'], pngfile.replace('tm','log').replace('png','xml'))
+			(data0 , time0) = readlog(cfg['General']['log_dir'], pngfile.replace('tm','log').replace('png','xml'))
 			break
 
 	plot_num = 0
@@ -125,8 +126,8 @@ def tmplot(time_now,data,cfg):
 
 			for i in range(j*int(cfg[zone]['plot_split'])*int(cfg[zone]['layers']),(j+1)*int(cfg[zone]['plot_split'])*int(cfg[zone]['layers'])):
 				try:
-					miner = data[i+ii]
-					miner0 = data0[i+ii]
+					mminer = data[i+ii]
+					mminer0 = data0[i+ii]
 				except IndexError:
 					## have read all data
 					break
@@ -139,10 +140,12 @@ def tmplot(time_now,data,cfg):
 
 				sum_mod_num = 0
 				sum_mod_num0 = 0
-				for dev_stat in miner[4]:
-					sum_mod_num += int(dev_stat[3])
-				for dev_stat0 in miner0[4]:
-					sum_mod_num0 += int(dev_stat0[3])
+				for miner in mminer[1:]:
+					for dev_stat in miner[4]:
+						sum_mod_num += int(dev_stat[3])
+				for miner0 in mminer0[1:]:
+					for dev_stat0 in miner0[4]:
+						sum_mod_num0 += int(dev_stat0[3])
 				text_x = i/int(cfg[zone]['layers']) + .5
 				text_y = int(cfg[zone]['layers']) - .5 - i % int(cfg[zone]['layers'])
 				text_x1 = i/int(cfg[zone]['layers']) + float(cfg[zone]['text_x1'])

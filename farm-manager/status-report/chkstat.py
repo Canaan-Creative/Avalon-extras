@@ -9,7 +9,7 @@ import socket
 import json
 from readconfig import readconfig
 
-def apiread(ip,command,lock,retry):
+def apiread(ip,port,command,lock,retry):
 	time_out = 0
 	while True:
 		time_out += 1
@@ -18,7 +18,7 @@ def apiread(ip,command,lock,retry):
 		try:
 			s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 			s.settimeout(time_out)
-			s.connect((ip,4028))
+			s.connect((ip,int(port)))
 
 			s.send(json.dumps({"command":command}))
 
@@ -43,7 +43,7 @@ def apiread(ip,command,lock,retry):
 def socketthread(miner_queue,data0,lock,retry):
 	while True:
 		try:
-			(miner_ip, miner_id) = miner_queue.get(False)
+			(miner_ip, miner_port, miner_id, miner_pid) = miner_queue.get(False)
 
 			err_conn_flag = False
 			for k in range(0,retry):
@@ -51,40 +51,40 @@ def socketthread(miner_queue,data0,lock,retry):
 				try:
 					s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 					s.settimeout(1)
-					s.connect((miner_ip,4028))
+					s.connect((miner_ip,int(miner_port)))
 					s.close()
 					break
 				except:
 					s.close()
 					lock.acquire()
 					if k < retry -1:
-						print('\033[1m\033[33mCannot connect to ' + miner_ip + '. Try Again.\033[0m')
+						print('\033[1m\033[33mCannot connect to ' + miner_ip + ':' + miner_port + '. Try Again.\033[0m')
 					else:
-						print('\033[31mCannot connect to ' + miner_ip + '. Skip.\033[0m')
+						print('\033[31mCannot connect to ' + miner_ip + ':' + miner_port + '. Skip.\033[0m')
 					lock.release()
 					err_conn_flag = True
 			if err_conn_flag:
 				lock.acquire()
-				data0[0][miner_id] = None
-				data0[1][miner_id] = None
-				data0[2][miner_id] = None
-				data0[3][miner_id] = None
+				data0[0][miner_id][miner_pid] = None
+				data0[1][miner_id][miner_pid] = None
+				data0[2][miner_id][miner_pid] = None
+				data0[3][miner_id][miner_pid] = None
 				lock.release()
 				continue
 
 			else:
 				tmp=[]
-				tmp.append(apiread(miner_ip, 'summary',lock,retry))
-				tmp.append(apiread(miner_ip, 'devs',lock,retry))
-				tmp.append(apiread(miner_ip, 'stats',lock,retry))
-				tmp.append(apiread(miner_ip, 'pools',lock,retry))
+				tmp.append(apiread(miner_ip, miner_port, 'summary',lock,retry))
+				tmp.append(apiread(miner_ip, miner_port, 'devs',lock,retry))
+				tmp.append(apiread(miner_ip, miner_port, 'stats',lock,retry))
+				tmp.append(apiread(miner_ip, miner_port, 'pools',lock,retry))
 
 				lock.acquire()
-				data0[0][miner_id] = tmp[0]
-				data0[1][miner_id] = tmp[1]
-				data0[2][miner_id] = tmp[2]
-				data0[3][miner_id] = tmp[3]
-				print("Complete fetching data from " + miner_ip + ".")
+				data0[0][miner_id][miner_pid] = tmp[0]
+				data0[1][miner_id][miner_pid] = tmp[1]
+				data0[2][miner_id][miner_pid] = tmp[2]
+				data0[3][miner_id][miner_pid] = tmp[3]
+				print("Complete fetching data from " + miner_ip + ':' + miner_port + ".")
 				lock.release()
 
 		except Queue.Empty:
@@ -96,12 +96,13 @@ def chkstat(cfg):
 	miner_queue = Queue.Queue()
 	lock = threading.Lock()
 	for i in range(0,len(cfg['miner_list'])):
-		miner_queue.put((cfg['miner_list'][i],i))
+		for j in range(0,len(cfg['port_list'][i])):
+			miner_queue.put((cfg['miner_list'][i],cfg['port_list'][i][j],i,j))
 	## data0[0]: -o summary
 	## data0[1]: -o devs
 	## data0[2]: -o stats
 	## data0[3]: -o pools
-	data0 = [['' for i in range(0,len(cfg['miner_list']))]for i in range(0,4)]
+	data0 = [[[''for i3 in range(0,len(cfg['port_list'][i2]))]for i2 in range(0,len(cfg['miner_list']))]for i1 in range(0,4)]
 
 	threads = []
 	for i in range(0,int(cfg['Telnet']['threads_num'])):
@@ -117,126 +118,119 @@ def chkstat(cfg):
 	data=[]
 	i = 0
 	while i < len(cfg['miner_list']):
-		miner = []
-		miner.append(cfg['miner_list'][i])
-		if data0[1][i] == None:
-			miner.append('Dead')
-			miner.append('0')
-			miner.append('0')
-			miner.append([])
-			miner.append([])
-			miner.append('0')
-			miner.append('8')
-		else:
-			dev = []
-			pool = []
+		mminer = []
+		mminer.append(cfg['miner_list'][i])
+		pn = 0
+		while pn < len(cfg['port_list'][i]):
+			miner = []
+			miner.append(cfg['port_list'][i][pn])
+			if data0[1][i][pn] == None:
+				miner.append('Dead')
+				miner.append('0')
+				miner.append('0')
+				miner.append([])
+				miner.append([])
+				miner.append('0')
+			else:
+				dev = []
+				pool = []
 
-			## error list:
-			## 1000 unenble to connect to port 4028
-			## 0100 alive module num less than 75 percent
-			## 0010 some module's temperature gets 255
-			## 0001 some moduls's temperature is higher than 80
-			error = 0
+				## error list:
+				## 10000 connection failed
+				## 01000 low alive dev num
+				## 00100 low alive module num
+				## 00010 some module's temperature gets 255
+				## 00001 some moduls's temperature is higher than 80
 
-			try:
-				for dd in data0[1][i]['DEVS']:
-					dev_stat = []
-					dev_stat.append(str(dd['Device Elapsed']))
-					dev_stat.append(str(dd['Total MH']))
-					dev_stat.append(str(dd['Temperature']))
-					dev.append(dev_stat)
-			except:
-				pass
-			j = 0
-
-
-			sum_mn = 0
-			err_255 = 0
-			err_temp = 0
-
-			try:
-				for sd in data0[2][i]['STATS']:
-					if sd['ID'][0:4] == 'POOL':
-						#ignore pool stat in 'stats'
-						break
-					mn = 0
-					temp = []
-					fan = []
+				try:
+					for dd in data0[1][i][pn]['DEVS']:
+						dev_stat = []
+						dev_stat.append(str(dd['Device Elapsed']))
+						dev_stat.append(str(dd['Total MH']))
+						dev_stat.append(str(dd['Temperature']))
+						dev.append(dev_stat)
+				except Exception,e:
+					print(str(e)+'.')
+					pass
+				j = 0
 
 
-					for key in sd:
-						if key[-10:] == 'MM Version':
-							mn += 1
-						elif key[0:11] == 'Temperature':
-							temperature = sd[key]
-							if temperature == 255:
-								err_255 = 1
-							elif temperature >= 80:
-								err_temp = 1
-							else: pass
-							temp.append(str(sd[key]))
-						elif key[0:3] == 'Fan':
-							fan.append(str(sd[key]))
-						else:
-							pass
+				try:
+					for sd in data0[2][i][pn]['STATS']:
+						if sd['ID'][0:4] == 'POOL':
+							#ignore pool stat in 'stats'
+							break
+						mn = 0
+						temp = []
+						fan = []
 
-					dev[j].append(str(mn))
-					dev[j].append(temp)
-					dev[j].append(fan)
 
-					sum_mn += mn
+						for key in sd:
+							if key[-10:] == 'MM Version':
+								mn += 1
+							elif key[0:11] == 'Temperature':
+								temperature = sd[key]
+								temp.append(str(sd[key]))
+							elif key[0:3] == 'Fan':
+								fan.append(str(sd[key]))
+							else:
+								pass
 
+						dev[j].append(str(mn))
+						dev[j].append(temp)
+						dev[j].append(fan)
+
+
+						j += 1
+				except Exception,e:
+					print(str(e)+'.')
+					pass
+
+
+				## when will 'devs' & 'stats' return different device numbers?
+				while j < len(dev):
+					print(cfg['miner_list'][i])
+					## mod num
+					dev[j].append('0')
+					## temperature list
+					dev[j].append([])
+					## fan speed list
+					dev[j].append([])
 					j += 1
-			except:
-				pass
 
-			error += err_255 * 2 + err_temp
-			if sum_mn < .75 * int(cfg['mod_num_list'][i]):
-				error += 4
+				try:
+					for pd in data0[3][i][pn]['POOLS']:
+						pool_stat = []
+						pool_stat.append(pd['Status'])
+						pool_stat.append(pd['URL'])
+						pool.append(pool_stat)
+				except Exception,e:
+					print(str(e)+'.')
+					pass
 
-			## when will 'devs' & 'stats' return different device numbers?
-			while j < len(dev):
-				print(cfg['miner_list'][i])
-				## mod num
-				dev[j].append('0')
-				## temperature list
-				dev[j].append([])
-				## fan speed list
-				dev[j].append([])
-				j += 1
+				miner.append('Alive')
 
-			try:
-				for pd in data0[3][i]['POOLS']:
-					pool_stat = []
-					pool_stat.append(pd['Status'])
-					pool_stat.append(pd['URL'])
-					pool.append(pool_stat)
-			except:
-				pass
+				try:
+					miner.append(str(data0[0][i][pn]['SUMMARY'][0]['Elapsed']))
+				except:
+					miner.append('0')
 
-			miner.append('Alive')
+				try:
+					miner.append(str(data0[0][i][pn]['SUMMARY'][0]['Total MH']))
+				except:
+					miner.append('0')
 
-			try:
-				miner.append(str(data0[0][i]['SUMMARY'][0]['Elapsed']))
-			except:
-				miner.append('0')
+				miner.append(dev)
+				miner.append(pool)
 
-			try:
-				miner.append(str(data0[0][i]['SUMMARY'][0]['Total MH']))
-			except:
-				miner.append('0')
+				try:
+					miner.append(str(data0[0][i][pn]['SUMMARY'][0]['MHS 15m']))
+				except KeyError:
+					miner.append('0')
 
-			miner.append(dev)
-			miner.append(pool)
-
-			try:
-				miner.append(str(data0[0][i]['SUMMARY'][0]['MHS 15m']))
-			except KeyError:
-				miner.append('0')
-
-			miner.append(str(error))
-
-		data.append(miner)
+			mminer.append(miner)
+			pn += 1
+		data.append(mminer)
 		i += 1
 	print(" Done.")
 	return data
