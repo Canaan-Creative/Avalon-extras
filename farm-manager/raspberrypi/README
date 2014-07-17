@@ -19,3 +19,5 @@ reboot_raspberrypi.sh:
 update_rasberrypi.sh:
 	firmware tools(burn,change ip,modify config)
 
+distsync.sh:
+	Create OpenWrt package's pool for pi and etc.	
