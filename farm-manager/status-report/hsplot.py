@@ -4,6 +4,9 @@ from statlogging import readlog
 from readconfig import readconfig
 from chkrate import chkrate
 
+import os
+import tempfile
+os.environ['MPLCONFIGDIR'] = tempfile.mkdtemp()
 import matplotlib
 matplotlib.use('Agg',warn=False)
 import matplotlib.pyplot as plt

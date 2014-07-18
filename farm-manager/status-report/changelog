@@ -1,3 +1,6 @@
+2014.07.18 #2
+  Add argument '-r' to skip fetching pool hash rate.
+
 2014.07.18 #1
   Fix incorrect module ID in error list.
 

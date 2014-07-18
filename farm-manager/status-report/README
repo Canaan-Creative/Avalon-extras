@@ -10,7 +10,7 @@ Depends:
 Debian-based Linux distributions:
 	apt-get install python2.7 python-scipy python-numpy python-matplotlib python-django
 	
-usage: statreport.py [-h] [-n] [-m] [-p] [-t] [-c CONFIG]
+usage: statreport.py [-h] [-n] [-r] [-m] [-w] [-p] [-t] [-c CONFIG]
 
 Generate miner status report.
 
@@ -18,9 +18,10 @@ optional arguments:
   -h, --help            show this help message and exit
   -n, --nolog           do not write xml log; will use former generated log
                         files to plot hashrate graph if '-p' is selected.
+  -r, --nopoolhashrate  do not fetch pool hashrate.
   -m, --email           send email.
-  -p, --hsplot          plot hash speed graph.
   -w, --webpage         render webpage.
+  -p, --hsplot          plot hash speed graph.
   -t, --tmplot          plot temperature map.
   -c CONFIG, --config CONFIG
                         use another config file rather than ./statreport.conf.

@@ -17,6 +17,7 @@ import re
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description="Generate miner status report.")
 	parser.add_argument("-n","--nolog", help="do not write xml log; will use former generated log files to plot hashrate graph if '-p' is selected.", action="store_true")
+	parser.add_argument("-r","--nopoolhashrate", help="do not fetch pool hashrate.", action="store_true")
 	parser.add_argument("-m","--email", help="send email.", action="store_true")
 	parser.add_argument("-w","--webpage", help="render webpage.", action="store_true")
 	parser.add_argument("-p","--hsplot", help="plot hash speed graph.", action="store_true")
@@ -42,14 +43,15 @@ if __name__ == '__main__':
 
 	if not args.nolog:
 		data = chkstat(cfg)
-		hashrate = chkrate(data,data0,cfg,time_now,time_old)
+		if not args.nopoolhashrate:
+			hashrate = chkrate(data,data0,cfg,time_now,time_old)
 		err = chkerr(data,cfg,time_now)
 		writelog(data,cfg,"log-" + time_now.strftime("%Y_%m_%d_%H_%M") + ".xml")
-
 	if args.hsplot:
 		if args.nolog:
-			hashrate = chkrate(None,None,cfg,time_now,time_old)
 			time_now = time_old
+		if args.nolog or args.nopoolhashrate:
+			hashrate = chkrate(None,None,cfg,time_now,time_old)
 		hspng = hsplot(hashrate,cfg,time_now)
 		if hspng != 1:
 			cfg['Email']['hsimg_dir'] = cfg['HSplot']['img_dir']

@@ -39,8 +39,12 @@ def renderpage(time,data,err,cfg):
 		f_s = open(cfg['Webpage']['stat_json'],'w')
 		f_s.write(status)
 		f_s.close()
-		shutil.copyfile(cfg['TMplot']['img_dir'] + "tm-"+time.strftime("%Y_%m_%d_%H_%M")+".png", cfg['Webpage']['tm_pic'])
-		shutil.copyfile(cfg['HSplot']['img_dir'] + "hs-"+time.strftime("%Y_%m_%d_%H_%M")+".png", cfg['Webpage']['hs_pic'])
+	except Exception,e:
+		print(str(e))
+	try:	shutil.copyfile(cfg['TMplot']['img_dir'] + "tm-"+time.strftime("%Y_%m_%d_%H_%M")+".png", cfg['Webpage']['tm_pic'])
+	except Exception,e:
+		print(str(e))
+	try:	shutil.copyfile(cfg['HSplot']['img_dir'] + "hs-"+time.strftime("%Y_%m_%d_%H_%M")+".png", cfg['Webpage']['hs_pic'])
 	except Exception,e:
 		print(str(e))
 

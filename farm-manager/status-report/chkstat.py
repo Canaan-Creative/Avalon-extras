@@ -50,7 +50,7 @@ def socketthread(miner_queue,data0,lock,retry):
 				## try connecting for some times
 				try:
 					s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-					s.settimeout(1)
+					s.settimeout(k+1)
 					s.connect((miner_ip,int(miner_port)))
 					s.close()
 					break
