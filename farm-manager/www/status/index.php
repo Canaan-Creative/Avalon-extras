@@ -34,12 +34,26 @@ $status = json_decode($file,true);
 <script src="js/jquery.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
 <script src="js/comm.js"></script>
+<script>
+function refresh(){
+	$.ajax({
+		type:"POST",
+		url:"refresh.php",
+		data:{},
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+		}
+	});
+}
+</script>
 <body>
 	<div class="row">
 		<!--Left Start-->
 		<div class="col-md-6">
 			<div class="jumbotron">
-			<h2>Generated <?php echo $status["time"] ?></h2>
+			<h2>Generated at <?php echo $status["time"] ?></h2>
+			<!--<button onClick="refresh();">Refresh</button>-->
 			</div>
 			<div class="jumbotron">
 				<a href="#" class="thumbnail">

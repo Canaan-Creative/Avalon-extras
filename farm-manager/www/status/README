@@ -10,7 +10,7 @@ Farm Status Webpage
 │   ├── fox1.png
 │   └── fox2.png
 ├── index.php               Main page, containing T-map, hashrate graph, 
-│                           error list and miner-ip map.
+│                             error list and miner-ip map.
 ├── js
 │   ├── bootstrap.min.js
 │   ├── comm.js
@@ -20,6 +20,9 @@ Farm Status Webpage
 │   ├── farm.json           Farm configuration file, containing position and ip info of 
 │   │                       each miner in each zone.
 │   └── status.json         Error list and some other info auto-genarated by statreport.py.
+├── refresh.php             Manual regenerate error list & T-map.   
+├── refresh.sh              Call statreport.py. A link to path of statreport should be made 
+│                             and related folders' write permission should be set.
 ├── remote-cgminer-api.py   
 ├── restart_cgminer.php
 ├── restart_cgminer.py
