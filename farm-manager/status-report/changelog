@@ -1,4 +1,7 @@
-2014.07.16 #2
+2014.07.18 #1
+  Fix incorrect module ID in error list.
+
+2014.07.17 #1
   Fix incorrect 15min-hash-rate on T-map. 
 
 2014.07.16 #1
