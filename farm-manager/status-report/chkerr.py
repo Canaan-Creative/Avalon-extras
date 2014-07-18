@@ -32,8 +32,8 @@ def chkerr(data,cfg,time):
 						except:
 							pass
 					for l in range(0,len(dev_stat[4])/2):
-						t0 = int(dev_stat[4][l])
-						t1 = int(dev_stat[4][l+1])
+						t0 = int(dev_stat[4][l*2])
+						t1 = int(dev_stat[4][l*2+1])
 						error_msg = []
 						if t0 >= 255 or t1 >= 255:
 							error_msg.append({'msg':'Temperature 255. ','color':'purple'})
@@ -57,11 +57,11 @@ def chkerr(data,cfg,time):
 
 		i += 1
 	for error in error_list:
-		error_log += error['id']+'\t'
+		error_log += '\t' + error['id']+'\t'
 		for msg in error['error']:
 			error_log += msg['msg']
 		error_log += '\n'
-
+	print("Error List:")
 	print(error_log,end="")
 	sys.stdout.flush()
 	return error_list

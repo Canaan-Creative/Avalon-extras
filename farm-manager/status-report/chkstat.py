@@ -161,8 +161,9 @@ def chkstat(cfg):
 							#ignore pool stat in 'stats'
 							break
 						mn = 0
-						temp = []
-						fan = []
+						did = int(sd['STATS'])
+						temp = ['0' for iii in range(0,int(cfg['dev_list'][i][pn][did])*2)]
+						fan = ['0' for iii in range(0,int(cfg['dev_list'][i][pn][did])*2)]
 
 
 						for key in sd:
@@ -170,9 +171,13 @@ def chkstat(cfg):
 								mn += 1
 							elif key[0:11] == 'Temperature':
 								temperature = sd[key]
-								temp.append(str(sd[key]))
+								index = int(key[11:])
+								while len(temp) < index: temp += ['0']
+								temp[index - 1] = str(sd[key])
 							elif key[0:3] == 'Fan':
-								fan.append(str(sd[key]))
+								index = int(key[3:])
+								while len(fan) < index: fan += ['0']
+								fan[int(key[3:])-1] = str(sd[key])
 							else:
 								pass
 
