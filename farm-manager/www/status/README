@@ -1,7 +1,8 @@
 Farm Status Webpage
 
 ├── cgminer.php             Display cgminer stauts.
-│                           Usage: cgminer.php?ip=xx.xx.xx.xx&port=yy,yy,yy                     
+│                           Usage: cgminer.php?ip=xx.xx.xx.xx&port=yy,yy,yy&hl=dd-mm
+│                                  dd[-mm] : dev (and mod) to highlighted display
 ├── css
 │   ├── bootstrap.min.css
 │   └── style.css
@@ -22,4 +23,5 @@ Farm Status Webpage
 ├── remote-cgminer-api.py   
 ├── restart_cgminer.php
 ├── restart_cgminer.py
-└── switch_led.php
+├── switch_led.php
+└── chkstat.py

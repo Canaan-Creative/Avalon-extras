@@ -81,7 +81,33 @@ foreach($farm_map as $zone_map){
 if(count($status["err_miner_list"]) === 0) echo "<tr><td>None</td><td>None</td></tr>";
 else{
 	foreach($status["err_miner_list"] as $err_miner){
-		echo "<tr><td>" . $err_miner["id"] . "</td><td>";
+		$lines = explode(" ",$err_miner["id"]);
+		switch(count($lines)){
+		case 1:
+			if(strpos($lines[0],":") == False){
+				foreach($zones as $zone)
+				foreach($zone["miner"] as $miner)
+					if($miner["ip"] == $lines[0]){
+						$ports = array();
+						foreach($miner["cgminer"] as $cgminer) $ports[] = $cgminer["port"];
+						$href = "cgminer.php?ip=" . $lines[0] . "&port=" . join(",",$ports);
+						break;
+					}
+			}else{
+				$liness = explode(":",$lines[0]); 
+			       	$href = "cgminer.php?ip=" . $liness[0] . "&port=" . $liness[1];
+			}
+			break;
+		case 2:
+			$liness = explode(":",$lines[0]);
+			$href = "cgminer.php?ip=" . $liness[0] . "&port=" . $liness[1] . "&hl=" . substr(explode("#",$lines[1])[1],0,1); 
+			break;
+		case 3:
+			$liness = explode(":",$lines[0]);
+			$href = "cgminer.php?ip=" . $liness[0] . "&port=" . $liness[1] . "&hl=" . explode(',',explode("#",$lines[1])[1])[0] . "-" . explode("#",$lines[2])[1]; 
+			break;
+		}
+		echo "<tr><td><a href=\"" . $href . "\">" . $err_miner["id"] . "</a></td><td>";
 		foreach($err_miner["error"] as $err) echo "<font color=\"" . $err["color"] . "\">" . $err["msg"] . "</font>";
 		echo "</td></tr>";
 	}

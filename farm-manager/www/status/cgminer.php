@@ -55,6 +55,7 @@ function decode($line){
 #
 $ip   = $_GET['ip'];
 $ports = explode(',',$_GET['port']);
+$hls = explode('-',$_GET['hl']);
 $data = json_decode(exec("python chkstat.py " . $ip . " " . join(' ', $ports)),true);
 for($i = 0; $i < 4 ;$i ++)
 	for($j = 0; $j < count($ports);$j++)
@@ -113,6 +114,8 @@ legend{ font-size:16px; font-weight:bold;}
 table{ width:100%;}
 th{ background:#efefef ; border:1px solid #c3c3c3;}
 td{ border:1px solid #c3c3c3;}
+.highlight{border:1px solid #c3c3c3; background:red}
+.lowlight{border:1px solid #c3c3c3; background:yellow}
 </style>
 
 </head>
@@ -209,24 +212,26 @@ echo "
   <th>Device</th><th>Enabled</th><th>Status</th><th>Temperature(C)</th><th>GHSav</th><th>GHS5s</th><th>GHS1m</th><th>GHS5m</th><th>GHS15m</th><th>LastValidWork</th>
 </tr>";
 
-  foreach($devs as $dev_name=>$dev) {
-    if($dev_name !== 'STATUS'){
+foreach($devs as $dev_name=>$dev){
+	if($dev_name !== 'STATUS'){
+		if($dev['ID'] == $hls[0]) $td = "<td class=\"highlight\">";
+		else $td = "<td>";
       echo "<tr>";
-      echo "<td>" . key($dev) . current($dev) ."</td>";
-      echo "<td>" . $dev['Enabled'] . "</td>";
-      echo "<td>" . $dev['Status'] . "</td>";
-      echo "<td>" . $dev['Temperature'] . "</td>";
-      echo "<td>" . $dev['MHS av']/1000 . "</td>";
-      echo "<td>" . $dev['MHS 5s']/1000 . "</td>";
-      echo "<td>" . $dev['MHS 1m']/1000 . "</td>";
-      echo "<td>" . $dev['MHS 5m']/1000 . "</td>";
-      echo "<td>" . $dev['MHS 15m']/1000 . "</td>";
+      echo $td . key($dev) . current($dev). "-" . $dev['Name'] . "-" . $dev['ID'] ."</td>";
+      echo $td . $dev['Enabled'] . "</td>";
+      echo $td . $dev['Status'] . "</td>";
+      echo $td . $dev['Temperature'] . "</td>";
+      echo $td . $dev['MHS av']/1000 . "</td>";
+      echo $td . $dev['MHS 5s']/1000 . "</td>";
+      echo $td . $dev['MHS 1m']/1000 . "</td>";
+      echo $td . $dev['MHS 5m']/1000 . "</td>";
+      echo $td . $dev['MHS 15m']/1000 . "</td>";
       if($dev['Last Valid Work'] !== "0"){
         $dt = new DateTime();
         $dt->setTimestamp($dev['Last Valid Work']);
-        echo "<td>" . date_format($dt,"Y-m-d H:i:s") . "</td>";
+        echo $td . date_format($dt,"Y-m-d H:i:s") . "</td>";
       }
-      else echo "<td>Never</td>";
+      else echo $td . "Never</td>";
       echo "</tr>";
     }
 }
@@ -240,32 +245,36 @@ echo "
 <div class=\"div-table\">
 <table>
 <tr>								
-  <th>Indicator</th><th>Device</th><th>MM</th><th>LocalWorks</th><th>DH%</th><th>Temperature(C)</th><th>Fan(RPM)</th><th>ASIC V(V)</th><th>ASIC F(GHS)</th>
+  <th>Indicator</th><th>Device</th><th>Module</th><th>MM</th><th>LocalWorks</th><th>DH%</th><th>Temperature(C)</th><th>Fan(RPM)</th><th>ASIC V(V)</th><th>ASIC F(GHS)</th>
 </tr>";
 
-  foreach($stats as $stat_name=>$stat) {
-    if($stat_name !== 'STATUS' && strpos($stat['ID'],"POOL") === False){
-      $mods = array();
-      foreach($stat as $key=>$value){
-        if(strpos($key,'MM Version') !== False){
-          $mods[] = substr($key,2,1);
-        }
-      }
-      foreach($mods as $mod){
+foreach($stats as $stat_name=>$stat) {
+	if($stat_name !== 'STATUS' && strpos($stat['ID'],"POOL") === False){
+		$mods = array();
+		foreach($stat as $key=>$value)
+			if(strpos($key,'MM Version') !== False) $mods[] = substr($key,2,1);
+      
+	foreach($mods as $mod){
+		$td = "<td>";
+		if(substr($stat['ID'],3) == $hls[0]){
+			if(count($hls) == 1) $td = "<td class=\"lowlight\">";
+			else if($mod == $hls[1]) $td = "<td class=\"highlight\">";
+		}
         echo "<tr>";
         echo "<td><button onClick=\"switch_led('" . $ip . "'," . $port . "," . substr($stat_name,5) . "," . $mod . ");\">LED</button></td>";
-        echo "<td>" . $stat['ID'] . "</td>";
-        echo "<td>" . $stat['ID' . $mod . ' MM Version'] . "</td>";
-        echo "<td>" . $stat['Local works' . $mod] . "</td>";
-        echo "<td>" . $stat['Device hardware error' . $mod . '%'] . "</td>";
-        echo "<td>" . $stat['Temperature' . ($mod * 2 - 1)] . "|" . $stat['Temperature' . ($mod * 2)] . "</td>";
-        echo "<td>" . $stat['Fan' . ($mod * 2 - 1)] . "|" . $stat['Fan' . ($mod * 2)] . "</td>";
-        echo "<td>" . $stat['Voltage' . $mod]/10000 . "</td>";
-        echo "<td>" . $stat['Frequency' . $mod]/1000 . "</td>";
+        echo $td . substr($stat['ID'],0,3) . "-" . substr($stat['ID'],3) . "</td>";
+        echo $td . $mod . "</td>";
+        echo $td . $stat['ID' . $mod . ' MM Version'] . "</td>";
+        echo $td . $stat['Local works' . $mod] . "</td>";
+        echo $td . $stat['Device hardware error' . $mod . '%'] . "</td>";
+        echo $td . $stat['Temperature' . ($mod * 2 - 1)] . "|" . $stat['Temperature' . ($mod * 2)] . "</td>";
+        echo $td . $stat['Fan' . ($mod * 2 - 1)] . "|" . $stat['Fan' . ($mod * 2)] . "</td>";
+        echo $td . $stat['Voltage' . $mod]/10000 . "</td>";
+        echo $td . $stat['Frequency' . $mod]/1000 . "</td>";
         echo "</tr>";
       }
     }
-  }
+ }	
 echo "
 </table>
 </div>
