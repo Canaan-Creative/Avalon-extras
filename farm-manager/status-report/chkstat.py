@@ -56,13 +56,15 @@ def socketthread(miner_queue,data0,lock,retry):
 					break
 				except:
 					s.close()
-					lock.acquire()
 					if k < retry -1:
+						lock.acquire()
 						print('\033[1m\033[33mCannot connect to ' + miner_ip + ':' + miner_port + '. Try Again.\033[0m')
+						lock.release()
 					else:
+						lock.acquire()
 						print('\033[31mCannot connect to ' + miner_ip + ':' + miner_port + '. Skip.\033[0m')
-					lock.release()
-					err_conn_flag = True
+						lock.release()
+						err_conn_flag = True
 			if err_conn_flag:
 				lock.acquire()
 				data0[0][miner_id][miner_pid] = None
