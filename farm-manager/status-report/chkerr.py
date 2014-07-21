@@ -64,4 +64,11 @@ def chkerr(data,cfg,time):
 	print("Error List:")
 	print(error_log,end="")
 	sys.stdout.flush()
+
+	logdir = cfg['General']['errlog_dir']
+	filename = 'err_' + time.strftime("%Y_%m_%d_%H_%M") + '.log'
+	logfile = open(logdir + filename, 'w')
+	logfile.write(error_log)
+	logfile.close()
+
 	return error_list

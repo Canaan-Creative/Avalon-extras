@@ -1,3 +1,6 @@
+2014.07.21 #1
+  Add miner error list log.
+
 2014.07.18 #2
   Add argument '-r' to skip fetching pool hash rate.
 

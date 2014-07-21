@@ -11,12 +11,16 @@ def readconfig(cfgfile):
 
 	if cfg['General']['log_dir'][-1] != '/':
 		cfg['General']['log_dir'] += '/'
+	if cfg['General']['errlog_dir'][-1] != '/':
+		cfg['General']['errlog_dir'] += '/'
 	if cfg['HSplot']['img_dir'][-1] != '/':
 		cfg['HSplot']['img_dir'] += '/'
 	if cfg['TMplot']['img_dir'][-1] != '/':
 		cfg['TMplot']['img_dir'] += '/'
 	if not os.path.isdir(cfg['General']['log_dir']):
 		os.makedirs(cfg['General']['log_dir'])
+	if not os.path.isdir(cfg['General']['errlog_dir']):
+		os.makedirs(cfg['General']['errlog_dir'])
 	if not os.path.isdir(cfg['HSplot']['img_dir']):
 		os.makedirs(cfg['HSplot']['img_dir'])
 	if not os.path.isdir(cfg['TMplot']['img_dir']):
