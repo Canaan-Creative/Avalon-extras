@@ -1,1 +1,1 @@
-.Cred{ color:red;}
+table.tmap{ margin:10px auto 10px auto;  }td.tmap{ width:75px;height:75px;}p.tmap{ font-size:small !important;font-weight:bold !important;text-align:center !important;margin:0px !important;}td.yaxis{ width:10px;height:75px; }td.xaxis{ width:75px;height:10px; }p.axis{ font-size:small !important;text-align:center !important;margin:0px !important; }

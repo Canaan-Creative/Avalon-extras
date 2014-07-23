@@ -1,9 +1,14 @@
 <?php
 $file = file_get_contents("json/farm.json");
 $farm = json_decode($file,true);
+$file = file_get_contents("json/status.json");
+$status = json_decode($file,true);
 $zones = $farm["zone"];
+$zones2 = $status["zone"];
 $farm_map = array();
+$z = 0;
 foreach($zones as $zone){
+	$zone2 = $zones2[$z];
 	$zone_map = array();
 	$miner_per_table = $zone["layers"] * $zone["plot_split"];
 	for($i = 0; $i < ceil( count($zone["miner"]) / $miner_per_table) ; $i ++) {
@@ -12,19 +17,62 @@ foreach($zones as $zone){
 		$zone_map[] = $split_map;
 	}
 	for($i=0; $i < count($zone["miner"]); $i ++){
+		$miner = $zone["miner"][$i];
+		$miner2 = $zone2["miner"][$i];
 		$n = floor($i / $miner_per_table);
 		$x = floor(($i % $miner_per_table) / $zone["layers"]);
 		$y = ($i % $miner_per_table) % $zone["layers"];
 		$ports = array();
-		foreach($zone["miner"][$i]["cgminer"] as $cgminer) $ports[] = $cgminer["port"];
-		$zone_map[$n][$y][$x] = "<a href=\"cgminer.php?ip=" .
-		       	$zone["miner"][$i]["ip"] . "&port=" . join(",",$ports) . "\">" . explode(".",$zone['miner'][$i]["ip"])[3] . "</a>";
+		foreach($miner["cgminer"] as $cgminer) $ports[] = $cgminer["port"];
+		if($miner2['alive'] == 'True')
+		{
+			$content = "<p class=\"tmap\">" . $miner2['modnum'];
+			$content = $content . "<font color=\"white\">";
+			switch($miner2['d_modnum'])
+			{
+			case 1:
+				$content = $content . "&#x2B06&#x2B06";
+				break;
+			case -1:
+				$content = $content . "&#x2B07&#x2B07";
+				break;
+			case 0:
+				$content = $content . "  ";
+				break;
+			}
+			$content = $content . "</font>";
+			$content = $content . "</p><p class=\"tmap\">" . $miner2['hashrate'];
+			$content = $content . "<font color=\"white\">";
+			switch($miner2['d_hashrate'])
+			{
+			case 2:
+				$content = $content . "&#x2B06&#x2B06";
+				break;
+			case -2:
+				$content = $content . "&#x2B07&#x2B07";
+				break;
+			case 1:
+				$content = $content . " &#x2B06";
+				break;
+			case -1:
+				$content = $content . " &#x2B07";
+				break;
+			case 0:
+				$content = $content . "  ";
+				break;
+			}
+			$content = $content . "</font>";
+			$content = $content . "</p><p class=\"tmap\">" . round($miner2['tempavg'],1) . "/" . $miner2['tempmax'] . "</p>";
+		}
+		else $content = "N/A";
+		$zone_map[$n][$y][$x] = "<td class=\"tmap\" style=\"background:" . $miner2['color'] .
+			"\" onclick=\"location.href='" . "cgminer.php?ip=" . $miner["ip"] . "&port=" . join(",",$ports) . "'\">" .
+			$content 
+			. "</td>";
 	}	
 	$farm_map[] = $zone_map;
+	$z ++;
 }
-#
-$file = file_get_contents("json/status.json");
-$status = json_decode($file,true);
 ?>
 
 <html>
@@ -56,20 +104,26 @@ function refresh(){
 			<!--<button onClick="refresh();">Refresh</button>-->
 			</div>
 			<div class="jumbotron">
-				<a href="#" class="thumbnail">
-					<img data-src="images/fox2.png" src="images/fox2.png" alt="...">
-				</a>
-			</div>
-			<div class="jumbotron">
 <?php
+$s = 1;
 foreach($farm_map as $zone_map){
 	for($n = 0; $n < count($zone_map); $n ++){
-		echo "<table class=\"table table-bordered table-striped\"><tbody>";
+		echo "<table class=\"tmap\"><tbody>";
 		for($y = 0; $y < count($zone_map[$n]);$y ++){
-			echo "<tr>";
-			for($x = 0; $x < count($zone_map[$n][$y]);$x ++) echo "<td>" . $zone_map[$n][$y][$x] . "</td>";
+			echo "<tr><td class=\"yaxis\"><p class=\"axis\">";
+			echo count($zone_map[$n])-$y . "</p></td>"; 
+			for($x = 0; $x < count($zone_map[$n][$y]);$x ++) echo $zone_map[$n][$y][$x];
 			echo "</tr>";
 		}
+		echo "<tr><td class=\"xaxiis\">  </td>";
+		for($x = 0; $x < count($zone_map[$n][0]);$x ++){
+			if($zone_map[$n][$y][$x] === ' ') echo "<td class=\"xaxis\"> </td>";
+			else{
+				echo "<td class=\"xaxis\"><p class=\"axis\">" . $s . "</td>";
+				$s ++;
+			}
+		}
+		echo "</tr>";
 		echo "</tbody></table>";
 	}
 }
