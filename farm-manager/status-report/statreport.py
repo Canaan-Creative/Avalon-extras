@@ -64,12 +64,12 @@ if __name__ == '__main__':
 			err = chkerr(data,cfg,time_now)
 
 	if args.tmplot:
-		tmpng = tmplot(time_now,data,cfg)
+		(tmpng,tmap_data) = tmplot(time_now,data,cfg)
 		cfg['Email']['tmimg_dir'] = cfg['TMplot']['img_dir']
 		cfg['Email']['tmimg'] = tmpng
 
 	if args.webpage:
-		renderpage(time_now,data,err,cfg)
+		renderpage(time_now,data,err,tmap_data,cfg)
 	if args.email:
 		sendmail(time_now.strftime("%Y-%m-%d %H:%M"),data,err,cfg)
 

@@ -6,9 +6,10 @@ import re
 import datetime
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg',warn=False)
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1 import ImageGrid
 from matplotlib import gridspec
@@ -25,6 +26,8 @@ def tmplot(time_now,data,cfg):
 	Tm=[]
 	T_err = [[]for j in range(0,cfg['zone_num'])]
 	T_err_255 = [[]for j in range(0,cfg['zone_num'])]
+
+	tmap_data = {'zone':[{'miner':[]}for j in range(0,cfg['zone_num'])]}
 
 	z = 0
 	zone = 'Zone1'
@@ -75,8 +78,9 @@ def tmplot(time_now,data,cfg):
 		i += 1
 	for z in range(0,cfg['zone_num']):
 		T[z] = np.ma.masked_greater(T[z], 254.5)
-	cmap = matplotlib.cm.jet
+	cmap = cm.jet
 	norm = matplotlib.colors.Normalize(vmin=60, vmax=90)
+	scal = cm.ScalarMappable(norm=norm, cmap=cmap)
 
 	fig = plt.figure(figsize=(float(cfg['TMplot']['width'])/float(cfg['TMplot']['dpi']),float(cfg['TMplot']['height'])/float(cfg['TMplot']['dpi'])), dpi=int(cfg['TMplot']['dpi']), facecolor="white")
 	titlefont = {'family' : cfg['TMplot']['font_family1'],
@@ -137,7 +141,7 @@ def tmplot(time_now,data,cfg):
 					## have read into another zone
 					i -= 1
 					break
-
+				miner_data = {'ip':mminer[0]}
 				sum_mod_num = 0
 				sum_mod_num0 = 0
 				for miner in mminer[1:]:
@@ -161,8 +165,11 @@ def tmplot(time_now,data,cfg):
 					if miner[1] == 'Alive':
 						flag_alive = True
 						rate_float += float(miner[6])
+				miner_data['alive'] = str(flag_alive)
 				if flag_alive:
-
+					miner_data['color'] = '#%02x%02x%02x' %  scal.to_rgba( Tm[i+ii] , bytes = True )[0:3]
+					miner_data['tempmax'] = Tm[i+ii]
+					miner_data['tempavg'] = Ta[i+ii]
 					l = len(str(rate_float).split('.')[0])
 					if l > 2 and l < 6:
 						rate = "%.2f" % (rate_float/1000) + 'G'
@@ -170,30 +177,38 @@ def tmplot(time_now,data,cfg):
 						rate = "%.2f" % (rate_float/1000000) + 'T'
 					else:
 						rate = "%.2f" % (rate_float) + 'M'
+					miner_data['modnum'] = str(sum_mod_num)+'/'+mod_num
+					miner_data['hashrate'] = rate
 					ax.text(text_x1, text_y1, str(sum_mod_num)+'/'+mod_num, ha='right',va='center',fontproperties=ticks_font,color='k')
 					ax.text(text_x2, text_y2, rate,ha='right',va='center',fontproperties=ticks_font,color='k')
 					ax.text(text_x3, text_y3, '%.1f' % Ta[i+ii]+'/'+str(Tm[i+ii]),ha='center',va='center',fontproperties=ticks_font,color='k')
 					if sum_mod_num > sum_mod_num0:
 						ax.text(text_x1, text_y1, r'$\blacktriangle\blacktriangle$',fontproperties=ticks_font,color='k',ha='left',va='bottom')
+						miner_data['d_modnum'] = 1
 					elif sum_mod_num < sum_mod_num0:
 						ax.text(text_x1, text_y1, r'$\blacktriangledown\blacktriangledown$',fontproperties=ticks_font,color='m',ha='left',va='center')
+						miner_data['d_modnum'] = -1
 					else:
-						pass
+						miner_data['d_modnum'] = 0
 					if float(miner[6]) > float(miner0[6])*1.5:
 						ax.text(text_x2, text_y2, r'$\blacktriangle\blacktriangle$',fontproperties=ticks_font,color='k',ha='left',va='center')
+						miner_data['d_hashrate'] = 2
 					elif float(miner[6]) > float(miner0[6])*1.1:
 						ax.text(text_x2, text_y2, r'$\blacktriangle$',fontproperties=ticks_font,color='k',ha='left',va='center')
+						miner_data['d_hashrate'] = 1
 					elif float(miner[6]) < float(miner0[6])*0.5:
 						ax.text(text_x2, text_y2, r'$\blacktriangledown\blacktriangledown$',fontproperties=ticks_font,color='m',ha='left',va='center')
+						miner_data['d_hashrate'] = -2
 					elif float(miner[6]) < float(miner0[6])*0.9:
 						ax.text(text_x2, text_y2, r'$\blacktriangledown$',fontproperties=ticks_font,color='m',ha='left',va='center')
+						miner_data['d_hashrate'] = -1
 					else:
-						pass
-
+						miner_data['d_hashrate'] = 0
 
 				else:
+					miner_data['color'] = '#ffffff'
 					ax.text(text_x, text_y,'N/A',ha='center',va='center',fontproperties=ticks_font,color='k')
-
+				tmap_data['zone'][z]['miner'].append(miner_data)
 			## single zone may have multi subplots
 			## split according to cfg['Zone#'][plot_split]
 			## method: alway plot the full fig in one subplot**, use x/ylim to cut print area out.
@@ -244,5 +259,5 @@ def tmplot(time_now,data,cfg):
 	plt.savefig(cfg['TMplot']['img_dir'] + "tm-"+time_now.strftime("%Y_%m_%d_%H_%M")+".png")
 	plt.clf()
 	print("Done.")
-	return "tm-"+time_now.strftime("%Y_%m_%d_%H_%M")+".png"
+	return ("tm-"+time_now.strftime("%Y_%m_%d_%H_%M")+".png",tmap_data)
 

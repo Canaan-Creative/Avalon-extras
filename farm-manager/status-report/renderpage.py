@@ -7,7 +7,7 @@ import json
 from django.template import loader, Context
 from django.conf import settings
 
-def renderpage(time,data,err,cfg):
+def renderpage(time,data,err,tmap_data,cfg):
 	info = {}
 	info['time'] = time.strftime("%Y.%m.%d %H:%M")
 
@@ -33,6 +33,8 @@ def renderpage(time,data,err,cfg):
 	for mod_num in cfg['mod_num_list']:
 		sum_mod_num0 += int(mod_num)
 	info['alive_mod_num'] = str(sum_mod_num) + '/' + str(sum_mod_num0)
+
+	info['zone'] = tmap_data['zone']
 
 	status = json.dumps(info)
 	try:
