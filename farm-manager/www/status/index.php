@@ -66,7 +66,7 @@ foreach($zones as $zone){
 		}
 		else $content = "N/A";
 		$zone_map[$n][$y][$x] = "<td class=\"tmap\" style=\"background:" . $miner2['color'] .
-			"\" onclick=\"location.href='" . "cgminer.php?ip=" . $miner["ip"] . "&port=" . join(",",$ports) . "'\">" .
+			"\" onclick=\"window.open('" . "cgminer.php?ip=" . $miner["ip"] . "&port=" . join(",",$ports) . "');\">" .
 			$content 
 			. "</td>";
 	}	
