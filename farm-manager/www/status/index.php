@@ -1,4 +1,5 @@
 <?php
+## T-map
 $file = file_get_contents("json/farm.json");
 $farm = json_decode($file,true);
 $file = file_get_contents("json/status.json");
@@ -73,6 +74,39 @@ foreach($zones as $zone){
 	$farm_map[] = $zone_map;
 	$z ++;
 }
+## Hashrate Graph
+$timeshift = 8 * 3600;
+$file = file_get_contents("bin/hashrate.log");
+$lines = explode("\n",$file);
+if (end($lines) == "") {
+	    array_pop($lines);
+}
+$hashrates = array();
+$series = array_fill(0, 4, array());
+$now = time();
+foreach($series as &$serie){
+	$serie['pointStart'] = $now * 1000 - 3600 * 1000;
+	$serie['pointInterval'] = 3600 * 1000;
+	$serie['data'] = array();
+}
+$series[0]['color'] = "blue"; 
+$series[1]['color'] = "cyan"; 
+$series[2]['color'] = "green"; 
+$series[3]['color'] = "red"; 
+$series[0]['name'] = "Local Method 1"; 
+$series[1]['name'] = "Local Method 2"; 
+$series[2]['name'] = "Pool Worker"; 
+$series[3]['name'] = "Pool Sum"; 
+foreach($lines as $line) $hashrates[] = explode(";",$line);
+foreach($hashrates as $hashrate){
+	$unix = DateTime::createFromFormat('Y_m_d_H_i', $hashrate[0])->getTimestamp();
+	$localtime = ($unix + $timeshift) * 1000;
+	if($now - 24.5*3600 > $unix) continue;
+	$series[0]['data'][] = array($localtime,$hashrate[1] * 1000000);
+	$series[1]['data'][] = array($localtime,$hashrate[2] * 1000000);
+	$series[2]['data'][] = array($localtime,$hashrate[3] * 1000000);
+	$series[3]['data'][] = array($localtime,$hashrate[4] * 1000000);
+}
 ?>
 
 <html>
@@ -82,6 +116,7 @@ foreach($zones as $zone){
 <script src="js/jquery.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
 <script src="js/comm.js"></script>
+<script src="js/highcharts.js"></script>
 <script>
 function refresh(){
 	$.ajax({
@@ -94,6 +129,24 @@ function refresh(){
 		}
 	});
 }
+</script>
+<script>
+$(function () { 
+	$('#hashrate').highcharts({
+		plotOptions: {line:{lineWidth:1,marker:{radius:2,symbol:"circle"}}},
+		title: {text:'Hash Rate Graph'},
+		yAxis: {title:{text:'Hash/s'}},
+		xAxis: {
+			title:{text:'Time (UTC+8)'},
+			tickInterval: 2 * 3600 * 1000,	
+            		type: 'datetime',
+            		dateTimeLabelFormats: {
+                		minute: '%H:%M'
+            		}
+        	},
+		series: <?php echo json_encode($series); ?>
+	});
+});
 </script>
 <body>
 	<div class="row">
@@ -117,7 +170,7 @@ foreach($farm_map as $zone_map){
 		}
 		echo "<tr><td class=\"xaxiis\">  </td>";
 		for($x = 0; $x < count($zone_map[$n][0]);$x ++){
-			if($zone_map[$n][$y][$x] === ' ') echo "<td class=\"xaxis\"> </td>";
+			if($zone_map[$n][0][$x] === ' ') echo "<td class=\"xaxis\"> </td>";
 			else{
 				echo "<td class=\"xaxis\"><p class=\"axis\">" . $s . "</td>";
 				$s ++;
@@ -128,6 +181,9 @@ foreach($farm_map as $zone_map){
 	}
 }
 ?>
+			</div>
+			<div class="jumbotron">
+				<div id="hashrate" style="width:100%; height: 720px !important;"></div>
 			</div>
 		</div>
 		<!--Left End-->
@@ -184,11 +240,6 @@ else{
 						</tbody>
 					</table>
 			</div>
-				<div class="jumbotron">
-					<a href="#" class="thumbnail">
-						<img data-src="images/fox1.png" src="images/fox1.png" alt="...">
-					</a>
-				</div>
 		</div>
 		<!--Right end-->
 	</div>
