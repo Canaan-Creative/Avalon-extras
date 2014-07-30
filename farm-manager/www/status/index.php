@@ -66,7 +66,7 @@ foreach($zones as $zone){
 			$content = $content . "</p><p class=\"tmap\">" . round($miner2['tempavg'],1) . "/" . $miner2['tempmax'] . "</p>";
 		}
 		else $content = "N/A";
-		$zone_map[$n][$y][$x] = "<td class=\"tmap\" style=\"background:" . $miner2['color'] .
+		$zone_map[$n][$y][$x] = "<td title=\"" . $miner["ip"] . "\" class=\"tmap\" style=\"background:" . $miner2['color'] .
 			"\" onclick=\"window.open('" . "cgminer.php?ip=" . $miner["ip"] . "&port=" . join(",",$ports) . "');\">" .
 			$content 
 			. "</td>";
@@ -133,6 +133,7 @@ function refresh(){
 <script>
 $(function () { 
 	$('#hashrate').highcharts({
+		credits: {enabled: false},
 		plotOptions: {line:{lineWidth:1,marker:{radius:2,symbol:"circle"}}},
 		title: {text:'Hash Rate Graph'},
 		yAxis: {title:{text:'Hash/s'}},
