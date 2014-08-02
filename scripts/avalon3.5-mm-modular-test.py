@@ -57,7 +57,7 @@ def run_loopback():
     version = ret[4:ret[0]]
     print "Device version: " +  ''.join([chr(x) for x in version])
 
-    # tx1 usb2iic addressing test
+    # tx1/tx2 usb2iic addressing test
     txdat = "30016705280000000000000000000018000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
     hiddev.write(endpout, txdat.decode("hex"))
     ret = hiddev.read(endpin, 64, 100)
@@ -70,7 +70,7 @@ def run_loopback():
     else:
         print "Read DNA Failed!"
 
-    # tx2 loopback testing
+    # tx3/tx4 loopback testing
     txdat_orig = "3003670528000018000000010405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425260000000000000000000000000000000000"
     hiddev.write(endpout, txdat_orig.decode("hex"))
     ret = hiddev.read(endpin, 64, 100)
@@ -83,7 +83,7 @@ def run_loopback():
             print "Loopback success"
         else:
             print "txdat = " + txdat_orig[16:96]
-            print "rxdat = " + rxdat[8:88]
+            print "rxdat = " + rxdat[8:ret[0]*2]
             print "Loopback failed"
     else:
         print "Read none!"
