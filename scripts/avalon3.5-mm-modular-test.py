@@ -6,6 +6,24 @@
 # Note: Avalon 3.5 use usb2iic instead of uart, the usb2iic bridge expose hid api to app.
 # Depends : PyUSB 1.0 (Under Linux)
 # PyUSB 1.0 Installation: https://github.com/walac/pyusb
+#
+#  bridge format: length[1]+transId[1]+sesId[1]+req[1]+data[60]
+#  length: 4+len(data)
+#  transId: 0
+#  sesId: 0
+#  req:
+#        0:RESET
+#        1:INIT
+#        2:DEINIT
+#        3:WRITE
+#        4:READ
+#        5:XFER
+#  data: the actual payload
+#        clockRate[4] + reserved[4] + payload[52] when init
+#        xparam[4] + payload[56] when write
+#            xparam: txSz[1]+rxSz[1]+options[1]+slaveAddr[1]
+#        payload[60] when read
+#
 
 import sys
 import usb.core
@@ -39,55 +57,88 @@ def enum_usbhid(vendor_id, product_id):
 
     return hiddev, endpin, endpout
 
-# usb2iic data
-# init: 0c00670140420f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-# tx1: Address 0x18 30016705280000000000000000000018000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-# tx2: Read DNA 08026705002800000000000000000018000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-# tx3: Send [04,26] to 0x18 3003670528000018000000010405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425260000000000000000000000000000000000
-# tx4: Read from 0x18 0804670500280018000000010405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425260000000000000000000000000000000000
+# addr : iic slaveaddr
+# req : see bridge format
+# data: 40 bytes payload
+def hid_req(hiddev, endpin, endpout, addr, req, data):
+    req = req.rjust(2, '0')
+
+    if req == '01':
+        data = data.ljust(120, '0')
+        datalen = 12
+        txdat = hex(datalen)[2:].rjust(2, '0') + \
+                "0000" +    \
+                req +   \
+                data
+    else:
+        data = data.ljust(112, '0')
+        datalen = 8 + len(data)
+        txdat = hex(datalen)[2:].rjust(2, '0') +    \
+                "0000" +    \
+                req + \
+                "280000" +  \
+                addr.rjust(2, '0') +    \
+                data
+        hiddev.write(endpout, txdat.decode("hex"))
+        hiddev.read(endpin, 64, 100)
+
+        datalen = 8
+        txdat = hex(datalen)[2:].rjust(2, '0') +    \
+                "0000" +    \
+                req + \
+                "002800" +  \
+                addr.rjust(2, '0') +    \
+                "0".ljust(112, '0')
+
+    hiddev.write(endpout, txdat.decode("hex"))
+
+def hid_read(hiddev, endpin):
+    ret = hiddev.read(endpin, 64, 100)
+    if ret[0] > 4:
+        return ret[4:ret[0]]
+    else:
+        return None
+
+def hid_xfer(hiddev, endpin, endpout, addr, req, data):
+    hid_req(hiddev, endpin, endpout, addr, req, data)
+    return hid_read(hiddev, endpin)
+
 def run_loopback():
     hid_vid = 0x1fc9
     hid_pid = 0x0088
 
     hiddev, endpin, endpout = enum_usbhid(hid_vid, hid_pid)
-    # init usb2iic bridge
-    txdat = "0c00670140420f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-    hiddev.write(endpout, txdat.decode("hex"))
-    ret = hiddev.read(endpin, 64, 100)
-    version = ret[4:ret[0]]
-    print "Device version: " +  ''.join([chr(x) for x in version])
 
-    # tx1/tx2 usb2iic addressing test
-    txdat = "30016705280000000000000000000018000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-    hiddev.write(endpout, txdat.decode("hex"))
-    ret = hiddev.read(endpin, 64, 100)
-    txdat = "08026705002800000000000000000018000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-    hiddev.write(endpout, txdat.decode("hex"))
-    ret = hiddev.read(endpin, 64, 100)
-    rxdat = binascii.hexlify(ret)
-    if ret[0] > 4:
-        print "DNA = " + rxdat[8:24]
+    ret = hid_xfer(hiddev, endpin, endpout, "00", "01", "40420f00")
+    if ret:
+        print "Device version: " +  ''.join([chr(x) for x in ret])
+    else:
+        print "Devcie Ver null"
+
+    # addressing 0x18
+    ret = hid_xfer(hiddev, endpin, endpout, "00", "05", "0000000000000018")
+    if ret:
+        rxdat = binascii.hexlify(ret)
+        print "DNA = " + rxdat[:16]
     else:
         print "Read DNA Failed!"
 
-    # tx3/tx4 loopback testing
-    txdat_orig = "3003670528000018000000010405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425260000000000000000000000000000000000"
-    hiddev.write(endpout, txdat_orig.decode("hex"))
-    ret = hiddev.read(endpin, 64, 100)
-    txdat = "08046705002800180000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-    hiddev.write(endpout, txdat.decode("hex"))
-    ret = hiddev.read(endpin, 64, 100)
-    rxdat = binascii.hexlify(ret)
-    if ret[0] > 4:
-        if rxdat[8:ret[0]*2] == txdat_orig[16:96]:
-            print "Loopback success"
+    # loopback on 0x18
+    txdat = "000000011234567890123456789012345678901234567890123456789012345678901234567890"
+    for i in range(1, 4):
+        ret = hid_xfer(hiddev, endpin, endpout, "18", "05", txdat +  str(i).rjust(2,'0'))
+        if ret:
+            rxdat = binascii.hexlify(ret)
+            if rxdat == (txdat +  str(i).rjust(2,'0')):
+                print "Loopback success " + str(i)
+            else:
+                print "txdat = " + txdat
+                print "rxdat = " + rxdat
+                print "Loopback failed"
+
         else:
-            print "txdat = " + txdat_orig[16:96]
-            print "rxdat = " + rxdat[8:ret[0]*2]
-            print "Loopback failed"
-    else:
-        print "Read none!"
+            print "Read None"
 
 if __name__ == '__main__':
-        run_loopback()
+    run_loopback()
 
