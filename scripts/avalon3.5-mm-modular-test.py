@@ -29,11 +29,13 @@ import sys
 import usb.core
 import usb.util
 import binascii
+import time
 from optparse import OptionParser
 
 parser = OptionParser()
 parser.add_option("-m", "--module", dest="module_id", default="0", help="Module ID: 0 - 3, default:0")
 parser.add_option("-M", "--Mode", dest="run_mode", default="0", help="Run Mode:0-Normal,1-Loopback test; default:0")
+parser.add_option("-S", "--static", dest="is_static", default="0", help="Static flag: 0-turn off, 1-turn on")
 (options, args) = parser.parse_args()
 
 asic_cnt = 10
@@ -114,18 +116,7 @@ def hid_xfer(hiddev, endpin, endpout, addr, req, data):
     hid_req(hiddev, endpin, endpout, addr, req, data)
     return hid_read(hiddev, endpin)
 
-def run_loopback():
-    hid_vid = 0x1fc9
-    hid_pid = 0x0088
-
-    hiddev, endpin, endpout = enum_usbhid(hid_vid, hid_pid)
-
-    ret = hid_xfer(hiddev, endpin, endpout, "00", "01", "40420f00")
-    if ret:
-        print "Device version: " +  ''.join([chr(x) for x in ret])
-    else:
-        print "Devcie version null"
-
+def run_loopback(hiddev, endpin, endpout):
     # addressing 0x18
     ret = hid_xfer(hiddev, endpin, endpout, "00", "05", "0000000000000018")
     if ret:
@@ -240,29 +231,42 @@ def run_require(hiddev, endpin, endpout, cmd):
 		result = result + "pg(" + str(pg) + ")"
 		print(result)
 
+def statics(hiddev, endpin, outpout):
+    start = time.time()
+    for i in range(0, 1000):
+        run_detect(hiddev, endpin, endpout, mm_package(TYPE_DETECT, options.module_id))
+    print "time elapsed: %s" %(time.time() - start)
 
-def run_modular_test():
+def run_modular_test(hiddev, endpin, endpout):
+    while True:
+        print("Reading result ...")
+        print("module id:" + options.module_id)
+        if options.is_static == '1':
+            statics(hiddev, endpin, endpout)
+            break
+        else:
+            run_detect(hiddev, endpin, endpout, mm_package(TYPE_DETECT, options.module_id))
+            run_require(hiddev, endpin, endpout, mm_package(TYPE_REQUIRE, options.module_id))
+            run_test(hiddev, endpin, endpout, mm_package(TYPE_TEST, options.module_id))
+            raw_input('Press enter to continue:')
+
+if __name__ == '__main__':
     hid_vid = 0x1fc9
     hid_pid = 0x0088
 
     hiddev, endpin, endpout = enum_usbhid(hid_vid, hid_pid)
+
     ret = hid_xfer(hiddev, endpin, endpout, "00", "01", "40420f00")
     if ret:
         print "USB2IIC version: " +  ''.join([chr(x) for x in ret])
     else:
         print "USB2IIC version null"
 
-    while True:
-        print("Reading result ...")
-        print("module id:" + options.module_id)
-        run_detect(hiddev, endpin, endpout, mm_package(TYPE_DETECT, options.module_id))
-        run_require(hiddev, endpin, endpout, mm_package(TYPE_REQUIRE, options.module_id))
-        run_test(hiddev, endpin, endpout, mm_package(TYPE_TEST, options.module_id))
-        raw_input('Press enter to continue:')
-
-if __name__ == '__main__':
-    if options.run_mode == '0':
-        run_modular_test()
+    if options.is_static == '1':
+        statics(hiddev, endpin, endpout)
     else:
-        run_loopback()
+        if options.run_mode == '0':
+            run_modular_test(hiddev, endpin, endpout)
+        else:
+            run_loopback(hiddev, endpin, endpout)
 

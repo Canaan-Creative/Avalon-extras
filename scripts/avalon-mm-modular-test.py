@@ -8,13 +8,14 @@ from serial import Serial
 from optparse import OptionParser
 import binascii
 import sys
+import time
 
 parser = OptionParser()
 parser.add_option("-s", "--serial", dest="serial_port", default="/dev/ttyUSB0", help="Serial port")
 parser.add_option("-t", "--type", dest="chip_type", default="3", help="Module type should be: 2 or 3")
 parser.add_option("-m", "--module", dest="module_id", default="0", help="Module ID: 0 - 3")
+parser.add_option("-S", "--static", dest="is_static", default="0", help="Static flag: 0-turn off, 1-turn on")
 (options, args) = parser.parse_args()
-
 
 if options.chip_type == '2':
 	asic_cnt = 7
@@ -112,10 +113,20 @@ def run_require(cmd):
 		result = result + "pg(" + str(pg) + ")"
 		print(result)
 
+def statics():
+    start = time.time()
+    for i in range(0, 1000):
+        run_detect(mm_package(TYPE_DETECT, options.module_id))
+    print "time elapsed: %s" %(time.time() - start)
+
 while (1):
 	print("Reading result ...")
 	print("module id:" + options.module_id)
-	run_detect(mm_package(TYPE_DETECT, options.module_id))
-	run_require(mm_package(TYPE_REQUIRE, options.module_id))
-	run_test(mm_package(TYPE_TEST, options.module_id))
-	raw_input('Press enter to continue:')
+        if options.is_static == '1':
+            statics()
+            break
+        else:
+            run_detect(mm_package(TYPE_DETECT, options.module_id))
+            run_require(mm_package(TYPE_REQUIRE, options.module_id))
+            run_test(mm_package(TYPE_TEST, options.module_id))
+            raw_input('Press enter to continue:')
