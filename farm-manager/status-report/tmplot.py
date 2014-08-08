@@ -1,10 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+
 from __future__ import print_function
-from statlogging import readlog
 import os
 import re
 import datetime
 import sys
+
 import numpy as np
 import matplotlib
 matplotlib.use('Agg', warn=False)
@@ -12,8 +13,11 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib import gridspec
 
+from statlogging import readlog
+
 
 def tmplot(time_now, data, cfg):
+
     print("Plotting into " + cfg['TMplot']['img_dir'] + "tm-" +
           time_now.strftime("%Y_%m_%d_%H_%M") + ".png ... ", end="")
     sys.stdout.flush()

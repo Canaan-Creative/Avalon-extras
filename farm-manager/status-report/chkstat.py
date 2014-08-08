@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+
 from __future__ import print_function
 import sys
 import threading
@@ -141,19 +142,6 @@ def chkstat(cfg):
             else:
                 dev = []
                 pool = []
-
-                # error list:
-                # 10000000000 low local work (20%)
-                # 01000000000 high device hardware error (5%)
-                # 00100000000 low temperature (<40C)
-                # 00010000000 fan stopped
-                # 00001000000 wrong voltage
-                # 00000100000 wrong frequency
-                # 00000010000 connection failed
-                # 00000001000 low alive dev num
-                # 00000000100 low alive module num
-                # 00000000010 some module's temperature gets 255
-                # 00000000001 some moduls's temperature is higher than 80
 
                 try:
                     for dd in data0[1][i][pn]['DEVS']:

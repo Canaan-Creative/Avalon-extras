@@ -1,11 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+
 from __future__ import print_function
 import xml.dom.minidom
 import datetime
 import sys
 
 
-def writelog(data,cfg,filename):
+def writelog(data, cfg, filename):
     # write XML log file
     logdir = cfg['General']['log_dir']
 
@@ -64,7 +65,7 @@ def writelog(data,cfg,filename):
     print('Done.')
 
 
-def readlog(logdir,filename):
+def readlog(logdir, filename):
 
     # read XML log file
     data = []

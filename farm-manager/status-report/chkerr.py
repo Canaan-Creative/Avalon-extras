@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+
 from __future__ import print_function
 import sys
 
@@ -103,11 +104,11 @@ def chkerr(data, cfg, time):
                             error_msg.append({'msg': 'Fan stopped. ',
                                               'color': 'pink'})
                         if lw >= 0 and (lw_avg - lw) / lw_avg > 0.2:
-                            error_msg.append({'msg': 'Local Work Too Low. ',
+                            error_msg.append({'msg': 'Local work too low. ',
                                               'color': 'red'})
                         if dh > 5:
-                            error_msg.append({'msg': 'High Device '
-                                              'Hardware Error. ',
+                            error_msg.append({'msg': 'Device hardware error '
+                                              'too high. ',
                                               'color': 'red'})
                         if volt != int(cfg['General']['voltage']) and volt >= 0:
                             error_msg.append({'msg': 'Wrong voltage. ',
