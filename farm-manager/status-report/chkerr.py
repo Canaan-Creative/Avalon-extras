@@ -39,7 +39,7 @@ def chkerr(data, cfg, time):
                 if len(miner[4]) < len(cfg['dev_list'][i][j]):
                     error_tmp.append({'id': ip + ':' + port,
                                       'error': [{'msg': 'Missing Device. ',
-                                                 'color': 'blue'}]})
+                                                 'color': 'red'}]})
                     miss_flag = True
                 elif len(miner[4]) > len(cfg['dev_list'][i][j]):
                     print('\033[1m\033[33mWe get more DEVs on ' +
@@ -65,7 +65,7 @@ def chkerr(data, cfg, time):
                                                   ' DEV#' + str(k),
                                                   'error':
                                                   [{'msg': 'Missing Module. ',
-                                                    'color': 'green'}]})
+                                                    'color': 'red'}]})
                         except:
                             pass
 
@@ -96,29 +96,29 @@ def chkerr(data, cfg, time):
                         elif t0 < 40 and t1 < 40 and t0 >= 0 and t1 >= 0:
                             error_msg.append({'msg': 'Temperature '
                                               'lower than 40. ',
-                                              'color': 'cyan'})
+                                              'color': 'blue'})
                         else:
                             pass
 
                         if f0 == 0 and f1 == 0:
                             error_msg.append({'msg': 'Fan stopped. ',
-                                              'color': 'pink'})
+                                              'color': 'green'})
                         if lw >= 0 and (lw_avg - lw) / lw_avg > 0.2:
                             error_msg.append({'msg': 'Local work too low. ',
-                                              'color': 'red'})
+                                              'color': 'green'})
                         if dh > 5:
                             error_msg.append({'msg': 'Device hardware error '
                                               'too high. ',
-                                              'color': 'red'})
+                                              'color': 'green'})
                         if volt != int(cfg['General']['voltage']) and volt >= 0:
                             error_msg.append({'msg': 'Wrong voltage. ',
-                                              'color': 'orange'})
+                                              'color': 'green'})
                         if freq != int(cfg['General']['frequency']
                                        ) and freq >= 0:
                             # ignore
                             if False:
                                 error_msg.append({'msg': 'Wrong frequency. ',
-                                                  'color': 'yellow'})
+                                                  'color': 'green'})
                         if error_msg != []:
                             error_tmp.append({'id': ip + ':' + port +
                                               ' DEV#' + str(k) + ', MOD#' +
