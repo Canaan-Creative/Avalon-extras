@@ -120,7 +120,7 @@ def readlog(logdir, filename):
                 dev_stat.append(dhError)
                 voltage = []
                 for voltageXML in dev_statXML.getElementsByTagName("Voltage"):
-                    fan.append(voltageXML.childNodes[0].data)
+                    voltage.append(voltageXML.childNodes[0].data)
                 dev_stat.append(voltage)
                 freq = []
                 for freqXML in dev_statXML.getElementsByTagName("Frequency"):
