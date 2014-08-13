@@ -52,6 +52,7 @@ if __name__ == '__main__':
             (data0, time_old) = readlog(cfg['General']['log_dir'], logfile)
             break
 
+    luckyID = []
     if not args.nolog:
         data = chkstat(cfg)
         (data, luckyID) = chkblock(data, data0)
@@ -83,5 +84,5 @@ if __name__ == '__main__':
 
     if args.webpage:
         renderpage(time_now, data, err, tmap_data, cfg)
-    if args.email:
+    if args.email or luckyID:
         sendmail(time_now.strftime("%Y-%m-%d %H:%M"), data, err, cfg, luckyID)

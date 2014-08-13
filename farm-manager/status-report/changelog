@@ -1,3 +1,6 @@
+2014.08.13 #3
+  Force sending email when new blocks have been found.
+
 2014.08.13 #2
   Add recording new found blocks in logs and emails.
 
