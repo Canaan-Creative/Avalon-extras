@@ -1,3 +1,21 @@
+2014.08.13 #3
+  Force sending email when new blocks have been found.
+
+2014.08.13 #2
+  Add recording new found blocks in logs and emails.
+
+2014.08.13 #1
+  Enable fetching hashrate data from ozco.in. 
+
+2014.08.09 #1
+  Adjust colors in error list.
+
+2014.08.08 #2
+  Reformat code according to PEP-8
+
+2014.08.08 #1
+  Add more conditions to error list.
+
 2014.07.23 #1
   Provide tmap data for webpage rendering.
 
