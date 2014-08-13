@@ -34,7 +34,7 @@ def getjs(poolcfg, url):
     return 0
 
 
-def poolrate(cfg):
+def ghash(cfg):
     url1 = 'https://cex.io/api/ghash.io/hashrate'
     url2 = 'https://cex.io/api/ghash.io/workers'
 
@@ -59,3 +59,23 @@ def poolrate(cfg):
         except KeyError:
             hs2 = '0'
     return (hs1, hs2)
+
+
+def ozco(cfg):
+    url = 'http://ozco.in/api.php?api_key=' + cfg['Pool']['api_key']
+    js = urllib2.urlopen(url).read()
+    dict0 = json.loads(js)
+    hs2 = ''.join(dict0['worker'][cfg['Pool']['username'] + '.' +
+                                  cfg['Pool']['workername']]['current_speed']
+                  .split(','))
+    hs1 = dict0['user']['hashrate_raw']
+    return (hs1,hs2)
+
+
+def poolrate(cfg):
+    if cfg['Pool']['name'] == 'ghash':
+        return ghash(cfg)
+    elif cfg['Pool']['name'] == 'ozco':
+        return ozco(cfg)
+    else:
+        return ('0','0')
