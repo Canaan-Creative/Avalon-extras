@@ -80,7 +80,7 @@ def sendmail(time, data, err_list, cfg, luckyID):
 
     template_var = {}
 
-    if not luckyID:
+    if luckyID:
         template_var['lucky'] = True
         template_var['luckyID'] = luckyID
     else:

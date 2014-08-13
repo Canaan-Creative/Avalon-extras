@@ -39,7 +39,7 @@ def chkblock(data, data0):
 
             j += 1
         i += 1
-    if not luckyID:
+    if luckyID:
         for item in luckyID:
             print item['id'] + ' found ' + item['num'] + ' new block(s).'
     return (data, luckyID)
