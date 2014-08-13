@@ -1,0 +1,7 @@
+[General]
+retry = 3
+threadnumber = 25
+[SSH]
+passwd = XXXXXXXXX
+[Telnet]
+flag = root@OpenWrt:/#
