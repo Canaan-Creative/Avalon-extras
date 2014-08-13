@@ -70,7 +70,7 @@ def post(mail, template_var):
         return False
 
 
-def sendmail(time, data, err_list, cfg):
+def sendmail(time, data, err_list, cfg, luckyID):
 
     mail = cfg['Email']
 
@@ -79,6 +79,12 @@ def sendmail(time, data, err_list, cfg):
         "] Report " + time)
 
     template_var = {}
+
+    if not luckyID:
+        template_var['lucky'] = True
+        template_var['luckyID'] = luckyID
+    else:
+        template_var['lucky'] = False
 
     print('Fetching balance data:')
     proxy_handler = urllib2.ProxyHandler({})

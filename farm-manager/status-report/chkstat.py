@@ -139,6 +139,7 @@ def chkstat(cfg):
                 miner.append([])
                 miner.append([])
                 miner.append('0')
+                miner.append('0')
             else:
                 dev = []
                 pool = []
@@ -260,6 +261,12 @@ def chkstat(cfg):
 
                 try:
                     miner.append(str(data0[0][i][pn]['SUMMARY'][0]['MHS 15m']))
+                except KeyError:
+                    miner.append('0')
+
+                try:
+                    miner.append(str(data0[0][i][pn]['SUMMARY'][0]['Found '
+                                                                   'Blocks']))
                 except KeyError:
                     miner.append('0')
 

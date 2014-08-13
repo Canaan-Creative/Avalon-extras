@@ -15,6 +15,7 @@ from tmplot import tmplot
 from renderpage import renderpage
 from chkerr import chkerr
 from chkrate import chkrate
+from chkblock import chkblock
 
 
 if __name__ == '__main__':
@@ -53,6 +54,7 @@ if __name__ == '__main__':
 
     if not args.nolog:
         data = chkstat(cfg)
+        (data, luckyID) = chkblock(data, data0)
         if not args.nopoolhashrate:
             hashrate = chkrate(data, data0, cfg, time_now, time_old)
         err = chkerr(data, cfg, time_now)
@@ -82,4 +84,4 @@ if __name__ == '__main__':
     if args.webpage:
         renderpage(time_now, data, err, tmap_data, cfg)
     if args.email:
-        sendmail(time_now.strftime("%Y-%m-%d %H:%M"), data, err, cfg)
+        sendmail(time_now.strftime("%Y-%m-%d %H:%M"), data, err, cfg, luckyID)

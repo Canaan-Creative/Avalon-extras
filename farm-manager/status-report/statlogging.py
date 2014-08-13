@@ -55,6 +55,8 @@ def writelog(data, cfg, filename):
                 log += "\t\t\t\t<Status>" + pool_stat[1] + "</Status>\n"
                 log += "\t\t\t</pool>\n"
             log += "\t\t\t<MHS15min>" + miner[6] + "</MHS15min>\n"
+            log += "\t\t\t<NewBlocks>" + miner[7] + "</NewBlocks>\n"
+            log += "\t\t\t<Blocks>" + miner[8] + "</Blocks>\n"
             log += "\t\t</subminer>\n"
         log += "\t</miner>\n"
     log += "</data>"
@@ -139,6 +141,16 @@ def readlog(logdir, filename):
             try:
                 miner.append(minerXML.getElementsByTagName
                              ("MHS15min")[0].childNodes[0].data)
+            except:
+                miner.append('0')
+            try:
+                miner.append(minerXML.getElementsByTagName
+                             ("NewBlocks")[0].childNodes[0].data)
+            except:
+                miner.append('0')
+            try:
+                miner.append(minerXML.getElementsByTagName
+                             ("Blocks")[0].childNodes[0].data)
             except:
                 miner.append('0')
             mminer.append(miner)

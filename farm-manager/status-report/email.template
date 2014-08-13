@@ -36,6 +36,13 @@
                               valign="top">
                               <table border="0" cellpadding="20" cellspacing="0"
                                 width="100%">     
+                                  {% if lucky %}
+                                  <td>
+                                    {% for luckyOne in luckyID %}
+                                    <span style="font-weight: bold; color: black; font-size: large;">{{ luckyOne.num }} new block(s) found by {{ luckyOne.id }} </span>
+                                    {% endfor %}
+                                  </td>
+                                  {% endif %}
                                   <tr>
                                     <td><span style="font-weight: bold; color: black; font-size: large;">Final Balance:</span><span style="font-weight: bold; color: black; font-size: large;"><br>
                                       </span>
