@@ -12,7 +12,7 @@ import usb.util
 import sys
 
 parser = OptionParser()
-parser.add_option("-M", "--Mode", dest="run_mode", default="1", help="Run Mode:0-CDC,1-HID; default:0")
+parser.add_option("-M", "--Mode", dest="run_mode", default="0", help="Run Mode:0-CDC,1-HID; default:0")
 (options, args) = parser.parse_args()
 
 LOOP_CNT = 1
@@ -31,7 +31,7 @@ def statics(run_mode):
             res_s = ser.read(64)
         else:
             hiddev.write(endpout, raw_dat.decode('hex'))
-            res_s = hiddev.read(endpin, 64, 5000)
+            res_s = hiddev.read(endpin, 64)
 
         if raw_dat != binascii.hexlify(res_s):
             print "Failed:" + str(i)
@@ -72,7 +72,7 @@ def enum_usbhid(vendor_id, product_id):
 
 if __name__ == '__main__':
     if options.run_mode == '0':
-        ser = Serial("/dev/ttyACM0", 115200, 8, timeout=1)
+        ser = Serial("/dev/ttyACM0", 115200, 8, timeout=0.005)
     else:
         hid_vid = 0x1fc9
         hid_pid = 0x0081
