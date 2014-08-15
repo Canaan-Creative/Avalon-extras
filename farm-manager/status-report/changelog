@@ -1,3 +1,6 @@
+2014.08.15 #1
+  Skip zero-module IPs.
+
 2014.08.13 #3
   Force sending email when new blocks have been found.
 
