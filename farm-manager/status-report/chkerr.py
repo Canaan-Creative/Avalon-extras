@@ -30,9 +30,10 @@ def chkerr(data, cfg, time):
         for miner in mminer[1:]:
             port = miner[0]
             if miner[1] == "Dead":
-                error_tmp.append({'id': ip + ':' + port,
-                                  'error': [{'msg': 'Connection Failed. ',
-                                            'color': 'black'}]})
+                if int(cfg['mod_num_list'][i]):
+                    error_tmp.append({'id': ip + ':' + port,
+                                      'error': [{'msg': 'Connection Failed. ',
+                                                 'color': 'black'}]})
             else:
                 dead_flag = False
                 miss_flag = False
@@ -54,7 +55,10 @@ def chkerr(data, cfg, time):
                         if lw > 0:
                             lw_sum += lw
                             lw_n += 1
-                lw_avg = float(lw_sum) / lw_n
+                try:
+                    lw_avg = float(lw_sum) / lw_n
+                except:
+                    lw_avg = 0
 
                 k = 0
                 for dev_stat in miner[4]:

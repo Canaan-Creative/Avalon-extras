@@ -30,17 +30,19 @@ def tmplot(time_now, data, cfg):
     Ta = []
     Tm = []
     T_err = [[]for j in range(0, cfg['zone_num'])]
+    T_skip = [[]for j in range(0, cfg['zone_num'])]
     T_err_255 = [[]for j in range(0, cfg['zone_num'])]
 
     tmap_data = {'zone': [{'miner': []}for j in range(0, cfg['zone_num'])]}
 
     z = 0
+    j = 0
     zone = 'Zone1'
     for mminer_stat in data:
         if i == len(cfg[zone]['miner_list']):
             z += 1
             i = 0
-        zone = 'Zone'+str(z+1)
+        zone = 'Zone' + str(z + 1)
         T_max = 0
         err = False
         for miner_stat in mminer_stat[1:]:
@@ -67,9 +69,12 @@ def tmplot(time_now, data, cfg):
 
         if n != 0:
             T_avg = float(T_sum) / n
-        else:
+        elif int(cfg['mod_num_list'][j]):
             T_avg = 256
             T_err[z].append([layer_n, shelf_n])
+        else:
+            T_avg = 256
+            T_skip[z].append([layer_n, shelf_n])
         T_sum = 0
         n = 0
 
@@ -87,6 +92,8 @@ def tmplot(time_now, data, cfg):
             T[z][layer_n].append(T_avg)
 
         i += 1
+        j += 1
+
     for z in range(0, cfg['zone_num']):
         T[z] = np.ma.masked_greater(T[z], 254.5)
     cmap = cm.jet
@@ -151,6 +158,9 @@ def tmplot(time_now, data, cfg):
                                                           facecolor='none',
                                                           edgecolor='r',
                                                           hatch='/'))
+            for p in T_skip[z]:
+                ax.add_patch(matplotlib.patches.Rectangle((p[1], p[0]), 1, 1,
+                                                          facecolor='none'))
             for p in T_err_255[z]:
                 ax.add_patch(matplotlib.patches.Rectangle((p[1], p[0]), 1, 1,
                                                           facecolor='none',
@@ -268,9 +278,10 @@ def tmplot(time_now, data, cfg):
                         miner_data['d_hashrate'] = 0
 
                 else:
-                    miner_data['color'] = '#ffffff'
-                    ax.text(text_x, text_y, 'N/A', ha='center', va='center',
-                            fontproperties=ticks_font, color='k')
+                    if int(cfg['mod_num_list'][i+ii]):
+                        miner_data['color'] = '#ffffff'
+                        ax.text(text_x, text_y, 'N/A', ha='center', va='center',
+                                fontproperties=ticks_font, color='k')
                 tmap_data['zone'][z]['miner'].append(miner_data)
             # single zone may have multi subplots
             # split according to cfg['Zone#'][plot_split]
