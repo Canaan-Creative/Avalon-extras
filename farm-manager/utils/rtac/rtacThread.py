@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 
 import telnetlib
+import time
 
 import paramiko
 
@@ -37,7 +38,10 @@ def sshThread(hostQueue, lock, commands, passwd, retry):
                 break
             try:
                 for c in commands:
-                    stdin, stdout, stderr = ssh.exec_command(c)
+                    if c[0:5] == 'sleep':
+                        time.sleep(int(c[6:]))
+                    else:
+                        stdin, stdout, stderr = ssh.exec_command(c)
             except:
                 ssh.close()
                 lock.acquire()
@@ -89,6 +93,9 @@ def telnetThread(hostQueue, lock, commands, flag, retry):
             try:
                 tn.read_until(flag)
                 for command in commands:
+                    if command[0:5] == 'sleep':
+                        time.sleep(int(command[6:]))
+                        continue
                     if isinstance(command, basestring):
                         tn.write(command + '\n')
                         tn.read_until(flag)

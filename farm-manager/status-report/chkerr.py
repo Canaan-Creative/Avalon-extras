@@ -18,22 +18,29 @@ def float_alt(s):
         return -1
 
 
-def chkerr(data, cfg, time):
+def chkerr(data, cfg, time, data0):
     error_list = []
     error_log = ''
     i = 0
     for mminer in data:
+        try:
+            mminer0 = data0[i]
+        except:
+            pass
         ip = mminer[0]
         dead_flag = True
         error_tmp = []
         j = 0
         for miner in mminer[1:]:
+            try:
+                miner0 = mminer0[j + 1]
+            except:
+                pass
             port = miner[0]
             if miner[1] == "Dead":
-                if int(cfg['mod_num_list'][i]):
-                    error_tmp.append({'id': ip + ':' + port,
-                                      'error': [{'msg': 'Connection Failed. ',
-                                                 'color': 'black'}]})
+                error_tmp.append({'id': ip + ':' + port,
+                                  'error': [{'msg': 'Connection Failed. ',
+                                             'color': 'black'}]})
             else:
                 dead_flag = False
                 miss_flag = False
@@ -62,6 +69,10 @@ def chkerr(data, cfg, time):
 
                 k = 0
                 for dev_stat in miner[4]:
+                    try:
+                        dev_stat0 = miner0[4][k]
+                    except:
+                        pass
                     if not miss_flag:
                         try:
                             if int(dev_stat[3]) < int(cfg['dev_list'][i][j][k]):
@@ -79,6 +90,10 @@ def chkerr(data, cfg, time):
                         f0 = int_alt(dev_stat[5][p*2])
                         f1 = int_alt(dev_stat[5][p*2+1])
                         lw = int_alt(dev_stat[6][p])
+                        try:
+                            lw0 = int_alt(dev_stat0[6][p])
+                        except:
+                            pass
                         dh = float_alt(dev_stat[7][p])
                         volt = int_alt(dev_stat[8][p])
                         freq = int_alt(dev_stat[9][p])
@@ -110,6 +125,12 @@ def chkerr(data, cfg, time):
                         if lw >= 0 and (lw_avg - lw) / lw_avg > 0.2:
                             error_msg.append({'msg': 'Local work too low. ',
                                               'color': 'green'})
+                        try:
+                            if lw == lw0:
+                                error_msg.append({'msg': 'Local work stopped. ',
+                                                  'color': 'orange'})
+                        except:
+                            pass
                         if dh > 5:
                             error_msg.append({'msg': 'Device hardware error '
                                               'too high. ',
