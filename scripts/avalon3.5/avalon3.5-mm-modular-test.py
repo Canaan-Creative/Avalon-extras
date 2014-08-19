@@ -251,8 +251,8 @@ def run_modular_test(hiddev, endpin, endpout):
             raw_input('Press enter to continue:')
 
 if __name__ == '__main__':
-    hid_vid = 0x1fc9
-    hid_pid = 0x0088
+    hid_vid = 0x29f1
+    hid_pid = 0x33f2
 
     hiddev, endpin, endpout = enum_usbhid(hid_vid, hid_pid)
 

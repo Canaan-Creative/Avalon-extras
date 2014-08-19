@@ -74,8 +74,8 @@ if __name__ == '__main__':
     if options.run_mode == '0':
         ser = Serial("/dev/ttyACM0", 115200, 8, timeout=1)
     else:
-        hid_vid = 0x1fc9
-        hid_pid = 0x0081
+        hid_vid = 0x29f1
+        hid_pid = 0x33f2
         hiddev, endpin, endpout = enum_usbhid(hid_vid, hid_pid)
 
     statics(options.run_mode)
