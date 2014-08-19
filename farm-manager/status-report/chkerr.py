@@ -132,9 +132,10 @@ def chkerr(data, cfg, time):
             j += 1
 
         if dead_flag:
-            error_list.append({'id': ip,
-                               'error': [{'msg': 'Connection Failed. ',
-                                          'color': 'black'}]})
+            if int(cfg['mod_num_list'][i]):
+                error_list.append({'id': ip,
+                                   'error': [{'msg': 'Connection Failed. ',
+                                              'color': 'black'}]})
         else:
             error_list += error_tmp
 
