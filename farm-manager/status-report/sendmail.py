@@ -138,8 +138,12 @@ def sendmail(time, data, err_list, cfg, luckyID):
         if alive_flag:
             alivenum += 1
 
-    template_var['active_ip_num'] = str(alivenum) + '/' + (
-        str(len(cfg['miner_list'])))
+    minernum = str(len(cfg['miner_list']))
+    for i in cfg['mod_num_list']:
+        if int(i) == 0:
+            minernum -= 1
+
+    template_var['active_ip_num'] = str(alivenum) + '/' + str(minernum)
 
     template_var['err_miner_list'] = err_list
 
