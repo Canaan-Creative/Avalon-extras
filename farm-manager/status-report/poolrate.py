@@ -34,48 +34,42 @@ def getjs(poolcfg, url):
     return 0
 
 
-def ghash(cfg):
-    url1 = 'https://cex.io/api/ghash.io/hashrate'
+def ghash(pool_cfg):
     url2 = 'https://cex.io/api/ghash.io/workers'
 
     proxy_handler = urllib2.ProxyHandler({})
     opener = urllib2.build_opener(proxy_handler)
     urllib2.install_opener(opener)
 
-    dict1 = getjs(cfg['Pool'], url1)
-    if dict1 == 0:
-        hs1 = '0'
-    else:
-        hs1 = str(dict1['last1h'])
-    time.sleep(1)
-
-    dict2 = getjs(cfg['Pool'], url2)
+    dict2 = getjs(pool_cfg, url2)
     if dict2 == 0:
         hs2 = '0'
     else:
         try:
-            hs2 = str(dict2[cfg['Pool']['username'] + '.' +
-                            cfg['Pool']['workername']]['last1h'])
+            hs2 = str(dict2[pool_cfg['username'] + '.' +
+                            pool_cfg['workername']]['last1h'])
         except KeyError:
             hs2 = '0'
-    return (hs1, hs2)
+    return hs2
 
 
-def ozco(cfg):
-    url = 'http://ozco.in/api.php?api_key=' + cfg['Pool']['api_key']
+def ozco(pool_cfg):
+    url = 'http://ozco.in/api.php?api_key=' + pool_cfg['api_key']
     js = urllib2.urlopen(url).read()
     dict0 = json.loads(js)
-    hs2 = ''.join(dict0['worker'][cfg['Pool']['username'] + '.' +
-                                  cfg['Pool']['workername']]['current_speed']
+    hs2 = ''.join(dict0['worker'][pool_cfg['username'] + '.' +
+                                  pool_cfg['workername']]['current_speed']
                   .split(','))
-    hs1 = dict0['user']['hashrate_raw']
-    return (hs1,hs2)
+    return hs2
 
 
 def poolrate(cfg):
-    if cfg['Pool']['name'] == 'ghash':
-        return ghash(cfg)
-    elif cfg['Pool']['name'] == 'ozco':
-        return ozco(cfg)
-    else:
-        return ('0','0')
+    rate = []
+    for pool_cfg in cfg['pool_list']:
+        if pool_cfg['name'] == 'ghash':
+            rate.append(ghash(pool_cfg))
+        elif pool_cfg['name'] == 'ozco':
+            rate.append(ozco(pool_cfg))
+        else:
+            rate.append('0')
+    return rate

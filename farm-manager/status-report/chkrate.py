@@ -18,8 +18,7 @@ def chkrate(data, data0, cfg, time, time0):
     t = []
     v1 = []
     v2 = []
-    vp = []
-    vps = []
+    vp = {}
 
     try:
         logfile = open(cfg['General']['hashrate_log'], 'r')
@@ -31,8 +30,11 @@ def chkrate(data, data0, cfg, time, time0):
                           - time).total_seconds())
                 v1.append(float(tmp[1]))
                 v2.append(float(tmp[2]))
-                vp.append(float(tmp[3]))
-                vps.append(float(tmp[4]))
+                for poolr in tmp[3:]:
+                    key, v = poolr.split(':')
+                    if key not in vp:
+                        vp[key] = []
+                    vp[key].append(float(v))
                 continue
             if datetime.datetime.strptime(tmp[0],
                                           "%Y_%m_%d_%H_%M") + deltaT > time:
@@ -105,16 +107,29 @@ def chkrate(data, data0, cfg, time, time0):
 
         print('Fetching pool hashrate data ... ', end="")
         sys.stdout.flush()
-        sum_pool_rate, pool_rate = poolrate(cfg)
+        new_v = poolrate(cfg)
         print('Done.')
 
-        vp.append(float(pool_rate))
-        vps.append(float(sum_pool_rate))
+        string = ""
+        i = 0
+        for v in new_v:
+            key = cfg['pool_list'][i]['label']
+            if key not in vp:
+                vp[key] = []
+            vp[key].append(float(v))
+            string += ";" + key + ":" + v
+            i += 1
+
+        label = ['Local Method 1', 'Local Method 2']
+        vps = [v1, v2]
+        for key in sorted(vp.iterkeys()):
+            label.append(key)
+            vp[key] = [0 for k in range(0, len(v1) - len(vp[key]))] + vp[key]
+            vps.append(vp[key])
 
         logfile = open(cfg['General']['hashrate_log'], 'a')
         logfile.write(time.strftime('%Y_%m_%d_%H_%M') + ';' +
-                      str(v1n) + ';' + str(v2n) + ';' + str(pool_rate) +
-                      ';' + str(sum_pool_rate) + '\n')
+                      str(v1n) + ';' + str(v2n) + string + '\n')
         logfile.close()
 
-    return [t, v1, v2, vp, vps]
+    return (label, vps, t)

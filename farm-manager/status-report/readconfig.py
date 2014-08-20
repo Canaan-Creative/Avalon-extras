@@ -29,6 +29,13 @@ def readconfig(cfgfile):
     if not os.path.isdir(cfg['TMplot']['img_dir']):
         os.makedirs(cfg['TMplot']['img_dir'])
 
+    cfg['pool_list'] = []
+    i = 0
+    while 'Pool'+str(i+1) in cfg:
+        i += 1
+        pool = 'Pool' + str(i)
+        cfg['pool_list'].append(cfg[pool])
+
     cfg['miner_list'] = []
     cfg['port_list'] = []
     cfg['dev_list'] = []

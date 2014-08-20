@@ -80,6 +80,7 @@ foreach($zones as $zone){
 	$z ++;
 }
 ## Hashrate Graph
+$colorlist = ["blue", "cyan", "green", "red", "yellow", "purple"];
 $timeshift = 8 * 3600;
 $file = file_get_contents("bin/hashrate.log");
 $lines = explode("\n",$file);
@@ -87,30 +88,57 @@ if (end($lines) == "") {
 	    array_pop($lines);
 }
 $hashrates = array();
-$series = array_fill(0, 4, array());
 $now = time();
-foreach($series as &$serie){
-	$serie['pointStart'] = $now * 1000 - 3600 * 1000;
-	$serie['pointInterval'] = 3600 * 1000;
-	$serie['data'] = array();
-}
-$series[0]['color'] = "blue"; 
-$series[1]['color'] = "cyan"; 
-$series[2]['color'] = "green"; 
-$series[3]['color'] = "red"; 
-$series[0]['name'] = "Local Method 1"; 
-$series[1]['name'] = "Local Method 2"; 
-$series[2]['name'] = "Pool Worker"; 
-$series[3]['name'] = "Pool Sum"; 
 foreach($lines as $line) $hashrates[] = explode(";",$line);
+
+$v1 = array();
+$v2 = array();
+$vp = array();
+
+$flag = FALSE;
 foreach($hashrates as $hashrate){
 	$unix = DateTime::createFromFormat('Y_m_d_H_i', $hashrate[0])->getTimestamp();
 	$localtime = ($unix + $timeshift) * 1000;
-	if($now - 24.5*3600 > $unix) continue;
-	$series[0]['data'][] = array($localtime,$hashrate[1] * 1000000);
-	$series[1]['data'][] = array($localtime,$hashrate[2] * 1000000);
-	$series[2]['data'][] = array($localtime,$hashrate[3] * 1000000);
-	$series[3]['data'][] = array($localtime,$hashrate[4] * 1000000);
+    if($flag){
+        $v1[] = array($localtime, $hashrate[1] * 1000000);
+        $v2[] = array($localtime, $hashrate[2] * 1000000);
+        for($i=3; $i<sizeof($hashrate); $i++){
+            $label = explode(":", $hashrate[$i])[0];
+            if(!array_key_exists($label, $vp))
+                $vp[$label] = array();
+            $vp[$label][] = array($localtime, explode(":",$hashrate[$i])[1] * 1000000);
+        }
+    }else{
+        if($now - 24.5*3600 < $unix)
+            $flag = TRUE;
+    }
+}
+$series = array_fill(0, sizeof($vp) + 2, array());
+$i = 0;
+foreach($series as &$serie){
+	$serie['pointStart'] = $now * 1000 - 3600 * 1000;
+	$serie['pointInterval'] = 3600 * 1000;
+    $serie['data'] = array();
+    $serie['color'] = $colorlist[$i];
+    switch($i){
+    case 0:
+        $serie['name'] = "Local Method 1";
+        $serie['data'] = $v1;
+        break;
+    case 1:
+        $serie['name'] = "Local Method 2";
+        $serie['data'] = $v2;
+        break;
+    default:
+        break; 
+    }
+    $i += 1;
+}
+$i = 0;
+foreach($vp as $label => $v){
+    $series[$i + 2]['name'] = $label;
+    $series[$i + 2]['data'] = $v;
+    $i += 1;
 }
 ?>
 

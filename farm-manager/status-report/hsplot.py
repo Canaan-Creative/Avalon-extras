@@ -16,7 +16,7 @@ import numpy as np
 
 def hsplot(hashrate, cfg, time0):
 
-    [t, v1, v2, vp, vps] = hashrate
+    labels, vps, t = hashrate
 
     if len(t) < 2:
         print("More log files are needed for plotting.")
@@ -29,16 +29,13 @@ def hsplot(hashrate, cfg, time0):
         t[k] = t[k] / 3600.0
 
     x = np.array(t)
-    y0 = np.array(v1)
-    y1 = np.array(v2)
-    y2 = np.array(vp)
-    y3 = np.array(vps)
-    ymax = np.amax(np.hstack((y0, y1, y2, y3)))
-
-    f0 = interp1d(x, y0)
-    f1 = interp1d(x, y1)
-    f2 = interp1d(x, y2)
-    f3 = interp1d(x, y3)
+    ys = []
+    fs = []
+    for v in vps:
+        y = np.array(v)
+        ys.append(y)
+        fs.append(interp1d(x, y))
+    ymax = np.amax(np.hstack(ys))
 
     xnew = np.linspace(t[0], t[-1], 1800)
 
@@ -55,13 +52,12 @@ def hsplot(hashrate, cfg, time0):
         size=int(cfg['HSplot']['font_size2']), weight='normal',
         stretch='normal')
 
-    p0, = plt.plot(xnew, f0(xnew), 'b-')
-    p1, = plt.plot(xnew, f1(xnew), 'c-')
-    p2, = plt.plot(xnew, f2(xnew), 'g-')
-    p3, = plt.plot(xnew, f3(xnew), 'r-')
-    plt.legend((p0, p1, p2, p3),
-               ('Local Method 1', 'Local Method 2', 'Pool Worker', 'Pool Sum'),
-               loc=2, prop=ticks_font)
+    colorlist = ['b-', 'c-', 'g-', 'r-', 'y-', 'm-']
+    plots = []
+    for i in range(0, len(vps)):
+        p, = plt.plot(xnew, fs[i](xnew), colorlist[i])
+        plots.append(p)
+    plt.legend(plots, labels, loc=2, prop=ticks_font)
     # x axis tick label
     xticklabel = []
     xmax = time0 - datetime.timedelta(
