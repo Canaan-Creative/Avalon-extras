@@ -138,7 +138,7 @@ def sendmail(time, data, err_list, cfg, luckyID):
         if alive_flag:
             alivenum += 1
 
-    minernum = str(len(cfg['miner_list']))
+    minernum = len(cfg['miner_list'])
     for i in cfg['mod_num_list']:
         if int(i) == 0:
             minernum -= 1
