@@ -23,8 +23,12 @@ foreach($zones as $zone){
 		$n = floor($i / $miner_per_table);
 		$x = floor(($i % $miner_per_table) / $zone["layers"]);
 		$y = ($i % $miner_per_table) % $zone["layers"];
-		$ports = array();
-		foreach($miner["cgminer"] as $cgminer) $ports[] = $cgminer["port"];
+        $ports = array();
+        $mod_num = 0;
+        foreach($miner["cgminer"] as $cgminer){
+            $ports[] = $cgminer["port"];
+            foreach($cgminer["mod"] as $mod) $mod_num += $mod;
+        }
 		if($miner2['alive'] == 'True')
 		{
 			$content = "<p class=\"tmap\">" . $miner2['modnum'];
@@ -65,7 +69,8 @@ foreach($zones as $zone){
 			$content = $content . "</font>";
 			$content = $content . "</p><p class=\"tmap\">" . round($miner2['tempavg'],1) . "/" . $miner2['tempmax'] . "</p>";
 		}
-		else $content = "N/A";
+        elseif($mod_num > 0) $content = "<p class=\"tmap\"><font color=\"red\">N/A</font></p>";
+        else $content = "";
 		$zone_map[$n][$y][$x] = "<td title=\"" . $miner["ip"] . "\" class=\"tmap\" style=\"background:" . $miner2['color'] .
 			"\" onclick=\"window.open('" . "cgminer.php?ip=" . $miner["ip"] . "&port=" . join(",",$ports) . "');\">" .
 			$content 

@@ -1,0 +1,3 @@
+/etc/init.d/cgminer stop
+sleep 3
+/etc/init.d/cgminer start

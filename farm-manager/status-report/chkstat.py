@@ -43,57 +43,55 @@ def socketthread(miner_queue, data0, lock, retry):
     while True:
         try:
             (miner_ip, miner_port, miner_id, miner_pid) = miner_queue.get(False)
-
-            err_conn_flag = False
-            for k in range(0, retry):
-                # try connecting for some times
-                try:
-                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    s.settimeout(k + 1)
-                    s.connect((miner_ip, int(miner_port)))
-                    s.close()
-                    break
-                except:
-                    s.close()
-                    if k < retry - 1:
-                        lock.acquire()
-                        print('\033[1m\033[33mCannot connect to ' + miner_ip +
-                              ':' + miner_port + '. Try Again.\033[0m')
-                        lock.release()
-                    else:
-                        lock.acquire()
-                        print('\033[31mCannot connect to ' + miner_ip + ':' +
-                              miner_port + '. Skip.\033[0m')
-                        lock.release()
-                        err_conn_flag = True
-            if err_conn_flag:
-                lock.acquire()
-                data0[0][miner_id][miner_pid] = None
-                data0[1][miner_id][miner_pid] = None
-                data0[2][miner_id][miner_pid] = None
-                data0[3][miner_id][miner_pid] = None
-                lock.release()
-                continue
-
-            else:
-                tmp = []
-                tmp.append(apiread(miner_ip, miner_port,
-                                   'summary', lock, retry))
-                tmp.append(apiread(miner_ip, miner_port, 'devs', lock, retry))
-                tmp.append(apiread(miner_ip, miner_port, 'stats', lock, retry))
-                tmp.append(apiread(miner_ip, miner_port, 'pools', lock, retry))
-
-                lock.acquire()
-                data0[0][miner_id][miner_pid] = tmp[0]
-                data0[1][miner_id][miner_pid] = tmp[1]
-                data0[2][miner_id][miner_pid] = tmp[2]
-                data0[3][miner_id][miner_pid] = tmp[3]
-                print("Complete fetching data from " + miner_ip + ':' +
-                      miner_port + ".")
-                lock.release()
-
-        except Queue.Empty:
+        except:
             break
+
+        err_conn_flag = False
+        for k in range(0, retry):
+            # try connecting for some times
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(k + 1)
+                s.connect((miner_ip, int(miner_port)))
+                s.close()
+                break
+            except:
+                s.close()
+                if k < retry - 1:
+                    lock.acquire()
+                    print('\033[1m\033[33mCannot connect to ' + miner_ip +
+                          ':' + miner_port + '. Try Again.\033[0m')
+                    lock.release()
+                else:
+                    lock.acquire()
+                    print('\033[31mCannot connect to ' + miner_ip + ':' +
+                          miner_port + '. Skip.\033[0m')
+                    lock.release()
+                    err_conn_flag = True
+        if err_conn_flag:
+            lock.acquire()
+            data0[0][miner_id][miner_pid] = None
+            data0[1][miner_id][miner_pid] = None
+            data0[2][miner_id][miner_pid] = None
+            data0[3][miner_id][miner_pid] = None
+            lock.release()
+            continue
+
+        else:
+            tmp = []
+            tmp.append(apiread(miner_ip, miner_port, 'summary', lock, retry))
+            tmp.append(apiread(miner_ip, miner_port, 'devs', lock, retry))
+            tmp.append(apiread(miner_ip, miner_port, 'stats', lock, retry))
+            tmp.append(apiread(miner_ip, miner_port, 'pools', lock, retry))
+
+            lock.acquire()
+            data0[0][miner_id][miner_pid] = tmp[0]
+            data0[1][miner_id][miner_pid] = tmp[1]
+            data0[2][miner_id][miner_pid] = tmp[2]
+            data0[3][miner_id][miner_pid] = tmp[3]
+            print("Complete fetching data from " + miner_ip + ':' +
+                  miner_port + ".")
+            lock.release()
 
 
 def chkstat(cfg):

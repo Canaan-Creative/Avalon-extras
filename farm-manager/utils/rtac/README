@@ -1,0 +1,13 @@
+usage: rtac.py [-h] [-s] [-m COMMANDS] [-o HOSTS] [-c CONFIGURATION]
+
+Run Them on All Controllers.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s, --ssh             Use ssh instead of telnet.
+  -m COMMANDS, --commands COMMANDS
+                        Command-to-run list.
+  -o HOSTS, --hosts HOSTS
+                        Host-to-login list.
+  -c CONFIGURATION, --configuration CONFIGURATION
+                        Configuration file.

@@ -58,7 +58,7 @@ if __name__ == '__main__':
         (data, luckyID) = chkblock(data, data0)
         if not args.nopoolhashrate:
             hashrate = chkrate(data, data0, cfg, time_now, time_old)
-        err = chkerr(data, cfg, time_now)
+        err = chkerr(data, cfg, time_now, data0)
         writelog(data, cfg,
                  "log-" + time_now.strftime("%Y_%m_%d_%H_%M") + ".xml")
     if args.hsplot:

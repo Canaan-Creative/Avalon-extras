@@ -1,7 +1,6 @@
 #!/usr/bin/env python2
 
 from __future__ import print_function
-import shutil
 import json
 
 
@@ -18,7 +17,12 @@ def renderpage(time, data, err, tmap_data, cfg):
         if alive_flag:
             alivenum += 1
 
-    info['active_ip_num'] = str(alivenum) + '/' + str(len(cfg['miner_list']))
+    minernum = len(cfg['miner_list'])
+    for i in cfg['mod_num_list']:
+        if int(i) == 0:
+            minernum -= 1
+
+    info['active_ip_num'] = str(alivenum) + '/' + str(minernum)
 
     info['err_miner_list'] = err
 

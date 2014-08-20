@@ -11,7 +11,7 @@ import sys
 import time
 
 parser = OptionParser()
-parser.add_option("-s", "--serial", dest="serial_port", default="/dev/ttyUSB0", help="Serial port")
+parser.add_option("-s", "--serial", dest="serial_port", default="/dev/ttyUSB0", help="Serial port, default: /dev/ttyUSB0")
 parser.add_option("-t", "--type", dest="chip_type", default="3", help="Module type should be: 2 or 3")
 parser.add_option("-m", "--module", dest="module_id", default="0", help="Module ID: 0 - 3")
 parser.add_option("-S", "--static", dest="is_static", default="0", help="Static flag: 0-turn off, 1-turn on")
