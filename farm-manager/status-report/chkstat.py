@@ -6,6 +6,7 @@ import threading
 import Queue
 import socket
 import json
+import datetime
 
 
 def apiread(ip, port, command, lock, retry):
@@ -237,6 +238,9 @@ def chkstat(cfg):
                         pool_stat = []
                         pool_stat.append(pd['Status'])
                         pool_stat.append(pd['URL'])
+                        pool_stat.append(datetime.datetime.fromtimestamp(
+                            pd['Last Share Time']).strftime(
+                                '%Y-%m-%d %H:%M:%S'))
                         pool.append(pool_stat)
                 except Exception, e:
                     print(str(e) + '.')
