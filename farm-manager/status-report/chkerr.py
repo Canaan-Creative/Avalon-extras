@@ -126,7 +126,7 @@ def chkerr(data, cfg, time, data0):
                             error_msg.append({'msg': 'Local work too low. ',
                                               'color': 'green'})
                         try:
-                            if lw == lw0:
+                            if lw == lw0 and lw != -1:
                                 error_msg.append({'msg': 'Local work stopped. ',
                                                   'color': 'orange'})
                         except:
