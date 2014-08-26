@@ -22,7 +22,7 @@ which curl > /dev/null && DL_PROG=curl && DL_PARA="-L -o"
 echo -ne > $REVISION_NEW
 
 cd $WORKDIR
-$DL_PROG https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/feeds.conf $DL_PARA feeds.conf
+$DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.conf $DL_PARA feeds.conf
 
 # Check all repos
 cat $WORKDIR/feeds.conf $BASEDIR/feeds-extra.conf | sed "s/^ *//;s/ *$//;s/ \{1,\}/ /g;/^$/d;/^#.*$/d" | sort | uniq | grep -E '^src-' | while read line; do
@@ -100,7 +100,7 @@ else
         echo                                                    >> $BUILD_LOG
 
         cd $WORKDIR/$BUILD_DIR
-        $DL_PROG https://github.com/BitSyncom/avalon-extras/raw/master/scripts/build-avalon-image.sh $DL_PARA build-avalon-image.sh
+        $DL_PROG https://github.com/Canaan-Creative/avalon-extras/raw/master/scripts/build-avalon-image.sh $DL_PARA build-avalon-image.sh
         chmod 0755 build-avalon-image.sh
         mkdir -p avalon/bin
         [ ! -d $WORKDIR/dl ] && mkdir -p $WORKDIR/dl
