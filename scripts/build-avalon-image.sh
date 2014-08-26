@@ -77,21 +77,21 @@ if [ "$1" == "--clone" ]; then
     [ ! -d avalon ] && mkdir -p avalon/bin
     cd avalon
     svn co svn://svn.openwrt.org/openwrt/trunk@41240 openwrt
-    git clone git://github.com/BitSyncom/cgminer.git
-    git clone git://github.com/BitSyncom/cgminer-openwrt-packages.git
+    git clone git://github.com/Canaan-Creative/cgminer.git
+    git clone git://github.com/Canaan-Creative/cgminer-openwrt-packages.git
 
     if [ "${MACHINE}" == "avalon2" ]; then
         (cd cgminer && git checkout -b avalon2 origin/avalon2)
-        git clone git://github.com/BitSyncom/luci.git && (cd luci && git checkout -b cgminer-webui-avalon2 origin/cgminer-webui-avalon2)
+        git clone git://github.com/Canaan-Creative/luci.git && (cd luci && git checkout -b cgminer-webui-avalon2 origin/cgminer-webui-avalon2)
     else
-        git clone git://github.com/BitSyncom/luci.git && (cd luci && git checkout -b cgminer-webui origin/cgminer-webui)
+        git clone git://github.com/Canaan-Creative/luci.git && (cd luci && git checkout -b cgminer-webui origin/cgminer-webui)
     fi
 
     cd openwrt
     [ -d ../../dl ] && ln -sf ../dl ../dl
     [ ! -e ../dl ] && mkdir ../dl
     ln -sf ../dl
-    $DL_PROG https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/feeds.conf $DL_PARA feeds.conf
+    $DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.conf $DL_PARA feeds.conf
     ./scripts/feeds update -a && ./scripts/feeds install -a
 
     ln -s feeds/cgminer/cgminer/root-files files
@@ -106,7 +106,7 @@ if [ "$1" == "--build" ]; then
     fi
     cd avalon/openwrt/
     make clean
-    $DL_PROG https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/${OPENWRT_CONFIG} $DL_PARA .config
+    $DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/${OPENWRT_CONFIG} $DL_PARA .config
     yes "" | make oldconfig
     make -j${CORE_NUM} V=s IGNORE_ERRORS=m || make V=s IGNORE_ERRORS=m
     exit $?
@@ -120,7 +120,7 @@ if [ "$1" == "--update" ]; then
     (cd avalon/cgminer-openwrt-packages && git pull)
     cd avalon/openwrt
     ./scripts/feeds update cgminer; ./scripts/feeds install -a -p cgminer
-    $DL_PROG https://raw.github.com/BitSyncom/cgminer-openwrt-packages/master/cgminer/data/${OPENWRT_CONFIG} $DL_PARA .config
+    $DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/${OPENWRT_CONFIG} $DL_PARA .config
     yes "" | make oldconfig
     exit $?
 fi
