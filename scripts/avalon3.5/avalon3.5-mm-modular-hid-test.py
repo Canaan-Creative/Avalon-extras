@@ -74,7 +74,7 @@ def enum_usbhid(vendor_id, product_id):
 def hid_req(hiddev, endpin, endpout, addr, req, data):
     req = req.rjust(2, '0')
 
-    if req == '01':
+    if req == 'a1':
         data = data.ljust(120, '0')
         datalen = 12
         txdat = hex(datalen)[2:].rjust(2, '0') + \
@@ -83,23 +83,23 @@ def hid_req(hiddev, endpin, endpout, addr, req, data):
                 data
         hiddev.write(endpout, txdat.decode("hex"))
 
-    if req == '03' or req == '05':
+    if req == 'a3' or req == 'a5':
         data = data.ljust(112, '0')
         datalen = 8 + len(data)
         txdat = hex(datalen)[2:].rjust(2, '0') +    \
                 "0000" +    \
-                "05" + \
+                "a5" + \
                 "280000" +  \
                 addr.rjust(2, '0') +    \
                 data
         hiddev.write(endpout, txdat.decode("hex"))
         hiddev.read(endpin, 64)
 
-    if req == '04' or req == '05':
+    if req == 'a4' or req == 'a5':
         datalen = 8
         txdat = hex(datalen)[2:].rjust(2, '0') +    \
                 "0000" +    \
-                "05" + \
+                "a5" + \
                 "002800" +  \
                 addr.rjust(2, '0') +    \
                 "0".ljust(112, '0')
@@ -118,7 +118,7 @@ def hid_xfer(hiddev, endpin, endpout, addr, req, data):
 
 def run_loopback(hiddev, endpin, endpout):
     # addressing 0x18
-    ret = hid_xfer(hiddev, endpin, endpout, "00", "05", "0000000000000018")
+    ret = hid_xfer(hiddev, endpin, endpout, "00", "a5", "0000000000000018")
     if ret:
         rxdat = binascii.hexlify(ret)
         print "DNA = " + rxdat[:16]
@@ -128,7 +128,7 @@ def run_loopback(hiddev, endpin, endpout):
     # loopback on 0x18
     txdat = "000000011234567890123456789012345678901234567890123456789012345678901234567890"
     for i in range(1, 4):
-        ret = hid_xfer(hiddev, endpin, endpout, "18", "05", txdat +  str(i).rjust(2,'0'))
+        ret = hid_xfer(hiddev, endpin, endpout, "18", "a5", txdat +  str(i).rjust(2,'0'))
         if ret:
             rxdat = binascii.hexlify(ret)
             if rxdat == (txdat +  str(i).rjust(2,'0')):
@@ -176,10 +176,10 @@ def mm_package(cmd_type, module_id):
 	return "4156" + cmd_type + "0101" + data + hex(crc)[2:].rjust(4, '0')
 
 def run_test(hiddev, endpin, endpout, cmd):
-        hid_req(hiddev, endpin, endpout, "00", "03", cmd)
+        hid_req(hiddev, endpin, endpout, "00", "a3", cmd)
 	for count in range(0, miner_cnt):
                 while True:
-                    hid_req(hiddev, endpin, endpout, "00", "04", cmd)
+                    hid_req(hiddev, endpin, endpout, "00", "a4", cmd)
                     res_s = hid_read(hiddev, endpin)
                     if res_s != None:
                         break
@@ -200,14 +200,14 @@ def run_test(hiddev, endpin, endpout, cmd):
 
 def run_detect(hiddev, endpin, endpout, cmd):
 	#version
-        res_s = hid_xfer(hiddev, endpin, endpout, "00", "05", cmd)
+        res_s = hid_xfer(hiddev, endpin, endpout, "00", "a5", cmd)
 	if not res_s:
 		print("ver:Something is wrong or modular id not correct")
 	else :
 		print("ver:" + ''.join([chr(x) for x in res_s])[3:20])
 
 def run_require(hiddev, endpin, endpout, cmd):
-        res_s = hid_xfer(hiddev, endpin, endpout, "00", "05", cmd)
+        res_s = hid_xfer(hiddev, endpin, endpout, "00", "a5", cmd)
 	if not res_s:
 		print("status:Something is wrong or modular id not correct")
 	else :
@@ -256,7 +256,7 @@ if __name__ == '__main__':
 
     hiddev, endpin, endpout = enum_usbhid(hid_vid, hid_pid)
 
-    ret = hid_xfer(hiddev, endpin, endpout, "00", "01", "40420f00")
+    ret = hid_xfer(hiddev, endpin, endpout, "00", "a1", "40420f00")
     if ret:
         print "USB2IIC version: " +  ''.join([chr(x) for x in ret])
     else:
