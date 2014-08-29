@@ -49,7 +49,7 @@ ser = Serial(options.serial_port, 115200, 8, timeout=0.02)
 def cdc_req(addr, req, data):
     req = req.rjust(2, '0')
 
-    if req == '01':
+    if req == 'a1':
         data = data.ljust(120, '0')
         datalen = 12
         txdat = hex(datalen)[2:].rjust(2, '0') + \
@@ -58,23 +58,23 @@ def cdc_req(addr, req, data):
                 data
         ser.write(txdat.decode("hex"))
 
-    if req == '03' or req == '05':
+    if req == 'a3' or req == 'a5':
         data = data.ljust(112, '0')
         datalen = 8 + len(data)
         txdat = hex(datalen)[2:].rjust(2, '0') +    \
                 "0000" +    \
-                "05" + \
+                "a5" + \
                 "280000" +  \
                 addr.rjust(2, '0') +    \
                 data
         ser.write(txdat.decode("hex"))
         ser.read(64)
 
-    if req == '04' or req == '05':
+    if req == 'a4' or req == 'a5':
         datalen = 8
         txdat = hex(datalen)[2:].rjust(2, '0') +    \
                 "0000" +    \
-                "05" + \
+                "a5" + \
                 "002800" +  \
                 addr.rjust(2, '0') +    \
                 "0".ljust(112, '0')
@@ -101,7 +101,7 @@ def cdc_xfer(addr, req, data):
 
 def run_loopback():
     # addressing 0x18
-    ret = cdc_xfer("00", "05", "0000000000000018")
+    ret = cdc_xfer("00", "a5", "0000000000000018")
     if ret:
         rxdat = binascii.hexlify(ret)
         print "DNA = " + rxdat[:16]
@@ -111,7 +111,7 @@ def run_loopback():
     # loopback on 0x18
     txdat = "000000011234567890123456789012345678901234567890123456789012345678901234567890"
     for i in range(1, 4):
-        ret = cdc_xfer("18", "05", txdat +  str(i).rjust(2,'0'))
+        ret = cdc_xfer("18", "a5", txdat +  str(i).rjust(2,'0'))
         if ret:
             rxdat = binascii.hexlify(ret)
             if rxdat == (txdat +  str(i).rjust(2,'0')):
@@ -159,10 +159,10 @@ def mm_package(cmd_type, module_id):
 	return "4156" + cmd_type + "0101" + data + hex(crc)[2:].rjust(4, '0')
 
 def run_test(cmd):
-        cdc_req("00", "03", cmd)
+        cdc_req("00", "a3", cmd)
 	for count in range(0, miner_cnt):
                 while True:
-                    cdc_req("00", "04", cmd)
+                    cdc_req("00", "a4", cmd)
                     res_s = cdc_read()
                     if res_s != None:
                         break
@@ -183,14 +183,14 @@ def run_test(cmd):
 
 def run_detect(cmd):
 	#version
-        res_s = cdc_xfer("00", "05", cmd)
+        res_s = cdc_xfer("00", "a5", cmd)
 	if not res_s:
 		print("ver:Something is wrong or modular id not correct")
 	else :
 		print("ver:" + ''.join([chr(x) for x in res_s])[3:20])
 
 def run_require(cmd):
-        res_s = cdc_xfer("00", "05", cmd)
+        res_s = cdc_xfer("00", "a5", cmd)
 	if not res_s:
 		print("status:Something is wrong or modular id not correct")
 	else :
@@ -230,7 +230,7 @@ def run_modular_test():
         raw_input('Press enter to continue:')
 
 if __name__ == '__main__':
-    ret = cdc_xfer("00", "01", "40420f00")
+    ret = cdc_xfer("00", "a1", "40420f00")
     if ret:
         print "USB2IIC version: " +  ''.join([chr(x) for x in ret])
     else:
