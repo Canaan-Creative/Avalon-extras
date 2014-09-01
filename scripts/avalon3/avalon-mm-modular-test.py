@@ -129,4 +129,6 @@ while (1):
             run_detect(mm_package(TYPE_DETECT, options.module_id))
             run_require(mm_package(TYPE_REQUIRE, options.module_id))
             run_test(mm_package(TYPE_TEST, options.module_id))
+            run_require(mm_package(TYPE_REQUIRE, options.module_id))
+            run_require(mm_package(TYPE_REQUIRE, options.module_id))
             raw_input('Press enter to continue:')
