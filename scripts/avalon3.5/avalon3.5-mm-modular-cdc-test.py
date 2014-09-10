@@ -12,16 +12,18 @@
 #  transId: 0
 #  sesId: 0
 #  req:
-#        0:RESET
-#        1:INIT
-#        2:DEINIT
-#        3:WRITE
-#        4:READ
-#        5:XFER
+#        a0:RESET
+#        a1:INIT
+#        a2:DEINIT
+#        a3:WRITE
+#        a4:READ
+#        a5:XFER
 #  data: the actual payload
 #        clockRate[4] + reserved[4] + payload[52] when init
+#
 #        xparam[4] + payload[56] when write
 #            xparam: txSz[1]+rxSz[1]+options[1]+slaveAddr[1]
+#
 #        payload[60] when read
 #
 
