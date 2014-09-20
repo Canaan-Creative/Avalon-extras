@@ -16,6 +16,7 @@ parser.add_option("-S", "--static", dest="is_static", default="0", help="Static 
 ser = Serial(options.serial_port, 115200, 8, timeout=2)
 
 TYPE_DETECT = "0a"
+TYPE_REQUIRE = "12"
 TYPE_WORK = "1c"
 
 def CRC16(message):
@@ -53,7 +54,6 @@ def mm_package(cmd_type, idx = "01", cnt = "01", module_id = None, pdata = '0'):
 
 def run_detect(cmd):
 	#version
-	print cmd
 	ser.write(cmd.decode('hex'))
 	res_s = ser.read(39)
 	if not res_s:
@@ -69,6 +69,26 @@ def run_testwork():
     nonce = ser.read(39)
     print "Nonce is " + binascii.hexlify(nonce)[10:18]
 
+def run_require(cmd):
+	ser.write(cmd.decode('hex'))
+	res_s = ser.read(39)
+	if not res_s:
+		print("status:Something is wrong")
+	else :
+		# format: freq(120), temp(40), hot(0)
+		avalon_require = binascii.hexlify(res_s)
+		freq = int(avalon_require[10:18], 16)
+		freq = (((freq << 24) & 0xff000000) | ((freq >> 24) & 0xff) | ((freq >> 8) & 0xff00) | ((freq << 8) & 0xff0000))
+		temp = int(avalon_require[18:26], 16)
+		temp = (((temp << 24) & 0xff000000) | ((temp >> 24) & 0xff) | ((temp >> 8) & 0xff00) | ((temp << 8) & 0xff0000))
+		hot = int(avalon_require[26:34], 16)
+		hot = (((hot << 24) & 0xff000000) | ((hot >> 24) & 0xff) | ((hot >> 8) & 0xff00) | ((hot << 8) & 0xff0000))
+		result = "freq(" + str(freq) + "), "
+		result = result + "temp(" + str(temp) + "), "
+		result = result + "hot(" + str(hot) + ")"
+		print(result)
+
+
 def statics():
     start = time.time()
     for i in range(0, 1000):
@@ -82,5 +102,6 @@ while (1):
             break
         else:
             run_detect(mm_package(TYPE_DETECT, module_id = None))
+	    run_require(mm_package(TYPE_REQUIRE, module_id = None))
 	    run_testwork()
             raw_input('Press enter to continue:')
