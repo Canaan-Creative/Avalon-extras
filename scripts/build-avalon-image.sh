@@ -106,7 +106,7 @@ if [ "$1" == "--build" ]; then
     fi
     cd avalon/openwrt/
     make clean
-    $DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/${OPENWRT_CONFIG} $DL_PARA .config
+    cp ./feeds/cgminer/cgminer/data/${OPENWRT_CONFIG} .config
     yes "" | make oldconfig
     make -j${CORE_NUM} V=s IGNORE_ERRORS=m || make V=s IGNORE_ERRORS=m
     exit $?
@@ -120,7 +120,7 @@ if [ "$1" == "--update" ]; then
     (cd avalon/cgminer-openwrt-packages && git pull)
     cd avalon/openwrt
     ./scripts/feeds update cgminer; ./scripts/feeds install -a -p cgminer
-    $DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/${OPENWRT_CONFIG} $DL_PARA .config
+    cp ./feeds/cgminer/cgminer/data/${OPENWRT_CONFIG} .config
     yes "" | make oldconfig
     exit $?
 fi
