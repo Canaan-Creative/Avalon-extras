@@ -224,7 +224,7 @@ void calc_prepare(const uint8_t *buf, uint8_t *calc)
 	memcpy(calc + 20, digest + 16, 4); /* e2 */
 }
 
-void data_pkg(const uint8_t *data, uint8_t *out)
+void data_pkg(const uint8_t *data, uint8_t *out, uint8_t *pre)
 {
 	uint8_t work[44];
 	uint8_t calc[24];
@@ -234,6 +234,14 @@ void data_pkg(const uint8_t *data, uint8_t *out)
 	memcpy(work + 32, data + 52, 12); /* Parser the Icarus protocl data */
 
 	calc_prepare(work, calc);
+
+	memcpy(pre + 0, calc + 0, 4);	/* a0 */
+	memcpy(pre + 4, calc + 4, 4);	/* a1 */
+	memcpy(pre + 8, calc + 8, 4);	/* a2 */
+	memcpy(pre + 12, calc + 12, 4);	/* e0 */
+	memcpy(pre + 16, calc + 16, 4);	/* e1 */
+	memcpy(pre + 20, calc + 20, 4);	/* e2 */
+
 
 	t = out + 12;
 	memcpy(t, work + 32, 12); /* Task data */
