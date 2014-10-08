@@ -3,7 +3,7 @@
 # This simple script was for test A3255 modular. there are 128 cores in one A3255 chip.
 # If all cores are working the number should be 0.
 # If some of them not working the number is the broken cores count.
-# Note: Avalon 3.5 use usb2iic instead of uart, the usb2iic bridge expose hid api to app.
+# Note: Avalon 3.5 use usb2iic instead of uart, the usb2iic bridge expose cdc api to app.
 # Depends : PyUSB 1.0 (Under Linux)
 # PyUSB 1.0 Installation: https://github.com/walac/pyusb
 #
@@ -27,28 +27,61 @@
 #        payload[60] when read
 #
 
-import sys
-import binascii
-import time
-from serial import Serial
 from optparse import OptionParser
-from array import array
+import time
+import binascii
+import usb.core
+import usb.util
+import sys
 
 parser = OptionParser()
-parser.add_option("-s", "--serial", dest="serial_port", default="/dev/ttyACM0", help="Serial port")
-parser.add_option("-m", "--module", dest="module_id", default="0", help="Module ID: 0 - 3, default:0")
-parser.add_option("-M", "--Mode", dest="run_mode", default="0", help="Run Mode:0-Normal,1-Loopback test; default:0")
+# TODO: Module id assignment
+parser.add_option("-m", "--module", dest="module_id", default="0", help="Module ID: 0 - 127, default:0")
 parser.add_option("-S", "--static", dest="is_static", default="0", help="Static flag: 0-turn off, 1-turn on")
 (options, args) = parser.parse_args()
 
 asic_cnt = 10
 miner_cnt = 5
-ser = Serial(options.serial_port, 115200, 8, timeout=0.02)
+
+def statics(usbdev, endpin, endpout):
+    start = time.time()
+    for i in range(0, 1000):
+        run_detect(usbdev, endpin, endpout, mm_package(TYPE_DETECT, module_id = options.module_id))
+    print "time elapsed: %s" %(time.time() - start)
+
+def enum_usbdev(vendor_id, product_id):
+    # Find device
+    usbdev = usb.core.find(idVendor = vendor_id, idProduct = product_id)
+
+    if not usbdev:
+        sys.exit("No Avalon USB Converter can be found!")
+    else:
+        print "Find an Avalon USB Converter"
+        if usbdev.is_kernel_driver_active(0):
+            try:
+                usbdev.detach_kernel_driver(0)
+            except usb.core.USBError as e:
+                sys.exit("Could not detach kernel driver: %s" % str(e))
+    try:
+        usbdev.set_configuration()
+        usbdev.reset()
+
+	# usbdev[iConfiguration][(bInterfaceNumber,bAlternateSetting)]
+        for endp in usbdev[0][(1,0)]:
+            if endp.bEndpointAddress & 0x80:
+                endpin = endp.bEndpointAddress
+            else:
+                endpout = endp.bEndpointAddress
+
+    except usb.core.USBError as e:
+        sys.exit("Could not set configuration: %s" % str(e))
+
+    return usbdev, endpin, endpout
 
 # addr : iic slaveaddr
 # req : see bridge format
 # data: 40 bytes payload
-def cdc_req(addr, req, data):
+def auc_req(usbdev, endpin, endpout, addr, req, data):
     req = req.rjust(2, '0')
 
     if req == 'a1':
@@ -58,7 +91,7 @@ def cdc_req(addr, req, data):
                 "0000" +    \
                 req +   \
                 data
-        ser.write(txdat.decode("hex"))
+        usbdev.write(endpout, txdat.decode("hex"))
 
     if req == 'a3' or req == 'a5':
         data = data.ljust(112, '0')
@@ -69,8 +102,8 @@ def cdc_req(addr, req, data):
                 "280000" +  \
                 addr.rjust(2, '0') +    \
                 data
-        ser.write(txdat.decode("hex"))
-        ser.read(64)
+        usbdev.write(endpout, txdat.decode("hex"))
+        usbdev.read(endpin, 64)
 
     if req == 'a4' or req == 'a5':
         datalen = 8
@@ -80,51 +113,19 @@ def cdc_req(addr, req, data):
                 "002800" +  \
                 addr.rjust(2, '0') +    \
                 "0".ljust(112, '0')
-        ser.write(txdat.decode("hex"))
+        usbdev.write(endpout, txdat.decode("hex"))
 
-def cdc_read():
-    mylist = []
-    ret = ser.read(64)
-
-    if isinstance(ret, str):
-        for c in ret:
-            mylist.append(ord(c))
-        del(ret)
-        ret = array("B", mylist)
-
-    if ret and ret[0] > 4:
+def auc_read(usbdev, endpin):
+    ret = usbdev.read(endpin, 64)
+    if ret[0] > 4:
         return ret[4:ret[0]]
     else:
         return None
 
-def cdc_xfer(addr, req, data):
-    cdc_req(addr, req, data)
-    return cdc_read()
+def auc_xfer(usbdev, endpin, endpout, addr, req, data):
+    auc_req(usbdev, endpin, endpout, addr, req, data)
+    return auc_read(usbdev, endpin)
 
-def run_loopback():
-    # addressing 0x18
-    ret = cdc_xfer("00", "a5", "0000000000000018")
-    if ret:
-        rxdat = binascii.hexlify(ret)
-        print "DNA = " + rxdat[:16]
-    else:
-        print "Read DNA Failed!"
-
-    # loopback on 0x18
-    txdat = "000000011234567890123456789012345678901234567890123456789012345678901234567890"
-    for i in range(1, 4):
-        ret = cdc_xfer("18", "a5", txdat +  str(i).rjust(2,'0'))
-        if ret:
-            rxdat = binascii.hexlify(ret)
-            if rxdat == (txdat +  str(i).rjust(2,'0')):
-                print "Loopback success" + str(i)
-            else:
-                print "txdat = " + txdat
-                print "rxdat = " + rxdat
-                print "Loopback failed"
-
-        else:
-            print "Read None"
 
 TYPE_TEST = "14"
 TYPE_DETECT = "0a"
@@ -155,17 +156,20 @@ def CRC16(message):
 				reg ^= poly
 	return reg
 
-def mm_package(cmd_type, module_id):
-	data = "000000000000000000000000000000000000000000000000000000000000" + module_id.rjust(4, '0')
+def mm_package(cmd_type, idx = "01", cnt = "01", module_id = None, pdata = '0'):
+	if module_id == None:
+	    data = pdata.ljust(64, '0')
+	else:
+	    data = pdata.ljust(60, '0') + module_id.rjust(4, '0')
 	crc = CRC16(data.decode("hex"))
-	return "4156" + cmd_type + "0101" + data + hex(crc)[2:].rjust(4, '0')
+	return "4156" + cmd_type + idx + cnt + data + hex(crc)[2:].rjust(4, '0')
 
-def run_test(cmd):
-        cdc_req("00", "a3", cmd)
+def run_test(usbdev, endpin, endpout, cmd):
+        auc_req(usbdev, endpin, endpout, "00", "a3", cmd)
 	for count in range(0, miner_cnt):
                 while True:
-                    cdc_req("00", "a4", cmd)
-                    res_s = cdc_read()
+                    auc_req(usbdev, endpin, endpout, "00", "a4", cmd)
+                    res_s = auc_read(usbdev, endpin)
                     if res_s != None:
                         break
 
@@ -183,16 +187,16 @@ def run_test(cmd):
 			print("")
 
 
-def run_detect(cmd):
+def run_detect(usbdev, endpin, endpout, cmd):
 	#version
-        res_s = cdc_xfer("00", "a5", cmd)
+        res_s = auc_xfer(usbdev, endpin, endpout, "00", "a5", cmd)
 	if not res_s:
 		print("ver:Something is wrong or modular id not correct")
 	else :
 		print("ver:" + ''.join([chr(x) for x in res_s])[3:20])
 
-def run_require(cmd):
-        res_s = cdc_xfer("00", "a5", cmd)
+def run_require(usbdev, endpin, endpout, cmd):
+        res_s = auc_xfer(usbdev, endpin, endpout, "00", "a5", cmd)
 	if not res_s:
 		print("status:Something is wrong or modular id not correct")
 	else :
@@ -216,33 +220,28 @@ def run_require(cmd):
 		result = result + "pg(" + str(pg) + ")"
 		print(result)
 
-def statics():
-    start = time.time()
-    for i in range(0, 1000):
-        run_detect(mm_package(TYPE_DETECT, options.module_id))
-    print "time elapsed: %s" %(time.time() - start)
 
-def run_modular_test():
+def run_modular_test(usbdev, endpin, endpout):
     while True:
         print("Reading result ...")
-        print("module id:" + options.module_id)
-        run_detect(mm_package(TYPE_DETECT, options.module_id))
-        run_require(mm_package(TYPE_REQUIRE, options.module_id))
-        run_test(mm_package(TYPE_TEST, options.module_id))
+        run_detect(usbdev, endpin, endpout, mm_package(TYPE_DETECT, module_id = options.module_id))
+        run_require(usbdev, endpin, endpout, mm_package(TYPE_REQUIRE, module_id = options.module_id))
+        run_test(usbdev, endpin, endpout, mm_package(TYPE_TEST, module_id = options.module_id))
         raw_input('Press enter to continue:')
 
 if __name__ == '__main__':
-    ret = cdc_xfer("00", "a1", "40420f00")
+    auc_vid = 0x29f1
+    auc_pid = 0x33f2
+    usbdev, endpin, endpout = enum_usbdev(auc_vid, auc_pid)
+
+    ret = auc_xfer(usbdev, endpin, endpout, "00", "a1", "40420f00")
     if ret:
-        print "USB2IIC version: " +  ''.join([chr(x) for x in ret])
+        print "AUC version: " +  ''.join([chr(x) for x in ret])
     else:
-        print "USB2IIC version null"
+        print "AUC version null"
 
     if options.is_static == '1':
-        statics()
+        statics(usbdev, endpin, endpout)
     else:
-        if options.run_mode == '0':
-            run_modular_test()
-        else:
-            run_loopback()
+        run_modular_test(usbdev, endpin, endpout)
 
