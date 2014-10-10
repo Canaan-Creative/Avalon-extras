@@ -38,6 +38,7 @@ parser = OptionParser()
 # TODO: Module id assignment
 parser.add_option("-m", "--module", dest="module_id", default="0", help="Module ID: 0 - 127, default:0")
 parser.add_option("-c", "--count", dest="test_count", default="1", help="Test count: 1,2,3... ")
+parser.add_option("-f", "--fastxfer", dest="fast_xfer", default="0", help="Fast Xfer switch 0-OFF/1-ON, default:0")
 (options, args) = parser.parse_args()
 
 asic_cnt = 10
@@ -93,27 +94,59 @@ def auc_req(usbdev, endpin, endpout, addr, req, data):
                 data
         usbdev.write(endpout, txdat.decode("hex"))
 
-    if req == 'a3' or req == 'a5':
+    if req == 'a3':
         data = data.ljust(112, '0')
         datalen = 8 + len(data)
         txdat = hex(datalen)[2:].rjust(2, '0') +    \
                 "0000" +    \
-                "a5" + \
+                "a3" + \
                 "280000" +  \
                 addr.rjust(2, '0') +    \
                 data
         usbdev.write(endpout, txdat.decode("hex"))
         usbdev.read(endpin, 64)
 
-    if req == 'a4' or req == 'a5':
+    if req == 'a4':
         datalen = 8
         txdat = hex(datalen)[2:].rjust(2, '0') +    \
                 "0000" +    \
-                "a5" + \
+                "a4" + \
                 "002800" +  \
                 addr.rjust(2, '0') +    \
                 "0".ljust(112, '0')
         usbdev.write(endpout, txdat.decode("hex"))
+
+    if req == 'a5':
+        if options.fast_xfer == '1':
+            data = data.ljust(112, '0')
+            datalen = 8 + len(data)
+            txdat = hex(datalen)[2:].rjust(2, '0') +    \
+                    "0000" +    \
+                    "a5" + \
+                    "282800" +  \
+                    addr.rjust(2, '0') +    \
+                    data
+            usbdev.write(endpout, txdat.decode("hex"))
+        else:
+            data = data.ljust(112, '0')
+            datalen = 8 + len(data)
+            txdat = hex(datalen)[2:].rjust(2, '0') +    \
+                    "0000" +    \
+                    "a5" + \
+                    "280000" +  \
+                    addr.rjust(2, '0') +    \
+                    data
+            usbdev.write(endpout, txdat.decode("hex"))
+            usbdev.read(endpin, 64)
+
+            datalen = 8
+            txdat = hex(datalen)[2:].rjust(2, '0') +    \
+                    "0000" +    \
+                    "a5" + \
+                    "002800" +  \
+                    addr.rjust(2, '0') +    \
+                    "0".ljust(112, '0')
+            usbdev.write(endpout, txdat.decode("hex"))
 
 def auc_read(usbdev, endpin):
     ret = usbdev.read(endpin, 64)
