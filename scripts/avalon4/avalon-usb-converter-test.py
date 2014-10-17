@@ -39,6 +39,9 @@ parser = OptionParser()
 parser.add_option("-m", "--module", dest="module_id", default="0", help="Module ID: 0 - 127, default:0")
 parser.add_option("-c", "--count", dest="test_count", default="1", help="Test count: 1,2,3... ")
 parser.add_option("-f", "--fastxfer", dest="fast_xfer", default="0", help="Fast Xfer switch 0-OFF/1-ON, default:0")
+parser.add_option("-V", "--voltage", dest="voltage", default="7875", help="Asic voltage, default:7875")
+parser.add_option("-F", "--freq", dest="freq", default="445,385,385", help="Asic freq, default:445,385,385")
+parser.add_option("-s", "--statics", dest="statics", default="0", help="Statics flag, default:0")
 (options, args) = parser.parse_args()
 
 asic_cnt = 10
@@ -58,11 +61,7 @@ def enum_usbdev(vendor_id, product_id):
         sys.exit("No Avalon USB Converter can be found!")
     else:
         print "Find an Avalon USB Converter"
-        if usbdev.is_kernel_driver_active(0):
-            try:
-                usbdev.detach_kernel_driver(0)
-            except usb.core.USBError as e:
-                sys.exit("Could not detach kernel driver: %s" % str(e))
+
     try:
         usbdev.set_configuration()
         usbdev.reset()
@@ -94,23 +93,25 @@ def auc_req(usbdev, endpin, endpout, addr, req, data):
                 data
         usbdev.write(endpout, txdat.decode("hex"))
 
+#FIXME: a3 not work
     if req == 'a3':
+        datalen = 8 + (len(data) / 2)
         data = data.ljust(112, '0')
-        datalen = 8 + len(data)
         txdat = hex(datalen)[2:].rjust(2, '0') +    \
                 "0000" +    \
-                "a3" + \
+                "a5" + \
                 "280000" +  \
                 addr.rjust(2, '0') +    \
                 data
         usbdev.write(endpout, txdat.decode("hex"))
         usbdev.read(endpin, 64)
 
+#FIXME: a4 not work
     if req == 'a4':
         datalen = 8
         txdat = hex(datalen)[2:].rjust(2, '0') +    \
                 "0000" +    \
-                "a4" + \
+                "a5" + \
                 "002800" +  \
                 addr.rjust(2, '0') +    \
                 "0".ljust(112, '0')
@@ -118,8 +119,8 @@ def auc_req(usbdev, endpin, endpout, addr, req, data):
 
     if req == 'a5':
         if options.fast_xfer == '1':
+            datalen = 8 + (len(data) / 2)
             data = data.ljust(112, '0')
-            datalen = 8 + len(data)
             txdat = hex(datalen)[2:].rjust(2, '0') +    \
                     "0000" +    \
                     "a5" + \
@@ -128,8 +129,8 @@ def auc_req(usbdev, endpin, endpout, addr, req, data):
                     data
             usbdev.write(endpout, txdat.decode("hex"))
         else:
+            datalen = 8 + (len(data) / 2)
             data = data.ljust(112, '0')
-            datalen = 8 + len(data)
             txdat = hex(datalen)[2:].rjust(2, '0') +    \
                     "0000" +    \
                     "a5" + \
@@ -199,26 +200,23 @@ def mm_package(cmd_type, idx = "01", cnt = "01", module_id = None, pdata = '0'):
 
 def run_test(usbdev, endpin, endpout, cmd):
         auc_req(usbdev, endpin, endpout, "00", "a3", cmd)
-	for count in range(0, miner_cnt):
-                while True:
-                    auc_req(usbdev, endpin, endpout, "00", "a4", cmd)
-                    res_s = auc_read(usbdev, endpin)
-                    if res_s != None:
-                        break
+        while True:
+            auc_req(usbdev, endpin, endpout, "00", "a4", cmd)
+            res_s = auc_read(usbdev, endpin)
+            if res_s != None:
+                break
 
-		if not res_s:
-			print(str(count) + ": Something is wrong or modular id not correct")
-		else :
-			result = binascii.hexlify(res_s)
-			for i in range(0, asic_cnt+1):
-				number = '{:03}'.format(int(result[10 + i * 2:12 + i * 2], 16))
-				if (i == 0):
-					sys.stdout.write(number + ":\t")
-				else :
-					sys.stdout.write(number + "\t")
-				sys.stdout.flush()
-			print("")
-
+        if not res_s:
+            print(str(count) + ": Something is wrong or modular id not correct")
+        else :
+	    # format: pass(20), all(40), percent(50%)
+	    avalon_test = binascii.hexlify(res_s)
+	    passcore = int(avalon_test[10:18], 16)
+	    allcore = int(avalon_test[18:26], 16)
+	    result = "pass(" + str(passcore) + "), "
+	    result = result + "all(" + str(allcore) + "), "
+	    #result = result + "percent(" + str(passcore/allcore) + ")"
+	    print("Result:" + result)
 
 def run_detect(usbdev, endpin, endpout, cmd):
 	#version
@@ -226,7 +224,7 @@ def run_detect(usbdev, endpin, endpout, cmd):
 	if not res_s:
 		print("ver:Something is wrong or modular id not correct")
 	else :
-		print("ver:" + ''.join([chr(x) for x in res_s])[3:20])
+		print("ver:" + ''.join([chr(x) for x in res_s])[5:20])
 
 def run_require(usbdev, endpin, endpout, cmd):
         res_s = auc_xfer(usbdev, endpin, endpout, "00", "a5", cmd)
@@ -259,6 +257,11 @@ def run_modular_test(usbdev, endpin, endpout):
         print("Reading result ...")
         run_detect(usbdev, endpin, endpout, mm_package(TYPE_DETECT, module_id = options.module_id))
         run_require(usbdev, endpin, endpout, mm_package(TYPE_REQUIRE, module_id = options.module_id))
+        txdata = "00000000"
+        # TODO voltage(7875) and freq( parse
+        txdata += "ce00".rjust(8, '0')
+        txdata += "181605bd"
+        run_test(usbdev, endpin, endpout, mm_package(TYPE_TEST, module_id = options.module_id, pdata = txdata))
         raw_input('Press enter to continue:')
 
 if __name__ == '__main__':
@@ -272,5 +275,8 @@ if __name__ == '__main__':
     else:
         print "AUC version null"
 
-    statics(usbdev, endpin, endpout)
+    if (options.statics == '1'):
+        statics(usbdev, endpin, endpout)
+    else:
+        run_modular_test(usbdev, endpin, endpout)
 
