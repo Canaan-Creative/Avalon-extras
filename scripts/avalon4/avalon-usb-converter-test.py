@@ -44,8 +44,8 @@ parser.add_option("-F", "--freq", dest="freq", default="445,385,385", help="Asic
 parser.add_option("-s", "--statics", dest="statics", default="0", help="Statics flag, default:0")
 (options, args) = parser.parse_args()
 
-asic_cnt = 10
-miner_cnt = 5
+asic_cnt = 4
+miner_cnt = 10
 
 def statics(usbdev, endpin, endpout):
     start = time.time()
@@ -200,23 +200,35 @@ def mm_package(cmd_type, idx = "01", cnt = "01", module_id = None, pdata = '0'):
 
 def run_test(usbdev, endpin, endpout, cmd):
         auc_req(usbdev, endpin, endpout, "00", "a3", cmd)
-        while True:
-            auc_req(usbdev, endpin, endpout, "00", "a4", cmd)
-            res_s = auc_read(usbdev, endpin)
-            if res_s != None:
-                break
+	for count in range(0, miner_cnt + 1):
+	    while True:
+		auc_req(usbdev, endpin, endpout, "00", "a4", cmd)
+		res_s = auc_read(usbdev, endpin)
+		if res_s != None:
+		    break
 
-        if not res_s:
-            print(str(count) + ": Something is wrong or modular id not correct")
-        else :
-	    # format: pass(20), all(40), percent(50%)
-	    avalon_test = binascii.hexlify(res_s)
-	    passcore = int(avalon_test[10:18], 16)
-	    allcore = int(avalon_test[18:26], 16)
-	    result = "pass(" + str(passcore) + "), "
-	    result = result + "all(" + str(allcore) + "), "
-	    #result = result + "percent(" + str(passcore/allcore) + ")"
-	    print("Result:" + result)
+	    if not res_s:
+		print(str(count) + ": Something is wrong or modular id not correct")
+	    else:
+		if count != (miner_cnt):
+		    result = binascii.hexlify(res_s)
+		    for i in range(0, asic_cnt+1):
+			    number = '{:03}'.format(int(result[10 + i * 2:12 + i * 2], 16))
+			    if (i == 0):
+				    sys.stdout.write(number + ":\t")
+			    else :
+				    sys.stdout.write(number + "\t")
+			    sys.stdout.flush()
+		    print("")
+		else:
+		    # format: pass(20), all(40), percent(50%)
+		    avalon_test = binascii.hexlify(res_s)
+		    passcore = int(avalon_test[10:18], 16)
+		    allcore = int(avalon_test[18:26], 16)
+		    result = "pass(" + str(passcore) + "), "
+		    result = result + "all(" + str(allcore) + "), "
+		    #result = result + "percent(" + str(passcore/allcore) + ")"
+		    print("Result:" + result)
 
 def run_detect(usbdev, endpin, endpout, cmd):
 	#version
@@ -243,7 +255,7 @@ def run_require(usbdev, endpin, endpout, cmd):
 		g_hw_work = int(avalon_require[50:58], 16)
 		pg = int(avalon_require[58:66], 16)
 		result = "status:temp(" + str(temp1) + "," + str(temp2) + "), "
-		result = result + "fan1(" + str(fan1) + "," + str(fan2) + "), "
+		result = result + "fan(" + str(fan1) + "," + str(fan2) + "), "
 		result = result + "freq(" + str(freq) + "), "
 		result = result + "vol(" + str(vol) + "), "
 		result = result + "localwork(" + str(localwork) + "), "
@@ -264,8 +276,6 @@ def run_modular_test(usbdev, endpin, endpout):
     while True:
         print("Reading result ...")
         run_detect(usbdev, endpin, endpout, mm_package(TYPE_DETECT, module_id = options.module_id))
-        run_require(usbdev, endpin, endpout, mm_package(TYPE_REQUIRE, module_id = options.module_id))
-
         # reserved 4 bytes, keep same format with AVA2_P_SET
         txdata = "00000000"
 
@@ -295,6 +305,7 @@ def run_modular_test(usbdev, endpin, endpout):
         tmp = tmp.rjust(8, '0')
         txdata += tmp
         run_test(usbdev, endpin, endpout, mm_package(TYPE_TEST, module_id = options.module_id, pdata = txdata))
+        run_require(usbdev, endpin, endpout, mm_package(TYPE_REQUIRE, module_id = options.module_id))
         raw_input('Press enter to continue:')
 
 if __name__ == '__main__':
