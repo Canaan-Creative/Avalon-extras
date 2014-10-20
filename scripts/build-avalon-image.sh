@@ -1,16 +1,15 @@
 #!/bin/bash
 
-#MACHINE=avalon
-MACHINE=avalon2                         # Support Avalon2/MM firmware
+#MACHINE=avalon1
+#MACHINE=avalon2                         # Support Avalon2/MM firmware
+MACHINE=avalon4                          # Support Avalon4/MM firmware
 
 #AVA_TARGET_BOARD=tl-wr703n-v1   # TP-Link WR703N-v1
-#AVA_TARGET_BOARD=tl-wr1043nd-v2 # TP-Link WR1043ND-v2
 #AVA_TARGET_BOARD=pi-modelb-v2   # Raspberry-Pi ModelB-v2
 [ -z "${AVA_TARGET_BOARD}" ]  && AVA_TARGET_BOARD=tl-wr703n-v1  # TP-Link WR703N-v1
 
 OPENWRT_CONFIG=""
 [ "${AVA_TARGET_BOARD}" == "tl-wr703n-v1" ] && AVA_TARGET_PLATFORM=ar71xx && OPENWRT_CONFIG=config.${MACHINE}.703n
-[ "${AVA_TARGET_BOARD}" == "tl-wr1043nd-v2" ] && AVA_TARGET_PLATFORM=ar71xx && OPENWRT_CONFIG=config.${MACHINE}.1043nd-v2
 [ "${AVA_TARGET_BOARD}" == "pi-modelb-v2" ] && AVA_TARGET_PLATFORM=brcm2708 && OPENWRT_CONFIG=config.${MACHINE}.raspberry-pi
 [ -z "${OPENWRT_CONFIG}" ] && echo "[ERROR]: Target board not suported" && exit 1
 
@@ -79,12 +78,18 @@ if [ "$1" == "--clone" ]; then
     svn co svn://svn.openwrt.org/openwrt/trunk@41240 openwrt
     git clone git://github.com/Canaan-Creative/cgminer.git
     git clone git://github.com/Canaan-Creative/cgminer-openwrt-packages.git
+    git clone git://github.com/Canaan-Creative/luci.git
 
+    if [ "${MACHINE}" == "avalon1" ]; then
+        (cd luci && git checkout -b cgminer-webui origin/cgminer-webui)
+    fi
     if [ "${MACHINE}" == "avalon2" ]; then
         (cd cgminer && git checkout -b avalon2 origin/avalon2)
-        git clone git://github.com/Canaan-Creative/luci.git && (cd luci && git checkout -b cgminer-webui-avalon2 origin/cgminer-webui-avalon2)
-    else
-        git clone git://github.com/Canaan-Creative/luci.git && (cd luci && git checkout -b cgminer-webui origin/cgminer-webui)
+        (cd luci && git checkout -b cgminer-webui-avalon2 origin/cgminer-webui-avalon2)
+    fi
+    if [ "${MACHINE}" == "avalon4" ]; then
+        (cd cgminer && git checkout -b avalon4 origin/avalon4)
+        (cd luci && git checkout -b cgminer-webui-avalon4 origin/cgminer-webui-avalon4)
     fi
 
     cd openwrt
