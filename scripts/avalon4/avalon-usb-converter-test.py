@@ -251,16 +251,49 @@ def run_require(usbdev, endpin, endpout, cmd):
 		result = result + "pg(" + str(pg) + ")"
 		print(result)
 
+def rev8(x):
+    result = 0
+    for i in xrange(8):
+        if (x >> i) & 1: result |= 1 << (7 - i)
+    return result
+
+def encode_voltage(v):
+    return rev8((0x78 - v / 125) << 1 | 1) << 8
 
 def run_modular_test(usbdev, endpin, endpout):
     while True:
         print("Reading result ...")
         run_detect(usbdev, endpin, endpout, mm_package(TYPE_DETECT, module_id = options.module_id))
         run_require(usbdev, endpin, endpout, mm_package(TYPE_REQUIRE, module_id = options.module_id))
+
+        # reserved 4 bytes, keep same format with AVA2_P_SET
         txdata = "00000000"
-        # TODO voltage(7875) and freq( parse
-        txdata += "ce00".rjust(8, '0')
-        txdata += "181605bd"
+
+        tmp = hex(encode_voltage(int(options.voltage, 10)))[2:]
+        tmp = tmp.rjust(8, '0')
+        txdata += tmp
+
+        freqdata = {}
+        tmp = options.freq.split(",")
+        if len(tmp) == 0:
+            freqdata[0] = 445
+            freqdata[1] = freqdata[2] = 385
+
+        if len(tmp) == 1:
+            freqdata[2] = freqdata[1] = freqdata[0] = tmp[0]
+
+        if len(tmp) == 2:
+            freqdata[0] = tmp[0]
+            freqdata[2] = freqdata[1] = tmp[1]
+
+        if len(tmp) == 3:
+            freqdata[0] = tmp[0]
+            freqdata[1] = tmp[1]
+            freqdata[2] = tmp[2]
+
+        tmp = hex(int(freqdata[0], 10) | (int(freqdata[1], 10) << 10) | (int(freqdata[2], 10) << 20))[2:]
+        tmp = tmp.rjust(8, '0')
+        txdata += tmp
         run_test(usbdev, endpin, endpout, mm_package(TYPE_TEST, module_id = options.module_id, pdata = txdata))
         raw_input('Press enter to continue:')
 
