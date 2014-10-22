@@ -97,7 +97,11 @@ if [ "$1" == "--clone" ]; then
     [ -d ../../dl ] && ln -sf ../dl ../dl
     [ ! -e ../dl ] && mkdir ../dl
     ln -sf ../dl
-    $DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.conf $DL_PARA feeds.conf
+    if [ "${MACHINE}" == "avalon4" ]; then
+	$DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.avalon4.conf $DL_PARA feeds.conf
+    else
+	$DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.conf $DL_PARA feeds.conf
+    fi
     ./scripts/feeds update -a && ./scripts/feeds install -a
 
     ln -s feeds/cgminer/cgminer/root-files files
