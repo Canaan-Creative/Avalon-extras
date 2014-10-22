@@ -108,12 +108,6 @@ else
 
         TIME_BEGIN=`date +"%Y%m%d %H:%M:%S"`
         BUILD_BEGIN=`date +%s`
-        AVA_TARGET_BOARD=tl-wr1043nd-v2 ./build-avalon-image.sh --build >> $BUILD_LOG 2>&1              && \
-                AVA_TARGET_BOARD=tl-wr1043nd-v2 ./build-avalon-image.sh >> $BUILD_LOG 2>&1              && \
-                AVA_TARGET_BOARD=tl-wr1043nd-v2 ./build-avalon-image.sh --cgminer >> $BUILD_LOG 2>&1    && \
-                echo "===========================================================" >> $BUILD_LOG 2>&1   && \
-                echo "=================== tl-wr1043nd-v2 DONE ===================" >> $BUILD_LOG 2>&1   && \
-                echo "===========================================================" >> $BUILD_LOG 2>&1   && \
                 AVA_TARGET_BOARD=tl-wr703n-v1 ./build-avalon-image.sh --build >> $BUILD_LOG 2>&1        && \
                 AVA_TARGET_BOARD=tl-wr703n-v1 ./build-avalon-image.sh >> $BUILD_LOG 2>&1                && \
                 AVA_TARGET_BOARD=tl-wr703n-v1 ./build-avalon-image.sh --cgminer >> $BUILD_LOG 2>&1      && \

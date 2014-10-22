@@ -54,7 +54,7 @@ Without any parameter I will build the Avalon firmware. make sure you run
      --removeall        Remove all files
 
      AVA_TARGET_BOARD   Environment variable, available target:
-                        tl-wr703n-v1, tl-wr1043nd-v2, pi-modelb-v2
+                        tl-wr703n-v1, pi-modelb-v2
                         use tl-wr703n-v1 if unset
 
 Written by: Xiangfu <xiangfu@openmobilefree.net>
