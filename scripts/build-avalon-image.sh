@@ -164,9 +164,11 @@ if [ ! -z "`cd cgminer-openwrt-packages && git status -s -uno`" ]; then
     OW_GIT_STATUS="+"
 fi
 
-rm -rf ${LUCI_PATH}/applications/luci-cgminer/dist                                                              && \
-( make -j${CORE_NUM} -C ${LUCI_PATH} || make -C ${LUCI_PATH} )                                                  && \
-cp -a  ${LUCI_PATH}/applications/luci-cgminer/dist/* ${OPENWRT_PATH}/files/                                     && \
+if [ "${MACHINE}" != "avalon4" ]; then
+    rm -rf ${LUCI_PATH}/applications/luci-cgminer/dist                                                              && \
+    ( make -j${CORE_NUM} -C ${LUCI_PATH} || make -C ${LUCI_PATH} )                                                  && \
+    cp -a  ${LUCI_PATH}/applications/luci-cgminer/dist/* ${OPENWRT_PATH}/files/                                     && \
+fi
 echo "$DATE"                                                    >  ${OPENWRT_PATH}/files/etc/avalon_version     && \
 echo "cgminer: $GIT_VERSION$GIT_STATUS"                         >> ${OPENWRT_PATH}/files/etc/avalon_version     && \
 echo "cgminer-openwrt-packages: $OW_GIT_VERSION$OW_GIT_STATUS"  >> ${OPENWRT_PATH}/files/etc/avalon_version     && \
