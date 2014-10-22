@@ -176,7 +176,7 @@ fi
 if [ "${MACHINE}" != "avalon4" ]; then
     rm -rf ${LUCI_PATH}/applications/luci-cgminer/dist                                                              && \
     ( make -j${CORE_NUM} -C ${LUCI_PATH} || make -C ${LUCI_PATH} )                                                  && \
-    cp -a  ${LUCI_PATH}/applications/luci-cgminer/dist/* ${OPENWRT_PATH}/files/                                     && \
+    cp -a  ${LUCI_PATH}/applications/luci-cgminer/dist/* ${OPENWRT_PATH}/files/
 fi
 echo "$DATE"                                                    >  ${OPENWRT_PATH}/files/etc/avalon_version     && \
 echo "cgminer: $GIT_VERSION$GIT_STATUS"                         >> ${OPENWRT_PATH}/files/etc/avalon_version     && \
