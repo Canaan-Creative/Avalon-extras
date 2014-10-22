@@ -18,6 +18,7 @@ which curl > /dev/null && DL_PROG=curl && DL_PARA="-L -o"
 
 VERSION=20140415
 OPENWRT_PATH=./openwrt
+OPENWRT_VER=41240
 LUCI_PATH=./luci
 
 # According to http://wiki.openwrt.org/doc/howto/build
@@ -75,7 +76,7 @@ fi
 if [ "$1" == "--clone" ]; then
     [ ! -d avalon ] && mkdir -p avalon/bin
     cd avalon
-    svn co svn://svn.openwrt.org/openwrt/trunk@41240 openwrt
+    svn co svn://svn.openwrt.org/openwrt/trunk@${OPENWRT_VER} openwrt
     git clone git://github.com/Canaan-Creative/cgminer.git
     git clone git://github.com/Canaan-Creative/cgminer-openwrt-packages.git
     git clone git://github.com/Canaan-Creative/luci.git
@@ -110,7 +111,11 @@ if [ "$1" == "--build" ]; then
         [ "$?" != "0" ] && echo "[ERROR]: clone failed" && exit 1
     fi
     cd avalon/openwrt/
-    make clean
+    LAST_OPENWRT_VER=`cat .openwrt_version`
+    if [ "${LAST_OPENWRT_VER}" != "${OPENWRT_VER}" ]; then
+       echo ${OPENWRT_VER} > .openwrt_version
+       make clean
+    fi
     cp ./feeds/cgminer/cgminer/data/${OPENWRT_CONFIG} .config
     yes "" | make oldconfig
     make -j${CORE_NUM} V=s IGNORE_ERRORS=m || make V=s IGNORE_ERRORS=m
