@@ -218,7 +218,10 @@ def run_test(usbdev, endpin, endpout, cmd):
 				    sys.stdout.write(number + ":\t")
 			    else :
 				    number = '{:04}'.format(int(result[12 + (i - 1) * 8:20 + (i - 1) * 8], 16))
-				    sys.stdout.write(number + "\t")
+				    if (number != "0000"):
+					sys.stdout.write("\x1b[1;31m" + number + "\x1b[0m" + "\t")
+				    else:
+					sys.stdout.write(number + "\t")
 			    sys.stdout.flush()
 		    print("")
 		else:
