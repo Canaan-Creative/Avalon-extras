@@ -213,10 +213,11 @@ def run_test(usbdev, endpin, endpout, cmd):
 		if count != (miner_cnt):
 		    result = binascii.hexlify(res_s)
 		    for i in range(0, asic_cnt+1):
-			    number = '{:03}'.format(int(result[10 + i * 2:12 + i * 2], 16))
 			    if (i == 0):
+				    number = '{:03}'.format(int(result[10:12], 16))
 				    sys.stdout.write(number + ":\t")
 			    else :
+				    number = '{:04}'.format(int(result[12 + (i - 1) * 8:20 + (i - 1) * 8], 16))
 				    sys.stdout.write(number + "\t")
 			    sys.stdout.flush()
 		    print("")
@@ -226,8 +227,9 @@ def run_test(usbdev, endpin, endpout, cmd):
 		    passcore = int(avalon_test[10:18], 16)
 		    allcore = int(avalon_test[18:26], 16)
 		    result = "pass(" + str(passcore) + "), "
+		    result = result + "bad(" + str(allcore - passcore) + "), "
 		    result = result + "all(" + str(allcore) + "), "
-		    #result = result + "percent(" + str(passcore/allcore) + ")"
+		    result = result + "pass percent(" + str(passcore * 100/allcore) + "%)"
 		    print("Result:" + result)
 
 def run_detect(usbdev, endpin, endpout, cmd):
@@ -236,7 +238,7 @@ def run_detect(usbdev, endpin, endpout, cmd):
 	if not res_s:
 		print("ver:Something is wrong or modular id not correct")
 	else :
-		print("ver:" + ''.join([chr(x) for x in res_s])[5:20])
+		print("ver:" + ''.join([chr(x) for x in res_s])[13:28])
 
 def run_require(usbdev, endpin, endpout, cmd):
         res_s = auc_xfer(usbdev, endpin, endpout, "00", "a5", cmd)
