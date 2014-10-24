@@ -22,10 +22,10 @@ which curl > /dev/null && DL_PROG=curl && DL_PARA="-L -o"
 echo -ne > $REVISION_NEW
 
 cd $WORKDIR
-$DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.conf $DL_PARA feeds.conf
+$DL_PROG $FEED_URL $DL_PARA feeds.conf
 
 # Check all repos
-cat $WORKDIR/feeds.conf $BASEDIR/feeds-extra.conf | sed "s/^ *//;s/ *$//;s/ \{1,\}/ /g;/^$/d;/^#.*$/d" | sort | uniq | grep -E '^src-' | while read line; do
+cat $WORKDIR/feeds.conf $BASEDIR/$EXTRA_FEEDS | sed "s/^ *//;s/ *$//;s/ \{1,\}/ /g;/^$/d;/^#.*$/d" | sort | uniq | grep -E '^src-' | while read line; do
         cd $REPO
         PROTOCOL="`echo $line | awk '{print $1}' | cut -b5-`"
         DIRECTORY="`echo $line | awk '{print $2}'`"
