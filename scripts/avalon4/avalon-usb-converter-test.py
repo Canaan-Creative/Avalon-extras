@@ -40,7 +40,7 @@ parser.add_option("-m", "--module", dest="module_id", default="0", help="Module 
 parser.add_option("-c", "--count", dest="test_count", default="1", help="Test count: 1,2,3... ")
 parser.add_option("-f", "--fastxfer", dest="fast_xfer", default="0", help="Fast Xfer switch 0-OFF/1-ON, default:0")
 parser.add_option("-V", "--voltage", dest="voltage", default="7875", help="Asic voltage, default:7875")
-parser.add_option("-F", "--freq", dest="freq", default="445,385,385", help="Asic freq, default:445,385,385")
+parser.add_option("-F", "--freq", dest="freq", default="200,200,200", help="Asic freq, default:200,200,200")
 parser.add_option("-s", "--statics", dest="statics", default="0", help="Statics flag, default:0")
 (options, args) = parser.parse_args()
 
