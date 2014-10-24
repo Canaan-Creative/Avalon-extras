@@ -148,7 +148,8 @@ if [ "${RET}" != "0" ] || [ "$1" == "--cgminer" ]; then
     if [ "${RET}" == "0" ]; then
         mkdir -p bin/${AVA_TARGET_BOARD}
         cp ${OPENWRT_PATH}/bin/${AVA_TARGET_PLATFORM}/packages/cgminer*.ipk  bin/${AVA_TARGET_BOARD}
-        cp ${OPENWRT_PATH}/build_dir/target-*uClibc-*/cgminer-*/cgminer bin/${AVA_TARGET_BOARD}/cgminer-${AVA_TARGET_PLATFORM}
+	[ "${AVA_TARGET_BOARD}" == "tl-wr703n-v1" ] && cp ${OPENWRT_PATH}/build_dir/target-mips*uClibc-*/cgminer-*/cgminer bin/${AVA_TARGET_BOARD}/cgminer-${AVA_TARGET_PLATFORM}
+	[ "${AVA_TARGET_BOARD}" == "pi-modelb-v2" ] && cp ${OPENWRT_PATH}/build_dir/target-arm*uClibc-*/cgminer-*/cgminer bin/${AVA_TARGET_BOARD}/cgminer-${AVA_TARGET_PLATFORM}
         exit "$?"
     fi
     exit "${RET}"
