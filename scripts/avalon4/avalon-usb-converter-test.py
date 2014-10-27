@@ -230,10 +230,9 @@ def run_test(usbdev, endpin, endpout, cmd):
 		    avalon_test = binascii.hexlify(res_s)
 		    passcore = int(avalon_test[DATA_OFFSET*2:(DATA_OFFSET+4)*2], 16)
 		    allcore = int(avalon_test[(DATA_OFFSET+4)*2:(DATA_OFFSET+8)*2], 16)
-		    result = "pass(" + str(passcore) + "), "
-		    result = result + "bad(" + str(allcore - passcore) + "), "
+		    result = "bad(" + str(allcore - passcore) + "), "
 		    result = result + "all(" + str(allcore) + "), "
-		    result = result + "pass percent(" + str(passcore * 100/allcore) + "%)"
+		    result = result + "bad percent(" + str((allcore - passcore) * 100/allcore) + "%)"
 		    print("Result:" + result)
 
 def run_detect(usbdev, endpin, endpout, cmd):
@@ -249,24 +248,22 @@ def run_require(usbdev, endpin, endpout, cmd):
 	if not res_s:
 		print("status:Something is wrong or modular id not correct")
 	else :
-		# format: temp(40|50), fan(20|30), freq(300), vol(400), localwork(1), g_hw_work(300), pg(0)
+		# format: temp(40), fan(20), freq(300), vol(400), localwork(1), g_hw_work(300), pg(0)
 		avalon_require = binascii.hexlify(res_s)
-		temp1 = int(avalon_require[DATA_OFFSET*2:(DATA_OFFSET+2)*2], 16)
-		temp2 = int(avalon_require[(DATA_OFFSET+2)*2:(DATA_OFFSET+4)*2], 16)
-		fan1 = int(avalon_require[(DATA_OFFSET+4)*2:(DATA_OFFSET+6)*2], 16)
-		fan2 = int(avalon_require[(DATA_OFFSET+6)*2:(DATA_OFFSET+8)*2], 16)
+		temp = int(avalon_require[(DATA_OFFSET+2)*2:(DATA_OFFSET+4)*2], 16)
+		fan = int(avalon_require[(DATA_OFFSET+6)*2:(DATA_OFFSET+8)*2], 16)
 		freq = int(avalon_require[(DATA_OFFSET+8)*2:(DATA_OFFSET+12)*2], 16)
-		vol = int(avalon_require[(DATA_OFFSET+12)*2:(DATA_OFFSET+16)*2], 16)
+		vol = avalon_require[(DATA_OFFSET+12)*2:(DATA_OFFSET+16)*2]
 		localwork = int(avalon_require[(DATA_OFFSET+16)*2:(DATA_OFFSET+20)*2], 16)
 		g_hw_work = int(avalon_require[(DATA_OFFSET+20)*2:(DATA_OFFSET+24)*2], 16)
-		pg = int(avalon_require[(DATA_OFFSET+24)*2:(DATA_OFFSET+28)*2], 16)
-		result = "status:temp(" + str(temp1) + "," + str(temp2) + "), "
-		result = result + "fan(" + str(fan1) + "," + str(fan2) + "), "
+		pg = avalon_require[(DATA_OFFSET+24)*2:(DATA_OFFSET+28)*2]
+		result = "status:temp(" + str(temp) + "), "
+		result = result + "fan(" + str(fan) + "), "
 		result = result + "freq(" + str(freq) + "), "
-		result = result + "vol(" + str(vol) + "), "
+		result = result + "vol(" + vol + "), "
 		result = result + "localwork(" + str(localwork) + "), "
 		result = result + "g_hw_work(" + str(g_hw_work) + "), "
-		result = result + "pg(" + str(pg) + ")"
+		result = result + "pg(" + pg + ")"
 		print(result)
 
 def rev8(x):
