@@ -164,6 +164,7 @@ def auc_xfer(usbdev, endpin, endpout, addr, req, data):
 TYPE_TEST = "14"
 TYPE_DETECT = "0a"
 TYPE_REQUIRE = "12"
+DATA_OFFSET = 6
 
 def CRC16(message):
 	#CRC-16-CITT poly, the CRC sheme used by ymodem protocol
@@ -196,7 +197,7 @@ def mm_package(cmd_type, idx = "01", cnt = "01", module_id = None, pdata = '0'):
 	else:
 	    data = pdata.ljust(60, '0') + module_id.rjust(4, '0')
 	crc = CRC16(data.decode("hex"))
-	return "4156" + cmd_type + idx + cnt + data + hex(crc)[2:].rjust(4, '0')
+	return "4156" + cmd_type + "00" + idx + cnt + data + hex(crc)[2:].rjust(4, '0')
 
 def run_test(usbdev, endpin, endpout, cmd):
         auc_req(usbdev, endpin, endpout, "00", "a3", cmd)
@@ -214,10 +215,10 @@ def run_test(usbdev, endpin, endpout, cmd):
 		    result = binascii.hexlify(res_s)
 		    for i in range(0, asic_cnt+1):
 			    if (i == 0):
-				    number = '{:03}'.format(int(result[10:12], 16))
+				    number = '{:03}'.format(int(result[DATA_OFFSET*2:(DATA_OFFSET+1)*2], 16))
 				    sys.stdout.write(number + ":\t")
 			    else :
-				    number = '{:04}'.format(int(result[12 + (i - 1) * 8:20 + (i - 1) * 8], 16))
+				    number = '{:04}'.format(int(result[(DATA_OFFSET+1+(i-1)*4)*2:(DATA_OFFSET+5+(i-1)*4)*2], 16))
 				    if (number != "0000"):
 					sys.stdout.write("\x1b[1;31m" + number + "\x1b[0m" + "\t")
 				    else:
@@ -227,8 +228,8 @@ def run_test(usbdev, endpin, endpout, cmd):
 		else:
 		    # format: pass(20), all(40), percent(50%)
 		    avalon_test = binascii.hexlify(res_s)
-		    passcore = int(avalon_test[10:18], 16)
-		    allcore = int(avalon_test[18:26], 16)
+		    passcore = int(avalon_test[DATA_OFFSET*2:(DATA_OFFSET+4)*2], 16)
+		    allcore = int(avalon_test[(DATA_OFFSET+4)*2:(DATA_OFFSET+8)*2], 16)
 		    result = "pass(" + str(passcore) + "), "
 		    result = result + "bad(" + str(allcore - passcore) + "), "
 		    result = result + "all(" + str(allcore) + "), "
@@ -241,7 +242,7 @@ def run_detect(usbdev, endpin, endpout, cmd):
 	if not res_s:
 		print("ver:Something is wrong or modular id not correct")
 	else :
-		print("ver:" + ''.join([chr(x) for x in res_s])[13:28])
+		print("ver:" + ''.join([chr(x) for x in res_s])[DATA_OFFSET+8:DATA_OFFSET+23])
 
 def run_require(usbdev, endpin, endpout, cmd):
         res_s = auc_xfer(usbdev, endpin, endpout, "00", "a5", cmd)
@@ -250,15 +251,15 @@ def run_require(usbdev, endpin, endpout, cmd):
 	else :
 		# format: temp(40|50), fan(20|30), freq(300), vol(400), localwork(1), g_hw_work(300), pg(0)
 		avalon_require = binascii.hexlify(res_s)
-		temp1 = int(avalon_require[10:14], 16)
-		temp2 = int(avalon_require[14:18], 16)
-		fan1 = int(avalon_require[18:22], 16)
-		fan2 = int(avalon_require[22:26], 16)
-		freq = int(avalon_require[26:34], 16)
-		vol = int(avalon_require[34:42], 16)
-		localwork = int(avalon_require[42:50], 16)
-		g_hw_work = int(avalon_require[50:58], 16)
-		pg = int(avalon_require[58:66], 16)
+		temp1 = int(avalon_require[DATA_OFFSET*2:(DATA_OFFSET+2)*2], 16)
+		temp2 = int(avalon_require[(DATA_OFFSET+2)*2:(DATA_OFFSET+4)*2], 16)
+		fan1 = int(avalon_require[(DATA_OFFSET+4)*2:(DATA_OFFSET+6)*2], 16)
+		fan2 = int(avalon_require[(DATA_OFFSET+6)*2:(DATA_OFFSET+8)*2], 16)
+		freq = int(avalon_require[(DATA_OFFSET+8)*2:(DATA_OFFSET+12)*2], 16)
+		vol = int(avalon_require[(DATA_OFFSET+12)*2:(DATA_OFFSET+16)*2], 16)
+		localwork = int(avalon_require[(DATA_OFFSET+16)*2:(DATA_OFFSET+20)*2], 16)
+		g_hw_work = int(avalon_require[(DATA_OFFSET+20)*2:(DATA_OFFSET+24)*2], 16)
+		pg = int(avalon_require[(DATA_OFFSET+24)*2:(DATA_OFFSET+28)*2], 16)
 		result = "status:temp(" + str(temp1) + "," + str(temp2) + "), "
 		result = result + "fan(" + str(fan1) + "," + str(fan2) + "), "
 		result = result + "freq(" + str(freq) + "), "
