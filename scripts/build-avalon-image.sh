@@ -136,6 +136,7 @@ if [ "$1" == "--update" ]; then
     (cd avalon/cgminer-openwrt-packages && git pull)
     cd avalon/openwrt
     ./scripts/feeds update cgminer; ./scripts/feeds install -a -p cgminer
+    ./scripts/feeds update luci
     cp ./feeds/cgminer/cgminer/data/${OPENWRT_CONFIG} .config
     yes "" | make oldconfig
     exit $?
