@@ -122,6 +122,13 @@ if [ "$1" == "--build" ]; then
         echo ${OPENWRT_VER} > .openwrt_version
         make clean
     fi
+
+    LAST_AVA_TARGET=`cat .ava_target`
+    if [ "${LAST_AVA_TARGET}" != "${AVA_TARGET_BOARD}" ]; then
+	echo "${AVA_TARGET_BOARD}" > .ava_target
+	make clean
+    fi
+
     cp ./feeds/cgminer/cgminer/data/${OPENWRT_CONFIG} .config
     yes "" | make oldconfig
     make -j${CORE_NUM} V=s IGNORE_ERRORS=m || make V=s IGNORE_ERRORS=m
