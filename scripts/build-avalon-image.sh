@@ -19,6 +19,8 @@ which curl > /dev/null && DL_PROG=curl && DL_PARA="-L -o"
 VERSION=20140415
 OPENWRT_PATH=./openwrt
 OPENWRT_VER=41240
+[ "${MACHINE}" == "avalon2" ] && OPENWRT_VER=41240
+[ "${MACHINE}" == "avalon4" ] && OPENWRT_VER=43076
 LUCI_PATH=./luci
 
 # According to http://wiki.openwrt.org/doc/howto/build
@@ -98,9 +100,9 @@ if [ "$1" == "--clone" ]; then
     [ ! -e ../dl ] && mkdir ../dl
     ln -sf ../dl
     if [ "${MACHINE}" == "avalon4" ]; then
-	$DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.avalon4.conf $DL_PARA feeds.conf
+        $DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.avalon4.conf $DL_PARA feeds.conf
     else
-	$DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.conf $DL_PARA feeds.conf
+        $DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.conf $DL_PARA feeds.conf
     fi
     ./scripts/feeds update -a && ./scripts/feeds install -a
 
@@ -117,8 +119,8 @@ if [ "$1" == "--build" ]; then
     cd avalon/openwrt/
     LAST_OPENWRT_VER=`cat .openwrt_version`
     if [ "${LAST_OPENWRT_VER}" != "${OPENWRT_VER}" ]; then
-       echo ${OPENWRT_VER} > .openwrt_version
-       make clean
+        echo ${OPENWRT_VER} > .openwrt_version
+        make clean
     fi
     cp ./feeds/cgminer/cgminer/data/${OPENWRT_CONFIG} .config
     yes "" | make oldconfig
@@ -148,8 +150,8 @@ if [ "${RET}" != "0" ] || [ "$1" == "--cgminer" ]; then
     if [ "${RET}" == "0" ]; then
         mkdir -p bin/${AVA_TARGET_BOARD}
         cp ${OPENWRT_PATH}/bin/${AVA_TARGET_PLATFORM}/packages/cgminer*.ipk  bin/${AVA_TARGET_BOARD}
-	[ "${AVA_TARGET_BOARD}" == "tl-wr703n-v1" ] && cp ${OPENWRT_PATH}/build_dir/target-mips*uClibc-*/cgminer-*/cgminer bin/${AVA_TARGET_BOARD}/cgminer-${AVA_TARGET_PLATFORM}
-	[ "${AVA_TARGET_BOARD}" == "pi-modelb-v2" ] && cp ${OPENWRT_PATH}/build_dir/target-arm*uClibc-*/cgminer-*/cgminer bin/${AVA_TARGET_BOARD}/cgminer-${AVA_TARGET_PLATFORM}
+        [ "${AVA_TARGET_BOARD}" == "tl-wr703n-v1" ] && cp ${OPENWRT_PATH}/build_dir/target-mips*uClibc-*/cgminer-*/cgminer bin/${AVA_TARGET_BOARD}/cgminer-${AVA_TARGET_PLATFORM}
+        [ "${AVA_TARGET_BOARD}" == "pi-modelb-v2" ] && cp ${OPENWRT_PATH}/build_dir/target-arm*uClibc-*/cgminer-*/cgminer bin/${AVA_TARGET_BOARD}/cgminer-${AVA_TARGET_PLATFORM}
         exit "$?"
     fi
     exit "${RET}"
