@@ -110,6 +110,8 @@ if [ "$1" == "--clone" ]; then
     exit 0
 fi
 
+rm -f ./dl/cgminer-*-avalon*.tar.bz2
+
 if [ "$1" == "--build" ]; then
     if [ ! -d avalon/openwrt ]; then
         "$0" --removeall
