@@ -316,7 +316,7 @@ if __name__ == '__main__':
     auc_pid = 0x33f2
     usbdev, endpin, endpout = enum_usbdev(auc_vid, auc_pid)
 
-    ret = auc_xfer(usbdev, endpin, endpout, "00", "a1", "40420f00")
+    ret = auc_xfer(usbdev, endpin, endpout, "00", "a1", "801A0600")
     if ret:
         print "AUC version: " +  ''.join([chr(x) for x in ret])
     else:
