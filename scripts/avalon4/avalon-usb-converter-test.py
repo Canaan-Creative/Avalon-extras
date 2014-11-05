@@ -232,7 +232,7 @@ def run_test(usbdev, endpin, endpout, cmd):
 		    allcore = int(avalon_test[(DATA_OFFSET+4)*2:(DATA_OFFSET+8)*2], 16)
 		    result = "bad(" + str(allcore - passcore) + "), "
 		    result = result + "all(" + str(allcore) + "), "
-		    result = result + "bad percent(" + str((allcore - passcore) * 100/allcore) + "%)"
+		    result = result + "bad percent(" + str(round((allcore - passcore) * 100.0/allcore, 2)) + "%)"
 		    print("Result:" + result)
 
 def run_detect(usbdev, endpin, endpout, cmd):
