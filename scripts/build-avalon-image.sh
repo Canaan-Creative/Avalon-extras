@@ -195,6 +195,8 @@ if [ "${MACHINE}" != "avalon4" ]; then
     rm -rf ${LUCI_PATH}/applications/luci-cgminer/dist                                                              && \
     ( make -j${CORE_NUM} -C ${LUCI_PATH} || make -C ${LUCI_PATH} )                                                  && \
     cp -a  ${LUCI_PATH}/applications/luci-cgminer/dist/* ${OPENWRT_PATH}/files/
+else
+    make -j${CORE_NUM} -C ${OPENWRT_PATH} package/luci/{clean,compile} V=s || make -C ${OPENWRT_PATH} package/luci/{clean,compile} V=s
 fi
 echo "Canaan A4-$DATE"                                          >  ${OPENWRT_PATH}/files/etc/avalon_version     && \
 echo ""					                        >> ${OPENWRT_PATH}/files/etc/avalon_version     && \
