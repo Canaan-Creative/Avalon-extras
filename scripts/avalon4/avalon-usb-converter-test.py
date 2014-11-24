@@ -161,9 +161,9 @@ def auc_xfer(usbdev, endpin, endpout, addr, req, data):
     return auc_read(usbdev, endpin)
 
 
-TYPE_TEST = "14"
-TYPE_DETECT = "0a"
-TYPE_REQUIRE = "12"
+TYPE_TEST = "32"
+TYPE_DETECT = "10"
+TYPE_REQUIRE = "31"
 DATA_OFFSET = 6
 
 def CRC16(message):
@@ -197,7 +197,7 @@ def mm_package(cmd_type, idx = "01", cnt = "01", module_id = None, pdata = '0'):
 	else:
 	    data = pdata.ljust(60, '0') + module_id.rjust(4, '0')
 	crc = CRC16(data.decode("hex"))
-	return "4156" + cmd_type + "00" + idx + cnt + data + hex(crc)[2:].rjust(4, '0')
+	return "434e" + cmd_type + "00" + idx + cnt + data + hex(crc)[2:].rjust(4, '0')
 
 def run_test(usbdev, endpin, endpout, cmd):
         auc_req(usbdev, endpin, endpout, "00", "a3", cmd)
@@ -289,8 +289,8 @@ def run_modular_test(usbdev, endpin, endpout):
         freqdata = {}
         tmp = options.freq.split(",")
         if len(tmp) == 0:
-            freqdata[0] = 445
-            freqdata[1] = freqdata[2] = 385
+            freqdata[0] = 200
+            freqdata[1] = freqdata[2] = 200
 
         if len(tmp) == 1:
             freqdata[2] = freqdata[1] = freqdata[0] = tmp[0]
