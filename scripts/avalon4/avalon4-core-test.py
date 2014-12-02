@@ -220,10 +220,17 @@ def run_test(usbdev, endpin, endpout, cmd):
 		print(str(count) + ": Something is wrong or modular id not correct")
 	    else:
 		if count != (miner_cnt):
+                    if (count == 0):
+                        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                        print("= PG1 =")
+
+                    if (count == 5):
+                        print("= PG2 =")
+
 		    result = binascii.hexlify(res_s)
 		    for i in range(0, asic_cnt+1):
 			    if (i == 0):
-				    number = '{:03}'.format(int(result[DATA_OFFSET*2:(DATA_OFFSET+1)*2], 16))
+				    number = '{:03}'.format(int(result[DATA_OFFSET*2:(DATA_OFFSET+1)*2], 16) % 5 + 1)
 				    sys.stdout.write(number + ":\t")
 			    else :
 				    number = '{:04}'.format(int(result[(DATA_OFFSET+1+(i-1)*4)*2:(DATA_OFFSET+5+(i-1)*4)*2], 16))
@@ -241,6 +248,7 @@ def run_test(usbdev, endpin, endpout, cmd):
 		    result = "bad(" + str(allcore - passcore) + "), "
 		    result = result + "all(" + str(allcore) + "), "
 		    result = result + "bad percent(" + str(round((allcore - passcore) * 100.0/allcore, 2)) + "%)"
+                    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 		    print("Result:" + result)
 
 def run_detect(usbdev, endpin, endpout, cmd):
