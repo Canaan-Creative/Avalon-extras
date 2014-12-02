@@ -18,6 +18,7 @@
 #        a3:WRITE
 #        a4:READ
 #        a5:XFER
+#        a6:XFER
 #  data: the actual payload
 #        clockRate[4] + reserved[4] + payload[52] when init
 #
@@ -149,6 +150,13 @@ def auc_req(usbdev, endpin, endpout, addr, req, data):
                     "0".ljust(112, '0')
             usbdev.write(endpout, txdat.decode("hex"))
 
+    if req == 'a6':
+        datalen = 4
+        txdat = hex(datalen)[2:].rjust(2, '0') + \
+                "0000" +    \
+                req
+        usbdev.write(endpout, txdat.decode("hex"))
+
 def auc_read(usbdev, endpin):
     ret = usbdev.read(endpin, 64)
     if ret[0] > 4:
@@ -265,6 +273,13 @@ def run_require(usbdev, endpin, endpout, cmd):
 		result = result + "g_hw_work(" + str(g_hw_work) + "), "
 		result = result + "pg(" + pg + ")"
 		print(result)
+
+def run_getinfo(usbdev, endpin, endpout):
+        res_s = auc_xfer(usbdev, endpin, endpout, "00", "a6", "")
+	if not res_s:
+		print("getinfo:Something is wrong or modular id not correct")
+	else :
+		print("getinfo:" + binascii.hexlify(res_s))
 
 def rev8(x):
     result = 0
