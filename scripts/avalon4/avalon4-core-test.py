@@ -40,6 +40,7 @@ parser = OptionParser()
 parser.add_option("-m", "--module", dest="module_id", default="0", help="Module ID: 0 - 127, default:0")
 parser.add_option("-c", "--count", dest="test_count", default="1", help="Test count: 1,2,3... ")
 parser.add_option("-f", "--fastxfer", dest="fast_xfer", default="0", help="Fast Xfer switch 0-OFF/1-ON, default:0")
+parser.add_option("-C", "--core", dest="test_cores", default="64", help="Test cores: 1-3968")
 parser.add_option("-V", "--voltage", dest="voltage", default="7875", help="Asic voltage, default:7875")
 parser.add_option("-F", "--freq", dest="freq", default="200,200,200", help="Asic freq, default:200,200,200")
 parser.add_option("-s", "--statics", dest="statics", default="0", help="Statics flag, default:0")
@@ -302,8 +303,8 @@ def run_modular_test(usbdev, endpin, endpout):
     while True:
         print("Reading result ...")
         run_detect(usbdev, endpin, endpout, mm_package(TYPE_DETECT, module_id = options.module_id))
-        # reserved 4 bytes, keep same format with AVA2_P_SET
-        txdata = "00000000"
+        tmp = hex(int(options.test_cores, 10))[2:]
+        txdata = tmp.rjust(8, '0')
 
         tmp = hex(encode_voltage(int(options.voltage, 10)))[2:]
         tmp = tmp.rjust(8, '0')
@@ -338,6 +339,7 @@ if __name__ == '__main__':
     auc_vid = 0x29f1
     auc_pid = 0x33f2
     usbdev, endpin, endpout = enum_usbdev(auc_vid, auc_pid)
+
 
     ret = auc_xfer(usbdev, endpin, endpout, "00", "a1", "801A0600")
     if ret:
