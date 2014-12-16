@@ -16,3 +16,6 @@ main.c: iic.c crc16.c hexdump.c
 
 clean:
 	@rm -f $(DENPENDS) $(OBJS) $(TARGET)
+
+download:
+	wget http://downloads.canaan-creative.com/software/avalon4/mm/latest/mm-no-mboot/mm.mcs -O ./mm.mcs
