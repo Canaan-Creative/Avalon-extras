@@ -1,4 +1,4 @@
-TARGET = mmupgrade
+TARGET = mm-tools
 SRC = iic.c crc16.c main.c
 OBJS = $(SRC:.c=.o)
 
@@ -16,4 +16,3 @@ main.c: iic.c crc16.c hexdump.c
 
 clean:
 	@rm -f $(DENPENDS) $(OBJS) $(TARGET)
-
