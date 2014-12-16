@@ -89,6 +89,7 @@ void flash_earse(void)
 		addr += 0x10000;
 		sleep_ms(1000);
 		printf("+");
+		fflush(stdout);
 	}
 	printf("\n");
 }
@@ -239,6 +240,7 @@ void mboot(void)
 		flash_prog_page(FLASH_PAGE, addr, byte_num);
 		addr += byte_num;
 		printf("+");
+		fflush(stdout);
         }
 	printf("\nFlash Program Success!\n");
 
