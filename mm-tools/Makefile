@@ -7,10 +7,10 @@ CFLAGS += -Wall
 all: $(TARGET) 
 
 $(TARGET):$(OBJS)
-	gcc $^ -o $@
+	$(CC) $^ -o $@
 
 %.o:%.c
-	gcc -c $< -o $@ $(CFLAGS)
+	$(CC) -c $< -o $@ $(CFLAGS)
 
 main.c: iic.c crc16.c hexdump.c
 
