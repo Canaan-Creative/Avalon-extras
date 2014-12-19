@@ -44,6 +44,7 @@ parser.add_option("-C", "--core", dest="test_cores", default="64", help="Test co
 parser.add_option("-V", "--voltage", dest="voltage", default="7875", help="Asic voltage, default:7875")
 parser.add_option("-F", "--freq", dest="freq", default="200,200,200", help="Asic freq, default:200,200,200")
 parser.add_option("-s", "--statics", dest="statics", default="0", help="Statics flag, default:0")
+parser.add_option("-S", "--status", dest="status", default="0", help="Only read status back, default:0")
 (options, args) = parser.parse_args()
 
 asic_cnt = 4
@@ -346,6 +347,11 @@ if __name__ == '__main__':
         print "AUC version: " +  ''.join([chr(x) for x in ret])
     else:
         print "AUC version null"
+
+    if (options.status == '1'):
+        while(1):
+            run_require(usbdev, endpin, endpout, mm_package(TYPE_REQUIRE, module_id = options.module_id))
+        sys.exit()
 
     if (options.statics == '1'):
         statics(usbdev, endpin, endpout)
