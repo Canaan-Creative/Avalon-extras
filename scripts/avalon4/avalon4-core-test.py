@@ -258,8 +258,11 @@ def run_detect(usbdev, endpin, endpout, cmd):
         res_s = auc_xfer(usbdev, endpin, endpout, "00", "a5", cmd)
 	if not res_s:
 		print("ver:Something is wrong or modular id not correct")
+		return None
 	else :
-		print("ver:" + ''.join([chr(x) for x in res_s])[DATA_OFFSET+8:DATA_OFFSET+23])
+		hw =  ''.join([chr(x) for x in res_s])[DATA_OFFSET+8:DATA_OFFSET+23]
+		print("ver:" + hw)
+		return hw[1]
 
 def run_require(usbdev, endpin, endpout, cmd):
         res_s = auc_xfer(usbdev, endpin, endpout, "00", "a5", cmd)
@@ -297,17 +300,27 @@ def rev8(x):
         if (x >> i) & 1: result |= 1 << (7 - i)
     return result
 
-def encode_voltage(v):
+def encode_voltage_adp3208d(v):
     return rev8((0x78 - v / 125) << 1 | 1) << 8
+
+def encode_voltage_ncp5392p(v):
+    if (v == 0):
+        return 0xff00;
+
+    return rev8(((0x59 - (v - 5000) / 125) & 0xff) << 1 | 1) << 8;
 
 def run_modular_test(usbdev, endpin, endpout):
     while True:
         print("Reading result ...")
-        run_detect(usbdev, endpin, endpout, mm_package(TYPE_DETECT, module_id = options.module_id))
+        hw = run_detect(usbdev, endpin, endpout, mm_package(TYPE_DETECT, module_id = options.module_id))
         tmp = hex(int(options.test_cores, 10))[2:]
         txdata = tmp.rjust(8, '0')
 
-        tmp = hex(encode_voltage(int(options.voltage, 10)))[2:]
+        if (hw == '1'):
+            tmp = hex(encode_voltage_ncp5392p(int(options.voltage, 10)))[2:]
+        else:
+            tmp = hex(encode_voltage_adp3208d(int(options.voltage, 10)))[2:]
+
         tmp = tmp.rjust(8, '0')
         txdata += tmp
 
@@ -340,7 +353,6 @@ if __name__ == '__main__':
     auc_vid = 0x29f1
     auc_pid = 0x33f2
     usbdev, endpin, endpout = enum_usbdev(auc_vid, auc_pid)
-
 
     ret = auc_xfer(usbdev, endpin, endpout, "00", "a1", "801A0600")
     if ret:
