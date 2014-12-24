@@ -66,9 +66,6 @@ def enum_usbdev(vendor_id, product_id):
         print "Find an Avalon USB Converter"
 
     try:
-        usbdev.set_configuration()
-        usbdev.reset()
-
 	# usbdev[iConfiguration][(bInterfaceNumber,bAlternateSetting)]
         for endp in usbdev[0][(1,0)]:
             if endp.bEndpointAddress & 0x80:
