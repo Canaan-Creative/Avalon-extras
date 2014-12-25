@@ -1,0 +1,46 @@
+= MM Tools =
+
+== Introduction ==
+MM Tools is a tool to reflash/test MM firmware for Avalon4
+     +-----------+
+     |    APP    |<-- MM Tools
+     +-----------+
+     |   MM OP   |<-- MM Tools API
+     +-----------+
+     |    IIC    |<-- Base on AUC api or linux iic api
+     +-----------+
+
+== Firmware upgrade ==
+
+== Core test ==
+Test AUC one by one and run MM core test one by one
+Take one AUC for example:
+Step 1: Detect MM modules
+Step 2: Run MM core test one by one
+	Note: we must keep other MM working, when test one MM.
+Step 3: Generate test report (json array)
+	Format:
+	[{
+	  "AUC ID": "AV4-1",
+	  "MM ID": "1",
+	  "MM Ver": "401412-39242210",
+	  "MM DNA": "0130935a61aa16d0",
+	  "PG1": [
+	    "0000-0000-0000-0000",
+	    "0000-0000-0000-0000",
+	    "0000-0000-0000-0000",
+	    "0000-0000-0000-0000",
+	    "0000-0000-0000-0000"
+	  ],
+	  "PG2": [
+	    "0000-0000-0000-0000",
+	    "0000-0000-0000-0000",
+	    "0000-0000-0000-0000",
+	    "0000-0000-0000-0000",
+	    "0000-0000-0000-0000"
+	  ],
+	  "bad": 0,
+	  "all": 2560,
+	  "bad percent": "0%"
+	}]
+
