@@ -18,7 +18,7 @@ Take one AUC for example:
 Step 1: Detect MM modules
 Step 2: Run MM core test one by one
 	Note: we must keep other MM working, when test one MM.
-Step 3: Generate test report (json array)
+Step 3: Generate test report (json array), append to log(file: /tmp/coretest.log)
 	Format:
 	[{
 	  "AUC ID": "AV4-1",
