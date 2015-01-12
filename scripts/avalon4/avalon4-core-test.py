@@ -349,7 +349,7 @@ def run_require(usbdev, endpin, endpout, cmd):
 		# format: temp(40), fan(20), freq(300), vol(400), localwork(1), g_hw_work(300), pg(0)
 		avalon_require = binascii.hexlify(res_s)
 
-		temp = struct.unpack_from("<h", res_s, DATA_OFFSET+2)[0]
+		temp = struct.unpack_from(">h", res_s, DATA_OFFSET+2)[0]
 		fan = int(avalon_require[(DATA_OFFSET+6)*2:(DATA_OFFSET+8)*2], 16)
 		freq = int(avalon_require[(DATA_OFFSET+8)*2:(DATA_OFFSET+12)*2], 16)
 		vol = avalon_require[(DATA_OFFSET+12)*2:(DATA_OFFSET+16)*2]
