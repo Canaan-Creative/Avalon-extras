@@ -36,7 +36,7 @@ import usb.util
 import sys
 import struct
 
-parser = OptionParser(version="%prog 20150112_1351")
+parser = OptionParser(version="%prog ver:20150112_1351")
 # TODO: Module id assignment
 parser.add_option("-m", "--module", dest="module_id", default="0", help="Module ID: 0 - 127, default:0")
 parser.add_option("-c", "--count", dest="test_count", default="1", help="Test count: 1,2,3... ")
@@ -47,6 +47,7 @@ parser.add_option("-F", "--freq", dest="freq", default="200,200,200", help="Asic
 parser.add_option("-s", "--statics", dest="statics", default="0", help="Statics flag, default:0")
 parser.add_option("-S", "--status", dest="status", default="0", help="Only read status back, default:0")
 (options, args) = parser.parse_args()
+parser.print_version()
 
 asic_cnt = 4
 miner_cnt = 10
@@ -438,9 +439,9 @@ if __name__ == '__main__':
 
     ret = auc_xfer(usbdev, endpin, endpout, "00", "a1", "801A0600")
     if ret:
-        print "AUC version: " +  ''.join([chr(x) for x in ret])
+        print "AUC ver: " +  ''.join([chr(x) for x in ret])
     else:
-        print "AUC version null"
+        print "AUC ver null"
 
     if (options.status == '1'):
         while(1):
