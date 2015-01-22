@@ -16,6 +16,7 @@
 #define IIC_SLAVE_DAT 0x41
 #define CS_ENABLE 0
 #define CS_DISABLE 1
+#define IIC2SPI_DISABLE 3
 
 static int gmcs1_len;
 
@@ -44,6 +45,15 @@ static void set_cs(unsigned char dat)
 	buf[0] = dat;
 	i2c_write(buf, 1);
 	i2c_setslave(IIC_SLAVE_DAT);
+}
+
+static void set_reboot(void)
+{
+	unsigned char buf[1];
+
+	i2c_setslave(IIC_SLAVE_CTL);
+	buf[0] = 4;
+	i2c_write(buf, 1);
 }
 
 static void set_mosi_dat(unsigned char *buf, unsigned int len)
@@ -149,7 +159,7 @@ static char char2byte(char char0, char char1)
 
 static int mboot_mcs_file(void)
 {
-	int i, byte_num;
+	int i, byte_num, mm_flg = 0, mm_info = 0;
 	unsigned char tmp[1000];
 	unsigned char data;
 	FILE *mboot_mcs_fp;
@@ -178,15 +188,21 @@ static int mboot_mcs_file(void)
 				break;
 			i++;
 		}
-		if (tmp[7] == '0' && tmp[8] == '0') {
+		if(tmp[0] == ':' && tmp[7] == '0' && tmp[8] == '4' && tmp[11] == '0' && tmp[12] == '8')
+                        mm_flg = 1;
+		//:10ff8000
+		if(tmp[0] == ':' && tmp[1] == '1' && tmp[2] == '0' && tmp[3] == 'f' && tmp[4] == 'f' && tmp[5] == '8' && tmp[6] == '0' && tmp[7] == '0' && tmp[8] == '0')
+                        mm_info = 1;
+		if (tmp[7] == '0' && tmp[8] == '0' && mm_flg && !mm_info) {
 			byte_num = char2byte(tmp[1], tmp[2]);
 			for (i = 0; i < byte_num * 2; i += 2) {
 				data = char2byte(tmp[9 + i], tmp[9 + i + 1]);
 				fputc(data, mboot_mcs_fp_new);
 				gmcs1_len++;
 			}
-		} else if (tmp[7] == '0' && tmp[8] == '1')
+		} else if (tmp[7] == '0' && tmp[8] == '1' && mm_flg && !mm_info)
 			break;
+		mm_info = 0;
 	}
 
 	fclose(mboot_mcs_fp);
@@ -206,18 +222,18 @@ void mboot(void)
 	mboot_mcs_file();
 	all_byte = gmcs1_len;
 
-        i2c_open(I2C_DEV);
+	i2c_open(I2C_DEV);
 
 	mboot_mcs_fp_new = fopen("./mm_new.mcs", "rt");
 
-	printf("Flash Erase Begin!\n");
+	printf("(1) MM Flash Erase Begin! Please Wait...\n");
 	enable_download();
 	flash_prog_en();
 	flash_earse();
-	printf("Flash Erase Success!\n");
+	printf("    MM Flash Erase Success!\n");
 
-	printf("Flash Program Begin!\n");
-        while (all_byte) {
+	printf("(2) Flash Program Begin! Please Wait...\n");
+	while (all_byte) {
 		if (all_byte >= SPI_FLASH_PAGE) {
 			byte_num = SPI_FLASH_PAGE;
 			all_byte -= SPI_FLASH_PAGE;
@@ -227,19 +243,22 @@ void mboot(void)
 		}
 
 		for (j = 0; j < byte_num; j++) {
-                	FLASH_PAGE[j] = fgetc(mboot_mcs_fp_new);
+			FLASH_PAGE[j] = fgetc(mboot_mcs_fp_new);
 			crc_init = mboot_crc16(crc_init, &FLASH_PAGE[j], 1);
 		}
 		flash_prog_page(FLASH_PAGE, addr, byte_num);
 		addr += byte_num;
 		printf("+");
 		fflush(stdout);
-        }
-	printf("\nFlash Program Success!\n");
+	}
+	printf("\n    MM Flash Program Success!\n");
 
 	flash_prog_info(crc_init, gmcs1_len);
-        fclose(mboot_mcs_fp_new);
-	printf("Flash Program Done!\n");
+	fclose(mboot_mcs_fp_new);
+	printf("    MM Flash Program Done!\n");
+	set_cs(IIC2SPI_DISABLE);
+	printf("(3) Reboot!\n");
+	set_reboot();
 }
 
 void mm_detect(void)
