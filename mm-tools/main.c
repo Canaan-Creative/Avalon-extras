@@ -10,7 +10,9 @@
 int main(int argc, char **argv)
 {
 #ifdef MM_TEST
-    	mm_detect();
+	uint16_t freq[3], voltage = 200;
+
+	mm_coretest(64, freq, voltage);
 #else
 	mboot();
 #endif

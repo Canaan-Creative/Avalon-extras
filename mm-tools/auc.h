@@ -2,9 +2,12 @@
 #define __AUC_H__
 
 #include <stdint.h>
+#include <libusb.h>
 
 #define CDC_I2C_PACKET_SZ	    64		/*!< Packet size of each I2C command packet */
 #define CDC_I2C_HEADER_SZ	    4		/*!< Size of the header in I2C command packet */
+#define CDC_I2C_XFER_HEADER_SZ	    4		/*!< Size of the xfer header in I2C command packet */
+#define CDC_I2C_PAYLOAD_SZ          (CDC_I2C_PACKET_SZ-CDC_I2C_HEADER_SZ-CDC_I2C_XFER_HEADER_SZ)
 
 /* CDC_I2C Requests */
 #define CDC_I2C_REQ_RESET	    0xa0		/*!< Request to abort and flush all pending requests */
@@ -28,9 +31,17 @@
 #define CDC_I2C_RES_INVALID_PARAM   0x12		/*!< Invalid parameters are provided for the given Request. */
 #define CDC_I2C_RES_PARTIAL_DATA    0x13		/*!< Partial transfer completed. */
 
+#define AUC_VID	0x29f1
+#define AUC_PID	0x33f2
+#define AUC_VERLEN	12
+#define AUC_EP_IN	0x81
+#define AUC_EP_OUT	0x1
+#define AUC_DEVCNT	100
+#define AUC_TIMEOUT_MS	200
+
 struct cdc_i2c_header {
 	uint8_t length;					/*!< Length of the packet (include header and body) */
-	uint8_t reserverd[2];				/*!< Reserved */
+	uint8_t reserved[2];				/*!< Reserved */
 	uint8_t type;					/*!< Request or Response type */
 };
 
@@ -40,22 +51,24 @@ enum i2c_clockrate {
 	I2C_CLK_1M = 1000000,
 };
 
-struct i2c_config {
-	struct cdc_i2c_header header;
-	enum i2c_clockrate aucspeed;
-	uint32_t aucxdelay;
+typedef void *AUC_HANDLE;
+
+struct auc_ctx {
+	libusb_device *auc_devlist[AUC_DEVCNT];
+	AUC_HANDLE handle[AUC_DEVCNT];
+	char auc_ver[AUC_DEVCNT][AUC_VERLEN + 1];
+	uint32_t auc_cnt;
 };
 
-typedef void *AUC_HANDLE;
 
 uint32_t auc_getcounts(void);
 AUC_HANDLE auc_open(uint32_t index);
-const char *auc_version(AUC_HANDLE handle);
-int auc_init(AUC_HANDLE handle, struct i2c_config *config);
-int auc_close(AUC_HANDLE handle);
-int auc_reset(AUC_HANDLE handle);
-int auc_write(AUC_HANDLE handle, uint8_t slaveAddr, unsigned char *wbuf, unsigned int wlen);
-int auc_read(AUC_HANDLE handle, uint8_t slaveAddr, unsigned char *rbuf, unsigned int rlen);
-int auc_xfer(AUC_HANDLE handle, uint8_t slaveAddr, unsigned char *wbuf, unsigned int wlen, unsigned char *rbuf, unsigned rlen);
+const char *auc_version(uint32_t index);
+int32_t auc_init(AUC_HANDLE handle, uint32_t clk_rate, uint32_t xfer_delay);
+int32_t auc_close(AUC_HANDLE handle);
+int32_t auc_reset(AUC_HANDLE handle);
+int32_t auc_write(AUC_HANDLE handle, uint8_t slaveAddr, uint8_t *wbuf, uint32_t wlen);
+int32_t auc_read(AUC_HANDLE handle, uint8_t slaveAddr, uint8_t *rbuf, uint32_t rlen);
+int32_t auc_xfer(AUC_HANDLE handle, uint8_t slaveAddr, uint8_t *wbuf, uint32_t wlen, uint8_t *rbuf, uint32_t rlen);
 
 #endif /* __AUC_H__ */

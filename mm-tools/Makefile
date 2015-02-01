@@ -2,15 +2,21 @@ TARGET = mm-tools
 SRC = iic.c crc16.c auc.c mboot_api.c mm_api.c main.c
 OBJS = $(SRC:.c=.o)
 
+INCLUDE += `pkg-config --cflags libusb-1.0`
 CFLAGS += -Wall
+LDFLAGS += `pkg-config --libs libusb-1.0`
+
+ifeq ($(MM_TEST), 1)
+CFLAGS += -DMM_TEST
+endif
 
 all: $(TARGET)
 
 $(TARGET):$(OBJS)
-	$(CC) $^ -o $@
+	$(CC) $^ -o $@ $(LDFLAGS)
 
 %.o:%.c
-	$(CC) -c $< -o $@ $(CFLAGS)
+	$(CC) -c $< -o $@ $(INCLUDE) $(CFLAGS)
 
 main.c: iic.c crc16.c hexdump.c auc.c mboot_api.c mm_api.c
 
