@@ -6,10 +6,6 @@ INCLUDE += `pkg-config --cflags libusb-1.0`
 CFLAGS += -Wall
 LDFLAGS += `pkg-config --libs libusb-1.0`
 
-ifeq ($(MM_TEST), 1)
-CFLAGS += -DMM_TEST
-endif
-
 all: $(TARGET)
 
 $(TARGET):$(OBJS)

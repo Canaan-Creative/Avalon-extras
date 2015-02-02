@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
+#include <unistd.h>
 #include "crc.h"
 #include "auc.h"
 
@@ -249,6 +250,7 @@ void set_radiator_mode()
 			avalon4_pkg_init(&sendpkg, AVA4_P_FINISH, 1, 1);
 			avalon4_pkg_send(hauc[i], &sendpkg, 0);
 		}
+		sleep(2);
 	}
 
 	for (i = 0; i < auc_cnts; i++) {
