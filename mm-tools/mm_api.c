@@ -10,17 +10,17 @@
 #define AVA4_DEFAULT_MINERS 10
 #define AVA4_H1 'C'
 #define AVA4_H2 'N'
-#define AVA4_P_COUNT    40
+#define AVA4_P_COUNT	40
 #define AVA4_P_DATA_LEN 32
 
 /* packet type */
-#define AVA4_P_DETECT   0x10
+#define AVA4_P_DETECT	0x10
 #define AVA4_P_FINISH	0x21
-#define AVA4_P_REQUIRE  0x31
-#define AVA4_P_TEST     0x32
-#define AVA4_P_ACKDETECT        0x40
+#define AVA4_P_REQUIRE	0x31
+#define AVA4_P_TEST	0x32
+#define AVA4_P_ACKDETECT	0x40
 
-#define AVA4_MODULE_BROADCAST   0
+#define AVA4_MODULE_BROADCAST	0
 
 struct avalon4_pkg {
 	uint8_t head[2];
@@ -220,6 +220,39 @@ void mm_coretest(uint16_t testcores, uint16_t freq[], uint16_t voltage)
 			auc_close(hauc);
 			hauc = NULL;
 		}
+	}
+}
+
+void set_radiator_mode()
+{
+	AUC_HANDLE hauc[100];
+	uint32_t auc_cnts;
+	uint32_t i;
+	struct avalon4_pkg sendpkg;
+
+	auc_cnts = auc_getcounts();
+	if (!auc_cnts)
+		printf("No AUC found!\n");
+	else
+		printf("Find %d auc\n", auc_cnts);
+
+	for (i = 0; i < auc_cnts; i++) {
+		hauc[i] = auc_open(i);
+		if (hauc[i]) {
+			auc_init(hauc[i], I2C_CLK_1M, 9600);
+			printf("auc-%d, ver:%s\n", i, auc_version(i));
+		}
+	}
+
+	while(1) {
+		for (i = 0; i < auc_cnts; i++) {
+			avalon4_pkg_init(&sendpkg, AVA4_P_FINISH, 1, 1);
+			avalon4_pkg_send(hauc[i], &sendpkg, 0);
+		}
+	}
+
+	for (i = 0; i < auc_cnts; i++) {
+		auc_close(hauc[i]);
 	}
 }
 
