@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include "crc.h"
 #include "auc.h"
+#include "jansson.h"
 
 #define AVA4_MM_DNA_LEN 8
 #define AVA4_MM_VER_LEN 15
@@ -186,6 +187,85 @@ static void mm_test(AUC_HANDLE handle, uint16_t testcores, uint16_t freq[], uint
 	}
 }
 
+static void write_jansson()
+{
+	FILE *fp = NULL;
+	json_t *report = json_object();
+	json_t *auc_id = json_string("0");
+	json_t *mm_id = json_string("0");
+	json_t *mm_ver = json_string("0");
+	json_t *mm_dna = json_string("0");
+	json_t *bad = json_integer(0);
+	json_t *all = json_integer(0);
+	json_t *bad_percent = json_string("0");
+
+	json_t *PG1 = json_array();
+	json_t *PG1_0 = json_string("0");
+	json_t *PG1_1 = json_string("0");
+	json_t *PG1_2 = json_string("0");
+	json_t *PG1_3 = json_string("0");
+	json_t *PG1_4 = json_string("0");
+
+	json_t *PG2 = json_array();
+	json_t *PG2_0 = json_string("0");
+	json_t *PG2_1 = json_string("0");
+	json_t *PG2_2 = json_string("0");
+	json_t *PG2_3 = json_string("0");
+	json_t *PG2_4 = json_string("0");
+
+	fp = fopen("log", "wt");
+	if(fp == NULL) {
+		return; 
+		printf("Open FILE failed\r\n");
+	}
+
+	json_string_set(auc_id, "AV4-1");
+	json_object_set_new(report, "AUC ID", auc_id);
+	json_string_set(mm_id, "1");
+	json_object_set_new(report, "MM ID", mm_id);
+	json_string_set(mm_ver, "401412-39242210");
+	json_object_set_new(report, "MM VER", mm_ver);
+	json_string_set(mm_dna, "0130935a61aa16d0");
+	json_object_set_new(report, "MM DNA", mm_dna);
+
+	json_string_set(PG1_0, "0000-0000-0000-0000");
+	json_string_set(PG1_1, "1111-1111-1111-1111");
+	json_string_set(PG1_2, "2222-2222-2222-2222");
+	json_string_set(PG1_3, "3333-3333-3333-3333");
+	json_string_set(PG1_4, "4444_4444_4444_4444");
+	json_array_insert_new(PG1, 0, PG1_0);
+	json_array_insert_new(PG1, 1, PG1_1);
+	json_array_insert_new(PG1, 2, PG1_2);
+	json_array_insert_new(PG1, 3, PG1_3);
+	json_array_insert_new(PG1, 4, PG1_4);
+	json_object_set_new(report, "PG1", PG1);
+
+	json_string_set(PG2_0, "0000-0000-0000-0000");
+	json_string_set(PG2_1, "1111-1111-1111-1111");
+	json_string_set(PG2_2, "2222-2222-2222-2222");
+	json_string_set(PG2_3, "3333-3333-3333-3333");
+	json_string_set(PG2_4, "4444_4444_4444_4444");
+	json_array_insert_new(PG2, 0, PG2_0);
+	json_array_insert_new(PG2, 1, PG2_1);
+	json_array_insert_new(PG2, 2, PG2_2);
+	json_array_insert_new(PG2, 3, PG2_3);
+	json_array_insert_new(PG2, 4, PG2_4);
+	json_object_set_new(report, "PG2", PG2);
+
+	json_integer_set(bad, 1);
+	json_object_set_new(report, "bad", bad);
+	json_integer_set(all, 10);
+	json_object_set_new(report, "all", all);
+	json_string_set(bad_percent, "10%");
+	json_object_set_new(report, "bad_percent", bad_percent);
+
+	json_dumpf(report, fp, 0);
+
+	printf("Write report success\r\n");
+
+	fclose(fp);
+}
+
 static void mm_corereport(AUC_HANDLE handle, uint16_t testcores, uint16_t freq[], uint16_t voltage)
 {
 	int32_t i;
@@ -230,7 +310,7 @@ void set_radiator_mode()
 	uint32_t auc_cnts;
 	uint32_t i;
 	struct avalon4_pkg sendpkg;
-
+	
 	auc_cnts = auc_getcounts();
 	if (!auc_cnts)
 		printf("No AUC found!\n");

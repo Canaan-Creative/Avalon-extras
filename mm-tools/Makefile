@@ -2,9 +2,9 @@ TARGET = mm-tools
 SRC = iic.c crc16.c auc.c mboot_api.c mm_api.c main.c
 OBJS = $(SRC:.c=.o)
 
-INCLUDE += `pkg-config --cflags libusb-1.0`
+INCLUDE += `pkg-config --cflags libusb-1.0 jansson`
 CFLAGS += -Wall
-LDFLAGS += `pkg-config --libs libusb-1.0`
+LDFLAGS += `pkg-config --libs libusb-1.0 jansson`
 
 all: $(TARGET)
 
