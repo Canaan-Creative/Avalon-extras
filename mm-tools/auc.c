@@ -22,7 +22,7 @@ struct cdc_i2c_xferparams {
 uint32_t auc_getcounts(void)
 {
 	static int32_t usb_init = 0;
-	struct libusb_device **devs;
+	struct libusb_device **devs = NULL;
 	struct libusb_device_descriptor info;
 	uint32_t count, i;
 
@@ -33,8 +33,10 @@ uint32_t auc_getcounts(void)
 		}
 		usb_init = 1;
 	} else {
-		libusb_free_device_list(devs, 1);
-		devs = NULL;
+		if (devs) {
+			libusb_free_device_list(devs, 1);
+			devs = NULL;
+		}
 		for (i = 0; i < auc_devctx.auc_cnt; i++)
 			auc_devctx.auc_devlist[i] = NULL;
 		auc_devctx.auc_cnt = 0;
