@@ -35,8 +35,8 @@ struct avalon4_pkg {
 struct mmreport {
 	char auc_id[20];
 	uint16_t mm_enable;
-	uint8_t mm_ver[AVA4_MM_VER_LEN];
-	uint8_t mm_dna[AVA4_MM_DNA_LEN];
+	uint8_t mm_ver[AVA4_MM_VER_LEN + 1];
+	uint8_t mm_dna[AVA4_MM_DNA_LEN + 1];
 	uint8_t pg1[5][30];
 	uint8_t pg2[5][30];
 	uint16_t bad;
@@ -50,8 +50,8 @@ static void avalon4_pkg_init(struct avalon4_pkg *mmpkg, uint8_t type, uint8_t id
 {
 	uint16_t crc = 0;
 
-	mmpkg->head[1] = AVA4_H1;
-	mmpkg->head[2] = AVA4_H2;
+	mmpkg->head[0] = AVA4_H1;
+	mmpkg->head[1] = AVA4_H2;
 	mmpkg->type = type;
 	mmpkg->opt = 0;
 	mmpkg->idx = idx;
