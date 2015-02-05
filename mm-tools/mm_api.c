@@ -187,52 +187,36 @@ static void mm_test(AUC_HANDLE handle, uint16_t testcores, uint16_t freq[], uint
 	}
 }
 
-static void write_jansson()
+static void write_jansson(struct mmreport mm_report, uint32_t mm_report_mm_id, FILE *fp)
 {
-	FILE *fp = NULL;
 	json_t *report = json_object();
-	json_t *auc_id = json_string("0");
-	json_t *mm_id = json_string("0");
-	json_t *mm_ver = json_string("0");
-	json_t *mm_dna = json_string("0");
-	json_t *bad = json_integer(0);
-	json_t *all = json_integer(0);
-	json_t *bad_percent = json_string("0");
+	json_t *auc_id = json_string(mm_report.auc_id);
+	json_t *mm_id = json_integer(mm_report_mm_id);
+	json_t *mm_ver = json_string(mm_report.mm_ver);
+	json_t *mm_dna = json_string(mm_report.mm_dna);
+	json_t *bad = json_integer(mm_report.bad);
+	json_t *all = json_integer(mm_report.all);
+	json_t *bad_percent = json_real((double)mm_report.bad / (double)mm_report.all);
 
 	json_t *PG1 = json_array();
-	json_t *PG1_0 = json_string("0");
-	json_t *PG1_1 = json_string("0");
-	json_t *PG1_2 = json_string("0");
-	json_t *PG1_3 = json_string("0");
-	json_t *PG1_4 = json_string("0");
+	json_t *PG1_0 = json_string(mm_report.pg1[0]);
+	json_t *PG1_1 = json_string(mm_report.pg1[1]);
+	json_t *PG1_2 = json_string(mm_report.pg1[2]);
+	json_t *PG1_3 = json_string(mm_report.pg1[3]);
+	json_t *PG1_4 = json_string(mm_report.pg1[4]);
 
 	json_t *PG2 = json_array();
-	json_t *PG2_0 = json_string("0");
-	json_t *PG2_1 = json_string("0");
-	json_t *PG2_2 = json_string("0");
-	json_t *PG2_3 = json_string("0");
-	json_t *PG2_4 = json_string("0");
+	json_t *PG2_0 = json_string(mm_report.pg2[0]);
+	json_t *PG2_1 = json_string(mm_report.pg2[1]);
+	json_t *PG2_2 = json_string(mm_report.pg2[2]);
+	json_t *PG2_3 = json_string(mm_report.pg2[3]);
+	json_t *PG2_4 = json_string(mm_report.pg2[4]);
 
-	fp = fopen("log", "wt");
-	if(fp == NULL) {
-		return; 
-		printf("Open FILE failed\r\n");
-	}
-
-	json_string_set(auc_id, "AV4-1");
 	json_object_set_new(report, "AUC ID", auc_id);
-	json_string_set(mm_id, "1");
 	json_object_set_new(report, "MM ID", mm_id);
-	json_string_set(mm_ver, "401412-39242210");
 	json_object_set_new(report, "MM VER", mm_ver);
-	json_string_set(mm_dna, "0130935a61aa16d0");
 	json_object_set_new(report, "MM DNA", mm_dna);
 
-	json_string_set(PG1_0, "0000-0000-0000-0000");
-	json_string_set(PG1_1, "1111-1111-1111-1111");
-	json_string_set(PG1_2, "2222-2222-2222-2222");
-	json_string_set(PG1_3, "3333-3333-3333-3333");
-	json_string_set(PG1_4, "4444_4444_4444_4444");
 	json_array_insert_new(PG1, 0, PG1_0);
 	json_array_insert_new(PG1, 1, PG1_1);
 	json_array_insert_new(PG1, 2, PG1_2);
@@ -240,11 +224,6 @@ static void write_jansson()
 	json_array_insert_new(PG1, 4, PG1_4);
 	json_object_set_new(report, "PG1", PG1);
 
-	json_string_set(PG2_0, "0000-0000-0000-0000");
-	json_string_set(PG2_1, "1111-1111-1111-1111");
-	json_string_set(PG2_2, "2222-2222-2222-2222");
-	json_string_set(PG2_3, "3333-3333-3333-3333");
-	json_string_set(PG2_4, "4444_4444_4444_4444");
 	json_array_insert_new(PG2, 0, PG2_0);
 	json_array_insert_new(PG2, 1, PG2_1);
 	json_array_insert_new(PG2, 2, PG2_2);
@@ -252,33 +231,36 @@ static void write_jansson()
 	json_array_insert_new(PG2, 4, PG2_4);
 	json_object_set_new(report, "PG2", PG2);
 
-	json_integer_set(bad, 1);
 	json_object_set_new(report, "bad", bad);
-	json_integer_set(all, 10);
 	json_object_set_new(report, "all", all);
-	json_string_set(bad_percent, "10%");
 	json_object_set_new(report, "bad_percent", bad_percent);
 
 	json_dumpf(report, fp, 0);
-
-	printf("Write report success\r\n");
-
-	fclose(fp);
 }
 
 static void mm_corereport(AUC_HANDLE handle, uint16_t testcores, uint16_t freq[], uint16_t voltage)
 {
-	int32_t i;
+	uint32_t i;
+	FILE *fp = NULL;
 
-	memset(reportlist, 0, sizeof(struct mmreport));
+	memset(reportlist, 0, sizeof(struct mmreport) * AVA4_DEFAULT_MODULARS);
 
 	mm_detect(handle);
 	mm_test(handle, testcores, freq, voltage);
 
 	/* Write reportlist to file */
-	for (i = 1; i < AVA4_DEFAULT_MODULARS; i++) {
-		/* TODO: use lib-jasson to record the reportlist */
+	fp = fopen("/tmp/coretest.log", "wt");
+	if(fp == NULL) {
+		return;
+		printf("Open FILE failed\r\n");
 	}
+
+	for (i = 1; i < AVA4_DEFAULT_MODULARS; i++) {
+		/* TODO: use lib-jansson to record the reportlist */
+		write_jansson(reportlist[i], i, fp);
+	}
+	printf("Write report success\r\n");
+	fclose(fp);
 }
 
 void mm_coretest(uint16_t testcores, uint16_t freq[], uint16_t voltage)
