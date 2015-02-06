@@ -9,5 +9,6 @@ void mboot(void);
 
 /* MM API */
 void mm_coretest(uint16_t testcores, uint16_t freq[], uint16_t voltage);
+void set_radiator_mode();
 
 #endif /* __API_H__ */
