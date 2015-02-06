@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
+#include <unistd.h>
 #include "crc.h"
 #include "auc.h"
+#include "jansson.h"
 
 #define AVA4_MM_DNA_LEN 8
 #define AVA4_MM_VER_LEN 15
@@ -10,17 +12,17 @@
 #define AVA4_DEFAULT_MINERS 10
 #define AVA4_H1 'C'
 #define AVA4_H2 'N'
-#define AVA4_P_COUNT    40
+#define AVA4_P_COUNT	40
 #define AVA4_P_DATA_LEN 32
 
 /* packet type */
-#define AVA4_P_DETECT   0x10
+#define AVA4_P_DETECT	0x10
 #define AVA4_P_FINISH	0x21
-#define AVA4_P_REQUIRE  0x31
-#define AVA4_P_TEST     0x32
-#define AVA4_P_ACKDETECT        0x40
+#define AVA4_P_REQUIRE	0x31
+#define AVA4_P_TEST	0x32
+#define AVA4_P_ACKDETECT	0x40
 
-#define AVA4_MODULE_BROADCAST   0
+#define AVA4_MODULE_BROADCAST	0
 
 struct avalon4_pkg {
 	uint8_t head[2];
@@ -185,19 +187,134 @@ static void mm_test(AUC_HANDLE handle, uint16_t testcores, uint16_t freq[], uint
 	}
 }
 
+static void write_jansson(struct mmreport mm_report, uint32_t mm_report_mm_id, FILE *fp)
+{
+	char tmp[31];
+	json_t *report = json_object();
+	json_t *auc_id = json_string(mm_report.auc_id);
+	json_t *mm_id = json_integer(mm_report_mm_id);
+	snprintf(tmp, AVA4_MM_VER_LEN, "%s", mm_report.mm_ver);
+	json_t *mm_ver = json_string(tmp);
+	snprintf(tmp, AVA4_MM_DNA_LEN, "%s", mm_report.mm_dna);
+	json_t *mm_dna = json_string(tmp);
+	json_t *bad = json_integer(mm_report.bad);
+	json_t *all = json_integer(mm_report.all);
+	int percent = (int)(((double)mm_report.bad / (double)mm_report.all) * 100);
+	sprintf(tmp, "%d%%", percent);
+	json_t *bad_percent = json_string(tmp);
+
+	json_t *PG1 = json_array();
+	snprintf(tmp, 30, "%s", mm_report.pg1[0]);
+	json_t *PG1_0 = json_string(tmp);
+	snprintf(tmp, 30, "%s", mm_report.pg1[1]);
+	json_t *PG1_1 = json_string(tmp);
+	snprintf(tmp, 30, "%s", mm_report.pg1[2]);
+	json_t *PG1_2 = json_string(tmp);
+	snprintf(tmp, 30, "%s", mm_report.pg1[3]);
+	json_t *PG1_3 = json_string(tmp);
+	snprintf(tmp, 30, "%s", mm_report.pg1[4]);
+	json_t *PG1_4 = json_string(tmp);
+
+	json_t *PG2 = json_array();
+	snprintf(tmp, 30, "%s", mm_report.pg2[0]);
+	json_t *PG2_0 = json_string(tmp);
+	snprintf(tmp, 30, "%s", mm_report.pg2[1]);
+	json_t *PG2_1 = json_string(tmp);
+	snprintf(tmp, 30, "%s", mm_report.pg2[2]);
+	json_t *PG2_2 = json_string(tmp);
+	snprintf(tmp, 30, "%s", mm_report.pg2[3]);
+	json_t *PG2_3 = json_string(tmp);
+	snprintf(tmp, 30, "%s", mm_report.pg2[4]);
+	json_t *PG2_4 = json_string(tmp);
+
+	json_array_insert_new(PG1, 0, PG1_0);
+	json_array_insert_new(PG1, 1, PG1_1);
+	json_array_insert_new(PG1, 2, PG1_2);
+	json_array_insert_new(PG1, 3, PG1_3);
+	json_array_insert_new(PG1, 4, PG1_4);
+
+	json_array_insert_new(PG2, 0, PG2_0);
+	json_array_insert_new(PG2, 1, PG2_1);
+	json_array_insert_new(PG2, 2, PG2_2);
+	json_array_insert_new(PG2, 3, PG2_3);
+	json_array_insert_new(PG2, 4, PG2_4);
+
+	json_object_set_new(report, "AUC ID", auc_id);
+	json_object_set_new(report, "MM ID", mm_id);
+	json_object_set_new(report, "MM VER", mm_ver);
+	json_object_set_new(report, "MM DNA", mm_dna);
+	json_object_set_new(report, "PG1", PG1);
+	json_object_set_new(report, "PG2", PG2);
+	json_object_set_new(report, "bad", bad);
+	json_object_set_new(report, "all", all);
+	json_object_set_new(report, "bad_percent", bad_percent);
+
+	json_dumpf(report, fp, 0);
+}
+
+static void jansson_test()
+{
+	uint32_t i;
+	FILE *fp = NULL;
+	memset(reportlist, 0, sizeof(struct mmreport) * AVA4_DEFAULT_MODULARS);
+
+	sprintf(reportlist[1].auc_id, "%s", "AV4-1");
+	for (i = 0; i < AVA4_MM_VER_LEN; i++) {
+		reportlist[1].mm_ver[i] = 65 + i;
+	}
+	for (i = 0; i < AVA4_MM_DNA_LEN; i++) {
+		reportlist[1].mm_dna[i] = 97 + i;
+	}
+	for (i = 0; i < 30; i++) {
+		reportlist[1].pg1[0][i] = 66 + i;
+		reportlist[1].pg1[1][i] = 67 + i;
+		reportlist[1].pg1[2][i] = 68 + i;
+		reportlist[1].pg1[3][i] = 69 + i;
+		reportlist[1].pg1[4][i] = 70 + i;
+		reportlist[1].pg2[0][i] = 71 + i;
+		reportlist[1].pg2[1][i] = 72 + i;
+		reportlist[1].pg2[2][i] = 73 + i;
+		reportlist[1].pg2[3][i] = 74 + i;
+		reportlist[1].pg2[4][i] = 75 + i;
+	}
+	reportlist[1].bad = 1;
+	reportlist[1].all = 100;
+	
+	fp = fopen("/tmp/coretest.log", "wt");
+	if(fp == NULL) {
+		return;
+		printf("Open FILE failed\r\n");
+	}
+
+	write_jansson(reportlist[1], i, fp);
+
+	printf("Write report test success\r\n");
+	fclose(fp);
+}
+
 static void mm_corereport(AUC_HANDLE handle, uint16_t testcores, uint16_t freq[], uint16_t voltage)
 {
-	int32_t i;
+	uint32_t i;
+	FILE *fp = NULL;
 
-	memset(reportlist, 0, sizeof(struct mmreport));
+	memset(reportlist, 0, sizeof(struct mmreport) * AVA4_DEFAULT_MODULARS);
 
 	mm_detect(handle);
 	mm_test(handle, testcores, freq, voltage);
 
 	/* Write reportlist to file */
-	for (i = 1; i < AVA4_DEFAULT_MODULARS; i++) {
-		/* TODO: use lib-jasson to record the reportlist */
+	fp = fopen("/tmp/coretest.log", "wt");
+	if(fp == NULL) {
+		return;
+		printf("Open FILE failed\r\n");
 	}
+
+	for (i = 1; i < AVA4_DEFAULT_MODULARS; i++) {
+		/* TODO: use lib-jansson to record the reportlist */
+		write_jansson(reportlist[i], i, fp);
+	}
+	printf("Write report success\r\n");
+	fclose(fp);
 }
 
 void mm_coretest(uint16_t testcores, uint16_t freq[], uint16_t voltage)
@@ -206,6 +323,7 @@ void mm_coretest(uint16_t testcores, uint16_t freq[], uint16_t voltage)
 	uint32_t auc_cnts;
 	uint32_t i;
 
+jansson_test();
 	auc_cnts = auc_getcounts();
 	if (!auc_cnts)
 		printf("No AUC found!\n");
@@ -220,6 +338,40 @@ void mm_coretest(uint16_t testcores, uint16_t freq[], uint16_t voltage)
 			auc_close(hauc);
 			hauc = NULL;
 		}
+	}
+}
+
+void set_radiator_mode()
+{
+	AUC_HANDLE hauc[100];
+	uint32_t auc_cnts;
+	uint32_t i;
+	struct avalon4_pkg sendpkg;
+
+	auc_cnts = auc_getcounts();
+	if (!auc_cnts)
+		printf("No AUC found!\n");
+	else
+		printf("Find %d auc\n", auc_cnts);
+
+	for (i = 0; i < auc_cnts; i++) {
+		hauc[i] = auc_open(i);
+		if (hauc[i]) {
+			auc_init(hauc[i], I2C_CLK_1M, 9600);
+			printf("auc-%d, ver:%s\n", i, auc_version(i));
+		}
+	}
+
+	while(1) {
+		for (i = 0; i < auc_cnts; i++) {
+			avalon4_pkg_init(&sendpkg, AVA4_P_FINISH, 1, 1);
+			avalon4_pkg_send(hauc[i], &sendpkg, 0);
+		}
+		sleep(2);
+	}
+
+	for (i = 0; i < auc_cnts; i++) {
+		auc_close(hauc[i]);
 	}
 }
 
