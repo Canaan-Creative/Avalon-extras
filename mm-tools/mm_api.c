@@ -71,7 +71,7 @@ static int32_t avalon4_pkg_send(AUC_HANDLE handle, const struct avalon4_pkg *mmp
 
 static int32_t avalon4_pkg_receive(AUC_HANDLE handle, struct avalon4_pkg *mmpkg, uint8_t module_id)
 {
-	return auc_xfer(handle, module_id, NULL, 0, (uint8_t *)mmpkg, AVA4_P_DATA_LEN);
+	return auc_xfer(handle, module_id, NULL, 0, (uint8_t *)mmpkg, AVA4_P_COUNT);
 }
 
 static int32_t mmpkg_parse(const struct avalon4_pkg *mmpkg, uint8_t module_id)
@@ -259,12 +259,12 @@ static void jansson_test()
 	memset(reportlist, 0, sizeof(struct mmreport) * AVA4_DEFAULT_MODULARS);
 
 	sprintf(reportlist[1].auc_id, "%s", "AV4-1");
-	for (i = 0; i < AVA4_MM_VER_LEN; i++) {
+	for (i = 0; i < AVA4_MM_VER_LEN; i++)
 		reportlist[1].mm_ver[i] = 65 + i;
-	}
-	for (i = 0; i < AVA4_MM_DNA_LEN; i++) {
+
+	for (i = 0; i < AVA4_MM_DNA_LEN; i++)
 		reportlist[1].mm_dna[i] = 97 + i;
-	}
+
 	for (i = 0; i < 30; i++) {
 		reportlist[1].pg1[0][i] = 66 + i;
 		reportlist[1].pg1[1][i] = 67 + i;
@@ -279,15 +279,14 @@ static void jansson_test()
 	}
 	reportlist[1].bad = 1;
 	reportlist[1].all = 100;
-	
+
 	fp = fopen("/tmp/coretest.log", "wt");
 	if(fp == NULL) {
-		return;
 		printf("Open FILE failed\r\n");
+		return;
 	}
 
 	write_jansson(reportlist[1], i, fp);
-
 	printf("Write report test success\r\n");
 	fclose(fp);
 }
@@ -305,8 +304,8 @@ static void mm_corereport(AUC_HANDLE handle, uint16_t testcores, uint16_t freq[]
 	/* Write reportlist to file */
 	fp = fopen("/tmp/coretest.log", "wt");
 	if(fp == NULL) {
-		return;
 		printf("Open FILE failed\r\n");
+		return;
 	}
 
 	for (i = 1; i < AVA4_DEFAULT_MODULARS; i++) {
@@ -323,7 +322,7 @@ void mm_coretest(uint16_t testcores, uint16_t freq[], uint16_t voltage)
 	uint32_t auc_cnts;
 	uint32_t i;
 
-jansson_test();
+	jansson_test();
 	auc_cnts = auc_getcounts();
 	if (!auc_cnts)
 		printf("No AUC found!\n");
@@ -343,15 +342,17 @@ jansson_test();
 
 void set_radiator_mode()
 {
-	AUC_HANDLE hauc[100];
+	AUC_HANDLE hauc[AUC_DEVCNT];
 	uint32_t auc_cnts;
 	uint32_t i;
 	struct avalon4_pkg sendpkg;
 
+	memset(hauc, 0, AUC_DEVCNT);
 	auc_cnts = auc_getcounts();
-	if (!auc_cnts)
+	if (!auc_cnts) {
 		printf("No AUC found!\n");
-	else
+		return;
+	} else
 		printf("Find %d auc\n", auc_cnts);
 
 	for (i = 0; i < auc_cnts; i++) {

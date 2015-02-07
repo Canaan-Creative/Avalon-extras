@@ -126,7 +126,7 @@ static uint32_t auc_pkg_init(uint8_t type, uint8_t *data, uint32_t len)
 	header->type = type;
 
 	if (len)
-		memcpy(header + sizeof(struct cdc_i2c_header), data, len);
+		memcpy(g_auc_pkg + sizeof(struct cdc_i2c_header), data, len);
 
 	return (uint32_t)header->length;
 }
@@ -147,6 +147,7 @@ int32_t auc_init(AUC_HANDLE handle, uint32_t clk_rate, uint32_t xfer_delay)
 	params.xfer_delay[2] = (xfer_delay >> 16) & 0xff;
 	params.xfer_delay[3] = (xfer_delay >> 24) & 0xff;
 
+	memset(buf, 0, CDC_I2C_PACKET_SZ);
 	count = auc_pkg_init(CDC_I2C_REQ_INIT_PORT, (uint8_t*)&params, sizeof(params));
 	if (usb_transfer(handle, g_auc_pkg, count, buf, CDC_I2C_PACKET_SZ)) {
 		printf("auc_init usb_transfer failed!\n");
@@ -196,9 +197,11 @@ int32_t auc_close(AUC_HANDLE handle)
 int32_t auc_reset(AUC_HANDLE handle)
 {
 	uint32_t count;
+	uint8_t buf[CDC_I2C_HEADER_SZ];
 
+	memset(buf, 0, CDC_I2C_HEADER_SZ);
 	count = auc_pkg_init(CDC_I2C_REQ_RESET, NULL, 0);
-	if (usb_transfer(handle, g_auc_pkg, count, NULL, 0)) {
+	if (usb_transfer(handle, g_auc_pkg, count, buf, CDC_I2C_HEADER_SZ)) {
 		printf("auc_reset usb_transfer failed!\n");
 		return 1;
 	}
@@ -209,8 +212,10 @@ int32_t auc_reset(AUC_HANDLE handle)
 int32_t auc_write(AUC_HANDLE handle, uint8_t slaveAddr, uint8_t *wbuf, uint32_t wlen)
 {
 	struct cdc_i2c_xferparams params;
+	uint8_t buf[CDC_I2C_HEADER_SZ];
 	int32_t count;
 
+	memset(&params, 0, sizeof(params));
 	params.txLength = wlen;
 	params.rxLength = 0;
 	params.reserved = 0;
@@ -218,8 +223,9 @@ int32_t auc_write(AUC_HANDLE handle, uint8_t slaveAddr, uint8_t *wbuf, uint32_t 
 	if (wlen)
 		memcpy(params.data, wbuf, wlen);
 
-	count = auc_pkg_init(CDC_I2C_REQ_DEVICE_WRITE, (uint8_t *)&params, sizeof(params) + wlen);
-	if (usb_transfer(handle, g_auc_pkg, count, NULL, 0)) {
+	memset(buf, 0, CDC_I2C_HEADER_SZ);
+	count = auc_pkg_init(CDC_I2C_REQ_DEVICE_WRITE, (uint8_t *)&params, sizeof(params));
+	if (usb_transfer(handle, g_auc_pkg, count, buf, CDC_I2C_HEADER_SZ)) {
 		printf("auc_write auc_transfer failed!\n");
 		return 1;
 	}
@@ -234,11 +240,18 @@ int32_t auc_read(AUC_HANDLE handle, uint8_t slaveAddr, uint8_t *rbuf, uint32_t r
 	struct cdc_i2c_header *pheader = (struct cdc_i2c_header*)buf;
 	int32_t count;
 
+	if (rlen > CDC_I2C_PAYLOAD_SZ) {
+		printf("auc_read rlen failed, rlen should <= %d bytes!\n", CDC_I2C_PAYLOAD_SZ);
+		return 0;
+	}
+
+	memset(&params, 0, sizeof(params));
 	params.txLength = 0;
 	params.rxLength = rlen;
 	params.reserved = 0;
 	params.slaveAddr = slaveAddr;
 
+	memset(buf, 0, CDC_I2C_PACKET_SZ);
 	count = auc_pkg_init(CDC_I2C_REQ_DEVICE_READ, (uint8_t *)&params, sizeof(params));
 	if (usb_transfer(handle, g_auc_pkg, count, buf, CDC_I2C_PACKET_SZ)) {
 		printf("auc_read usb_transfer failed!\n");
@@ -262,6 +275,12 @@ int32_t auc_xfer(AUC_HANDLE handle, uint8_t slaveAddr, uint8_t *wbuf, uint32_t w
 	struct cdc_i2c_header *pheader = (struct cdc_i2c_header *)buf;
 	int32_t count;
 
+	if (rlen > CDC_I2C_PAYLOAD_SZ) {
+		printf("auc_xfer rlen failed, rlen should <= %d bytes!\n", CDC_I2C_PAYLOAD_SZ);
+		return 0;
+	}
+
+	memset(&params, 0, sizeof(params));
 	params.txLength = wlen;
 	params.rxLength = rlen;
 	params.reserved = 0;
@@ -269,7 +288,8 @@ int32_t auc_xfer(AUC_HANDLE handle, uint8_t slaveAddr, uint8_t *wbuf, uint32_t w
 	if (wlen)
 		memcpy(params.data, wbuf, wlen);
 
-	count = auc_pkg_init(CDC_I2C_REQ_DEVICE_XFER, (uint8_t*)&params, sizeof(params) + wlen);
+	memset(buf, 0, CDC_I2C_PACKET_SZ);
+	count = auc_pkg_init(CDC_I2C_REQ_DEVICE_XFER, (uint8_t*)&params, sizeof(params));
 	if (usb_transfer(handle, g_auc_pkg, count, buf, CDC_I2C_PACKET_SZ)) {
 		printf("auc_xfer usb_transfer failed!\n");
 		return 0;
