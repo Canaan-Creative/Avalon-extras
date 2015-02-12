@@ -1,0 +1,51 @@
+##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
+##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
+m4_define([v_maj], [1])
+m4_define([v_min], [0])
+m4_define([v_mic], [0])
+##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
+m4_define([v_ver], [v_maj.v_min.v_mic])
+##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
+##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
+
+AC_INIT([mm-tools], [v_ver], [Fengling.Qin@gmail.com])
+
+AC_PREREQ(2.59)
+AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_SRCDIR([main.c])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
+
+dnl Check for programs
+AC_PROG_CC
+LT_INIT([disable-shared])
+
+AC_CONFIG_SUBDIRS([compat/libusb-1.0])
+LIBUSB_LIBS="compat/libusb-1.0/libusb/.libs/libusb-1.0.a"
+AC_ARG_ENABLE([udev],
+	      [AC_HELP_STRING([--disable-udev],[Disable building libusb with udev])],
+	      [udev=$enableval]
+	      )
+
+if test "x$udev" != xno; then
+    LIBUSB_LIBS+=" -ludev"
+fi
+
+AC_CONFIG_SUBDIRS([compat/jansson-2.6])
+JANSSON_LIBS="compat/jansson-2.6/src/.libs/libjansson.a"
+PKG_PROG_PKG_CONFIG()
+
+PTHREAD_LIBS=-lpthread
+PTHREAD_FLAGS="-lpthread"
+MATH_LIBS="-lm"
+
+AC_SUBST(PTHREAD_FLAGS)
+AC_SUBST(PTHREAD_LIBS)
+AC_SUBST(LIBUSB_LIBS)
+AC_SUBST(JANSSON_LIBS)
+AC_SUBST(MATH_LIBS)
+
+AC_CONFIG_FILES([
+	Makefile
+	compat/Makefile
+	])
+AC_OUTPUT
