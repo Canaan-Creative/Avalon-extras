@@ -44,8 +44,45 @@ AC_SUBST(LIBUSB_LIBS)
 AC_SUBST(JANSSON_LIBS)
 AC_SUBST(MATH_LIBS)
 
+iic_rpi="no"
+
+AC_ARG_ENABLE([iic_rpi],
+	      [AC_HELP_STRING([--enable-iic-rpi], [Compile support for mm upgrade by Raspberry Pi B(default disabled)])],
+	      [iic_rpi=$enableval]
+	      )
+AM_CONDITIONAL([USE_IIC_RPI], [test x$iic_rpi = xyes])
+AM_CONDITIONAL([USE_IIC_AUC], [test x$iic_rpi = xno])
+
 AC_CONFIG_FILES([
 	Makefile
 	compat/Makefile
 	])
 AC_OUTPUT
+
+echo
+echo
+echo
+echo "------------------------------------------------------------------------"
+echo "$PACKAGE $VERSION"
+echo "------------------------------------------------------------------------"
+echo
+echo
+echo "Configuration Options Summary:"
+echo
+
+if test "x$iic_rpi" = xyes; then
+    echo "  USE_IIC_RPI  :  Enable"
+else
+    echo "  USE_IIC_AUC  :  Enable"
+fi
+
+echo
+echo "Compilation............: make (or gmake)"
+echo "  CPPFLAGS.............: $CPPFLAGS"
+echo "  CFLAGS...............: $CFLAGS"
+echo "  LDFLAGS..............: $LDFLAGS $PTHREAD_FLAGS"
+echo "  LDADD................: $JANSSON_LIBS $PTHREAD_LIBS $MATH_LIBS $LIBUSB_LIBS"
+echo
+echo "Installation...........: make install (as root if needed, with 'su' or 'sudo')"
+echo "  prefix...............: $prefix"
+echo

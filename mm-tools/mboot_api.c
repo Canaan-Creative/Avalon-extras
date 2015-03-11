@@ -259,6 +259,7 @@ void mboot(void)
 	set_cs(IIC2SPI_DISABLE);
 	printf("(3) Reboot!\n");
 	set_reboot();
+	i2c_close();
 }
 
 void mm_detect(void)
