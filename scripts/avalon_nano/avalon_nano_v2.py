@@ -1,19 +1,45 @@
 #!/usr/bin/env python2.7
 
 # This simple script was for test Avalon nano.
-
-from serial import Serial
+import usb.core
+import usb.util
 from optparse import OptionParser
 import binascii
 import sys
 import time
 
 parser = OptionParser()
-parser.add_option("-s", "--serial", dest="serial_port", default="/dev/ttyACM0", help="Serial port, default: /dev/ttyACM0")
 parser.add_option("-S", "--static", dest="is_static", default="0", help="Static flag: 0-turn off, 1-turn on")
 (options, args) = parser.parse_args()
 
-ser = Serial(options.serial_port, 115200, 8, timeout=2)
+def enum_usbdev(vendor_id, product_id):
+    # Find device
+    usbdev = usb.core.find(idVendor = vendor_id, idProduct = product_id)
+
+    if not usbdev:
+        sys.exit("Avalon nano cann't be found!")
+    else:
+        print "Find an Avalon nano"
+
+    if usbdev.is_kernel_driver_active(0) is True:
+	usbdev.detach_kernel_driver(0)
+
+    try:
+	# usbdev[iConfiguration][(bInterfaceNumber,bAlternateSetting)]
+        for endp in usbdev[0][(0,0)]:
+            if endp.bEndpointAddress & 0x80:
+                endpin = endp.bEndpointAddress
+            else:
+                endpout = endp.bEndpointAddress
+
+    except usb.core.USBError as e:
+        sys.exit("Could not set configuration: %s" % str(e))
+
+    return usbdev, endpin, endpout
+
+nano_vid = 0x29f1
+nano_pid = 0x33f1
+usbdev, endpin, endpout = enum_usbdev(nano_vid, nano_pid)
 
 TYPE_DETECT = "0a"
 TYPE_REQUIRE = "12"
@@ -54,27 +80,54 @@ def mm_package(cmd_type, idx = "01", cnt = "01", module_id = None, pdata = '0'):
 
 def run_detect(cmd):
 	#version
-	ser.write(cmd.decode('hex'))
-	res_s = ser.read(39)
+	usbdev.write(endpout, cmd.decode("hex"))
+	try:
+		res_s = usbdev.read(endpin, 39)
+	except:
+		print "detect failed"
+
 	if not res_s:
 		print("ver:Something is wrong or modular id not correct")
 	else :
-		print("ver:" + res_s[5:20])
+		hw =  ''.join([chr(x) for x in res_s])[5:20]
+		print("ver:" + hw)
 
+# 178ab19c1e0dc9651d37418fbbf44b976dfd4571c09241c49564141267eff8d8000000000000000000000000000000000000000001d0c14a507051881a057e08
+# 010f0eb6
 def run_testwork():
     cmd = mm_package(TYPE_WORK, '01', '02', None, "d8f8ef6712146495c44192c07145fd6d974bf4bb8f41371d65c90d1e9cb18a17")
-    ser.write(cmd.decode('hex'))
+    usbdev.write(endpout, cmd.decode("hex"))
     cmd = mm_package(TYPE_WORK, '02', '02', None, "0000000000000000000000000000000000000000087e051a885170504ac1d001")
-    ser.write(cmd.decode('hex'))
-    nonce = ser.read(39)
-    print "Nonce is " + binascii.hexlify(nonce)[10:18]
+    usbdev.write(endpout, cmd.decode("hex"))
+
+    nonce = None
+    loop = 0
+    while (nonce == None):
+	try:
+            nonce = usbdev.read(endpin, 39)
+	except:
+	    pass
+
+        time.sleep(0.01)
+	loop = loop + 1
+	if loop == 3:
+		break
+
+    if nonce:
+        print "Nonce is " + binascii.hexlify(nonce)[10:18]
+    else:
+        print "Nonce is None"
 
 def run_require(cmd):
-	ser.write(cmd.decode('hex'))
-	res_s = ser.read(39)
-	if not res_s:
-		print("status:Something is wrong")
-	else :
+	usbdev.write(endpout, cmd.decode("hex"))
+	time.sleep(0.05)
+	res_s = None
+	try:
+		res_s = usbdev.read(endpin, 39)
+	except:
+		print "require failed"
+
+	if res_s:
 		# format: freq(120), temp(40), hot(0)
 		avalon_require = binascii.hexlify(res_s)
 		freq = int(avalon_require[10:18], 16)
@@ -88,20 +141,21 @@ def run_require(cmd):
 		result = result + "hot(" + str(hot) + ")"
 		print(result)
 
-
 def statics():
     start = time.time()
     for i in range(0, 1000):
         run_detect(mm_package(TYPE_DETECT, module_id = None))
     print "time elapsed: %s" %(time.time() - start)
 
-while (1):
-	print("Reading result ...")
-        if options.is_static == '1':
-            statics()
-            break
-        else:
-            run_detect(mm_package(TYPE_DETECT, module_id = None))
-	    run_require(mm_package(TYPE_REQUIRE, module_id = None))
-	    run_testwork()
-            raw_input('Press enter to continue:')
+
+if __name__ == '__main__':
+        while (1):
+            print("Reading result ...")
+            if options.is_static == '1':
+                statics()
+                break
+            else:
+                run_detect(mm_package(TYPE_DETECT, module_id = None))
+                run_require(mm_package(TYPE_REQUIRE, module_id = None))
+                run_testwork()
+                raw_input('Press enter to continue:')
