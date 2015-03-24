@@ -34,7 +34,7 @@ cat $WORKDIR/feeds.conf $BASEDIR/$EXTRA_FEEDS | sed "s/^ *//;s/ *$//;s/ \{1,\}/ 
         [ "$PROTOCOL" == "git-b" ] && BRANCH="`echo $line | awk '{print $4}'`"
         [ -z "$PROTOCOL" -o -z "$DIRECTORY" -o -z "$URL" ] && { echo "File format failed"; exit 1; }
         [ "$PROTOCOL" == "git-b" -a -z "$BRANCH" ] && { echo "File format failed"; exit 1; }
-         [ "$PROTOCOL" == "git" ] && BRANCH="`echo $URL | awk -F';' '{print $2}'`" &&  [ -n "$BRANCH" ] && { echo "Change $URL to git-b"; URL="`echo $URL | awk -F';' '{pri nt $1}'`"; PROTOCOL="git-b"; }
+        [ "$PROTOCOL" == "git" ] && BRANCH="`echo $URL | awk -F';' '{print $2}'`" &&  [ -n "$BRANCH" ] && { echo "Change $URL to git-b"; URL="`echo $URL | awk -F';' '{print $1}'`"; PROTOCOL="git-b"; }
 
         # Checkout repo and get infomation if possible
         case "$PROTOCOL" in
@@ -66,7 +66,7 @@ cat $WORKDIR/feeds.conf $BASEDIR/$EXTRA_FEEDS | sed "s/^ *//;s/ *$//;s/ \{1,\}/ 
                         cd $REPO
                         git clone $URL ./$DIRECTORY || { echo "Clone git failed: $URL"; exit 1; }
                         cd $REPO/$DIRECTORY
-                        git checkout -b "`basename $BRANCH`" $BRANCH
+                        git checkout -b "`basename $BRANCH`" origin/$BRANCH
                 fi
                 REVISION=`git log | head -n 1 | cut -d " " -f2`
                 [ -z "$REVISION" ] && { echo "Get git branch revision failed: $URL"; exit 1; }
