@@ -41,9 +41,9 @@ nano_vid = 0x29f1
 nano_pid = 0x33f1
 usbdev, endpin, endpout = enum_usbdev(nano_vid, nano_pid)
 
-TYPE_DETECT = "0a"
-TYPE_REQUIRE = "12"
-TYPE_WORK = "1c"
+TYPE_DETECT = "10"
+TYPE_REQUIRE = "15"
+TYPE_WORK = "13"
 
 def CRC16(message):
 	#CRC-16-CITT poly, the CRC sheme used by ymodem protocol
@@ -76,20 +76,20 @@ def mm_package(cmd_type, idx = "01", cnt = "01", module_id = None, pdata = '0'):
 	else:
 	    data = pdata.ljust(60, '0') + module_id.rjust(4, '0')
 	crc = CRC16(data.decode("hex"))
-	return "4156" + cmd_type + idx + cnt + data + hex(crc)[2:].rjust(4, '0')
+	return "4156" + cmd_type + "00" + idx + cnt + data + hex(crc)[2:].rjust(4, '0')
 
 def run_detect(cmd):
 	#version
 	usbdev.write(endpout, cmd.decode("hex"))
 	try:
-		res_s = usbdev.read(endpin, 39)
+		res_s = usbdev.read(endpin, 40)
 	except:
 		print "detect failed"
 
 	if not res_s:
 		print("ver:Something is wrong or modular id not correct")
 	else :
-		hw =  ''.join([chr(x) for x in res_s])[5:20]
+		hw =  ''.join([chr(x) for x in res_s])[6:21]
 		print("ver:" + hw)
 
 # 178ab19c1e0dc9651d37418fbbf44b976dfd4571c09241c49564141267eff8d8000000000000000000000000000000000000000001d0c14a507051881a057e08
@@ -104,7 +104,7 @@ def run_testwork():
     loop = 0
     while (nonce == None):
 	try:
-            nonce = usbdev.read(endpin, 39)
+            nonce = usbdev.read(endpin, 40)
 	except:
 	    pass
 
@@ -114,7 +114,7 @@ def run_testwork():
 		break
 
     if nonce:
-        print "Nonce is " + binascii.hexlify(nonce)[10:18]
+        print "Nonce is " + binascii.hexlify(nonce)[12:20]
     else:
         print "Nonce is None"
 
@@ -123,7 +123,7 @@ def run_require(cmd):
 	time.sleep(0.05)
 	res_s = None
 	try:
-		res_s = usbdev.read(endpin, 39)
+		res_s = usbdev.read(endpin, 40)
 	except:
 		print "require failed"
 
