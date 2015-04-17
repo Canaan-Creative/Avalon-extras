@@ -113,10 +113,15 @@ def run_testwork():
 	if loop == 3:
 		break
 
-    if nonce:
-        print "Nonce is " + binascii.hexlify(nonce)[12:20]
+    if nonce != None:
+	    if nonce[2] == 0x24:
+		    freq = (nonce[6] << 24) | (nonce[7] << 16) | (nonce[8] << 8) | (nonce[9])
+
+		    print "Status: Freq is", freq, "Mhz"
+	    else:
+		    print "Nonce is " + binascii.hexlify(nonce)[12:20]
     else:
-        print "Nonce is None"
+	print "Nonce is None"
 
 def run_require(cmd):
 	usbdev.write(endpout, cmd.decode("hex"))
