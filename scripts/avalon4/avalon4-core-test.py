@@ -36,7 +36,7 @@ import usb.util
 import sys
 import struct
 
-parser = OptionParser(version="%prog ver:20150112_1351")
+parser = OptionParser(version="%prog ver:20150708_1054")
 # TODO: Module id assignment
 parser.add_option("-m", "--module", dest="module_id", default="0", help="Module ID: 0 - 127, default:0")
 parser.add_option("-c", "--count", dest="test_count", default="1", help="Test count: 1,2,3... ")
