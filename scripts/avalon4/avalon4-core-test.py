@@ -1,9 +1,11 @@
 #!/usr/bin/env python2.7
 
-# This simple script was for test A3255 modular. there are 128 cores in one A3255 chip.
+# This simple script was for test A3255 modular.
+# there are 128 cores in one A3255 chip.
 # If all cores are working the number should be 0.
 # If some of them not working the number is the broken cores count.
-# Note: Avalon 3.5 use usb2iic instead of uart, the usb2iic bridge expose cdc api to app.
+# Note: Avalon 3.5 use usb2iic instead of uart,
+# the usb2iic bridge expose cdc api to app.
 # Depends : PyUSB 1.0 (Under Linux)
 # PyUSB 1.0 Installation: https://github.com/walac/pyusb
 #
@@ -53,94 +55,96 @@ asic_cnt = 4
 miner_cnt = 10
 
 g_freq_table = {
-        '100':'1e078547',
-        '170':'340d0547',
-        '200':'1e0784c7',
-        '220':'200804c7',
-        '230':'220884c7',
-        '300':'2e0b84c7',
-        '340':'340d04c7',
-        '350':'360d84c7',
-        '360':'54550447',
-        '370':'747d0447',
-        '380':'787e0447',
-        '390':'5c570447',
-        '395':'7c7f0447',
-        '400':'1e078447',
-        '410':'60580447',
-        '411':'401004c7',
-        '415':'62588447',
-        '420':'62588447',
-        '425':'20080447',
-        '430':'66598447',
-        '440':'685a0447',
-        '450':'22088447',
-        '460':'6c5b0447',
-        '470':'6e5b8447',
-        '480':'725c8447',
-        '490':'745d0447',
-        '500':'26098447',
-        '510':'785e0447',
-        '520':'7a5e8447',
-        '530':'280a0447',
-        '540':'54350447',
-        '550':'2a0a8447',
-        '560':'58360447',
-        '570':'2c0b0447',
-        '580':'2c0b0447',
-        '590':'5c370447',
-        '600':'2e0b8447',
-        '610':'60380447',
-        '620':'300c0447',
-        '630':'300c0447',
-        '640':'64390447',
-        '650':'320c8447',
-        '660':'683a0447',
-        '670':'340d0447',
-        '680':'340d0447',
-        '690':'6c3b0447',
-        '700':'360d8447',
-        '710':'703c0447',
-        '720':'380e0447',
-        '730':'380e0447',
-        '740':'743d0447',
-        '750':'3a0e8447',
-        '760':'783e0447',
-        '770':'3c0f0447',
-        '780':'3c0f0447',
-        '790':'7c3f0447',
-        '800':'3e0f8447',
-        '810':'3e0f8447',
-        '820':'40100447',
-        '830':'40100447',
-        '840':'42108447',
-        '850':'42108447',
-        '860':'42108447',
-        '870':'44110447',
-        '880':'44110447',
-        '890':'46118447',
-        '900':'46118447',
-        '910':'46118447',
-        '920':'48120447',
-        '930':'48120447',
-        '940':'4a128447',
-        '950':'4a128447',
-        '960':'4a128447',
-        '970':'4c130447',
-        '980':'4c130447',
-        '990':'4e138447',
-        '1000':'4e138447'
-};
+        '100': '1e078547',
+        '170': '340d0547',
+        '200': '1e0784c7',
+        '220': '200804c7',
+        '230': '220884c7',
+        '300': '2e0b84c7',
+        '340': '340d04c7',
+        '350': '360d84c7',
+        '360': '54550447',
+        '370': '747d0447',
+        '380': '787e0447',
+        '390': '5c570447',
+        '395': '7c7f0447',
+        '400': '1e078447',
+        '410': '60580447',
+        '411': '401004c7',
+        '415': '62588447',
+        '420': '62588447',
+        '425': '20080447',
+        '430': '66598447',
+        '440': '685a0447',
+        '450': '22088447',
+        '460': '6c5b0447',
+        '470': '6e5b8447',
+        '480': '725c8447',
+        '490': '745d0447',
+        '500': '26098447',
+        '510': '785e0447',
+        '520': '7a5e8447',
+        '530': '280a0447',
+        '540': '54350447',
+        '550': '2a0a8447',
+        '560': '58360447',
+        '570': '2c0b0447',
+        '580': '2c0b0447',
+        '590': '5c370447',
+        '600': '2e0b8447',
+        '610': '60380447',
+        '620': '300c0447',
+        '630': '300c0447',
+        '640': '64390447',
+        '650': '320c8447',
+        '660': '683a0447',
+        '670': '340d0447',
+        '680': '340d0447',
+        '690': '6c3b0447',
+        '700': '360d8447',
+        '710': '703c0447',
+        '720': '380e0447',
+        '730': '380e0447',
+        '740': '743d0447',
+        '750': '3a0e8447',
+        '760': '783e0447',
+        '770': '3c0f0447',
+        '780': '3c0f0447',
+        '790': '7c3f0447',
+        '800': '3e0f8447',
+        '810': '3e0f8447',
+        '820': '40100447',
+        '830': '40100447',
+        '840': '42108447',
+        '850': '42108447',
+        '860': '42108447',
+        '870': '44110447',
+        '880': '44110447',
+        '890': '46118447',
+        '900': '46118447',
+        '910': '46118447',
+        '920': '48120447',
+        '930': '48120447',
+        '940': '4a128447',
+        '950': '4a128447',
+        '960': '4a128447',
+        '970': '4c130447',
+        '980': '4c130447',
+        '990': '4e138447',
+        '1000': '4e138447'
+}
+
 
 def statics(usbdev, endpin, endpout):
     start = time.time()
     for i in range(0, int(options.test_count)):
-        run_detect(usbdev, endpin, endpout, mm_package(TYPE_DETECT, module_id = options.module_id))
-    print "time elapsed: %s" %(time.time() - start)
+        run_detect(usbdev, endpin, endpout, mm_package(TYPE_DETECT, module_id=options.module_id))
+    print "time elapsed: %s" % (time.time() - start)
+
 
 def enum_usbdev(vendor_id, product_id):
     # Find device
-    usbdev = usb.core.find(idVendor = vendor_id, idProduct = product_id)
+    usbdev = usb.core.find(idVendor=vendor_id, idProduct=product_id)
 
     if not usbdev:
         sys.exit("No Avalon USB Converter can be found!")
@@ -148,8 +152,8 @@ def enum_usbdev(vendor_id, product_id):
         print "Find an Avalon USB Converter"
 
     try:
-	# usbdev[iConfiguration][(bInterfaceNumber,bAlternateSetting)]
-        for endp in usbdev[0][(1,0)]:
+        # usbdev[iConfiguration][(bInterfaceNumber,bAlternateSetting)]
+        for endp in usbdev[0][(1, 0)]:
             if endp.bEndpointAddress & 0x80:
                 endpin = endp.bEndpointAddress
             else:
@@ -160,6 +164,7 @@ def enum_usbdev(vendor_id, product_id):
 
     return usbdev, endpin, endpout
 
+
 # addr : iic slaveaddr
 # req : see bridge format
 # data: 40 bytes payload
@@ -169,74 +174,45 @@ def auc_req(usbdev, endpin, endpout, addr, req, data):
     if req == 'a1':
         data = data.ljust(120, '0')
         datalen = 12
-        txdat = hex(datalen)[2:].rjust(2, '0') + \
-                "0000" +    \
-                req +   \
-                data
+        txdat = hex(datalen)[2:].rjust(2, '0') + "0000" + req + data
         usbdev.write(endpout, txdat.decode("hex"))
 
-#FIXME: a3 not work
+    # FIXME: a3 not work
     if req == 'a3':
         datalen = 8 + (len(data) / 2)
         data = data.ljust(112, '0')
-        txdat = hex(datalen)[2:].rjust(2, '0') +    \
-                "0000" +    \
-                "a5" + \
-                "280000" +  \
-                addr.rjust(2, '0') +    \
-                data
+        txdat = hex(datalen)[2:].rjust(2, '0') + "0000" + "a5" + "280000" + addr.rjust(2, '0') + data
         usbdev.write(endpout, txdat.decode("hex"))
         usbdev.read(endpin, 64)
 
-#FIXME: a4 not work
+    # FIXME: a4 not work
     if req == 'a4':
         datalen = 8
-        txdat = hex(datalen)[2:].rjust(2, '0') +    \
-                "0000" +    \
-                "a5" + \
-                "002800" +  \
-                addr.rjust(2, '0') +    \
-                "0".ljust(112, '0')
+        txdat = hex(datalen)[2:].rjust(2, '0') + "0000" + "a5" + "002800" + addr.rjust(2, '0') + "0".ljust(112, '0')
         usbdev.write(endpout, txdat.decode("hex"))
 
     if req == 'a5':
         if options.fast_xfer == '1':
             datalen = 8 + (len(data) / 2)
             data = data.ljust(112, '0')
-            txdat = hex(datalen)[2:].rjust(2, '0') +    \
-                    "0000" +    \
-                    "a5" + \
-                    "282800" +  \
-                    addr.rjust(2, '0') +    \
-                    data
+            txdat = hex(datalen)[2:].rjust(2, '0') + "0000" + "a5" + "282800" + addr.rjust(2, '0') + data
             usbdev.write(endpout, txdat.decode("hex"))
         else:
             datalen = 8 + (len(data) / 2)
             data = data.ljust(112, '0')
-            txdat = hex(datalen)[2:].rjust(2, '0') +    \
-                    "0000" +    \
-                    "a5" + \
-                    "280000" +  \
-                    addr.rjust(2, '0') +    \
-                    data
+            txdat = hex(datalen)[2:].rjust(2, '0') + "0000" + "a5" + "280000" + addr.rjust(2, '0') + data
             usbdev.write(endpout, txdat.decode("hex"))
             usbdev.read(endpin, 64)
 
             datalen = 8
-            txdat = hex(datalen)[2:].rjust(2, '0') +    \
-                    "0000" +    \
-                    "a5" + \
-                    "002800" +  \
-                    addr.rjust(2, '0') +    \
-                    "0".ljust(112, '0')
+            txdat = hex(datalen)[2:].rjust(2, '0') + "0000" + "a5" + "002800" + addr.rjust(2, '0') + "0".ljust(112, '0')
             usbdev.write(endpout, txdat.decode("hex"))
 
     if req == 'a6':
         datalen = 4
-        txdat = hex(datalen)[2:].rjust(2, '0') + \
-                "0000" +    \
-                req
+        txdat = hex(datalen)[2:].rjust(2, '0') + "0000" + req
         usbdev.write(endpout, txdat.decode("hex"))
+
 
 def auc_read(usbdev, endpin):
     ret = usbdev.read(endpin, 64)
@@ -244,6 +220,7 @@ def auc_read(usbdev, endpin):
         return ret[4:ret[0]]
     else:
         return None
+
 
 def auc_xfer(usbdev, endpin, endpout, addr, req, data):
     auc_req(usbdev, endpin, endpout, addr, req, data)
@@ -255,44 +232,48 @@ TYPE_DETECT = "10"
 TYPE_REQUIRE = "31"
 DATA_OFFSET = 6
 
-def CRC16(message):
-	#CRC-16-CITT poly, the CRC sheme used by ymodem protocol
-	poly = 0x1021
-	 #16bit operation register, initialized to zeros
-	reg = 0x0000
-	#pad the end of the message with the size of the poly
-	message += '\x00\x00'
-	#for each bit in the message
-	for byte in message:
-		mask = 0x80
-		while(mask > 0):
-			#left shift by one
-			reg<<=1
-			#input the next bit from the message into the right hand side of the op reg
-			if ord(byte) & mask:
-				reg += 1
-			mask>>=1
-			#if a one popped out the left of the reg, xor reg w/poly
-			if reg > 0xffff:
-				#eliminate any one that popped out the left
-				reg &= 0xffff
-				#xor with the poly, this is the remainder
-				reg ^= poly
-	return reg
 
-def mm_package(cmd_type, idx = "01", cnt = "01", module_id = None, pdata = '0'):
-	if module_id == None:
-	    data = pdata.ljust(64, '0')
-	else:
-	    data = pdata.ljust(60, '0') + module_id.rjust(4, '0')
-	crc = CRC16(data.decode("hex"))
-	return "434e" + cmd_type + "00" + idx + cnt + data + hex(crc)[2:].rjust(4, '0')
+def CRC16(message):
+    # CRC-16-CITT poly, the CRC sheme used by ymodem protocol
+    poly = 0x1021
+    # 16bit operation register, initialized to zeros
+    reg = 0x0000
+    # pad the end of the message with the size of the poly
+    message += '\x00\x00'
+    # for each bit in the message
+    for byte in message:
+        mask = 0x80
+        while(mask > 0):
+            # left shift by one
+            reg <<= 1
+            # input the next bit from the message into the right hand side
+            # of the op reg
+            if ord(byte) & mask:
+                reg += 1
+            mask >>= 1
+            # if a one popped out the left of the reg, xor reg w/poly
+            if reg > 0xffff:
+                # eliminate any one that popped out the left
+                reg &= 0xffff
+                # xor with the poly, this is the remainder
+                reg ^= poly
+    return reg
+
+
+def mm_package(cmd_type, idx="01", cnt="01", module_id=None, pdata='0'):
+    if module_id is None:
+        data = pdata.ljust(64, '0')
+    else:
+        data = pdata.ljust(60, '0') + module_id.rjust(4, '0')
+        crc = CRC16(data.decode("hex"))
+        return "434e" + cmd_type + "00" + idx + cnt + data + hex(crc)[2:].rjust(4, '0')
+
 
 def run_test(usbdev, endpin, endpout, cmd):
         auc_req(usbdev, endpin, endpout, "00", "a3", cmd)
         global asic_cnt, miner_cnt
-	for count in range(0, miner_cnt + 1):
-                asics = asic_cnt;
+        for count in range(0, miner_cnt + 1):
+                asics = asic_cnt
                 if (count == 0):
                         print("= PG1 =")
 
@@ -303,9 +284,12 @@ def run_test(usbdev, endpin, endpout, cmd):
                         print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
                         while asics:
                                 while True:
-                                        auc_req(usbdev, endpin, endpout, "00", "a4", cmd)
+                                        auc_req(usbdev, endpin, endpout,
+                                                "00",
+                                                "a4",
+                                                cmd)
                                         res_s = auc_read(usbdev, endpin)
-                                        if res_s != None:
+                                        if res_s is not None:
                                                 break
 
                                 if not res_s:
@@ -321,7 +305,7 @@ def run_test(usbdev, endpin, endpout, cmd):
                                                 if (i == 0):
                                                         number = '{:03}'.format(int(result[DATA_OFFSET*2:(DATA_OFFSET+1)*2], 16) % 5 + 1)
                                                         sys.stdout.write(number + ":\t")
-                                                else :
+                                                else:
                                                         number = '{:04}'.format(int(result[(DATA_OFFSET+1+(i-1)*4)*2:(DATA_OFFSET+5+(i-1)*4)*2], 16))
                                                         if (number != "0000"):
                                                                 core = int(number, 10)
@@ -334,14 +318,14 @@ def run_test(usbdev, endpin, endpout, cmd):
                                                 sys.stdout.flush()
                                         print("")
                                 if (asics >= 4):
-                                        asics -= 4;
+                                        asics -= 4
                                 else:
-                                        asics = 0;
+                                        asics = 0
                 else:
                         while True:
                                 auc_req(usbdev, endpin, endpout, "00", "a4", cmd)
                                 res_s = auc_read(usbdev, endpin)
-                                if res_s != None:
+                                if res_s is not None:
                                         break
 
                         # format: pass(20), all(40), percent(50%)
@@ -354,68 +338,77 @@ def run_test(usbdev, endpin, endpout, cmd):
                         print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                         print("Result:" + result)
 
+
 def run_detect(usbdev, endpin, endpout, cmd):
-	#version
-        res_s = auc_xfer(usbdev, endpin, endpout, "00", "a5", cmd)
-	if not res_s:
-		print("ver:Something is wrong or modular id not correct")
-		return None
-	else :
-		hw =  ''.join([chr(x) for x in res_s])[DATA_OFFSET+8:DATA_OFFSET+23]
-		print("ver:" + hw)
-                return hw[0:2]
+    # version
+    res_s = auc_xfer(usbdev, endpin, endpout, "00", "a5", cmd)
+    if not res_s:
+        print("ver:Something is wrong or modular id not correct")
+        return None
+    else:
+        hw = ''.join([chr(x) for x in res_s])[DATA_OFFSET+8:DATA_OFFSET+23]
+        print("ver:" + hw)
+        return hw[0:2]
+
 
 def run_require(usbdev, endpin, endpout, cmd):
-        res_s = auc_xfer(usbdev, endpin, endpout, "00", "a5", cmd)
-	if not res_s:
-		print("status:Something is wrong or modular id not correct")
-	else :
-		# format: temp(40), fan(20), freq(300), vol(400), localwork(1), g_hw_work(300), pg(0)
-		avalon_require = binascii.hexlify(res_s)
+    res_s = auc_xfer(usbdev, endpin, endpout, "00", "a5", cmd)
+    if not res_s:
+        print("status:Something is wrong or modular id not correct")
+    else:
+        # format: temp(40), fan(20), freq(300), vol(400), localwork(1),
+        # g_hw_work(300), pg(0)
+        avalon_require = binascii.hexlify(res_s)
 
-		temp = struct.unpack_from(">h", res_s, DATA_OFFSET+2)[0]
-		fan = int(avalon_require[(DATA_OFFSET+6)*2:(DATA_OFFSET+8)*2], 16)
-		freq = int(avalon_require[(DATA_OFFSET+8)*2:(DATA_OFFSET+12)*2], 16)
-		vol = avalon_require[(DATA_OFFSET+12)*2:(DATA_OFFSET+16)*2]
-		localwork = int(avalon_require[(DATA_OFFSET+16)*2:(DATA_OFFSET+20)*2], 16)
-		g_hw_work = int(avalon_require[(DATA_OFFSET+20)*2:(DATA_OFFSET+24)*2], 16)
-		pg = avalon_require[(DATA_OFFSET+24)*2:(DATA_OFFSET+28)*2]
-		result = "status:temp(" + str(temp) + "), "
-		result = result + "fan(" + str(fan) + "), "
-		result = result + "freq(" + str(freq) + "), "
-		result = result + "vol(" + vol + "), "
-		result = result + "localwork(" + str(localwork) + "), "
-		result = result + "g_hw_work(" + str(g_hw_work) + "), "
-		result = result + "pg(" + pg + ")"
-		print(result)
+        temp = struct.unpack_from(">h", res_s, DATA_OFFSET+2)[0]
+        fan = int(avalon_require[(DATA_OFFSET+6)*2:(DATA_OFFSET+8)*2], 16)
+        freq = int(avalon_require[(DATA_OFFSET+8)*2:(DATA_OFFSET+12)*2], 16)
+        vol = avalon_require[(DATA_OFFSET+12)*2:(DATA_OFFSET+16)*2]
+        localwork = int(avalon_require[(DATA_OFFSET+16)*2:(DATA_OFFSET+20)*2], 16)
+        g_hw_work = int(avalon_require[(DATA_OFFSET+20)*2:(DATA_OFFSET+24)*2], 16)
+        pg = avalon_require[(DATA_OFFSET+24)*2:(DATA_OFFSET+28)*2]
+        result = "status:temp(" + str(temp) + "), "
+        result = result + "fan(" + str(fan) + "), "
+        result = result + "freq(" + str(freq) + "), "
+        result = result + "vol(" + vol + "), "
+        result = result + "localwork(" + str(localwork) + "), "
+        result = result + "g_hw_work(" + str(g_hw_work) + "), "
+        result = result + "pg(" + pg + ")"
+        print(result)
+
 
 def run_getinfo(usbdev, endpin, endpout):
-        res_s = auc_xfer(usbdev, endpin, endpout, "00", "a6", "")
-	if not res_s:
-		print("getinfo:Something is wrong or modular id not correct")
-	else :
-		print("getinfo:" + binascii.hexlify(res_s))
+    res_s = auc_xfer(usbdev, endpin, endpout, "00", "a6", "")
+    if not res_s:
+        print("getinfo:Something is wrong or modular id not correct")
+    else:
+        print("getinfo:" + binascii.hexlify(res_s))
+
 
 def rev8(x):
     result = 0
     for i in xrange(8):
-        if (x >> i) & 1: result |= 1 << (7 - i)
+        if (x >> i) & 1:
+            result |= 1 << (7 - i)
     return result
+
 
 def encode_voltage_adp3208d(v):
     return rev8((0x78 - v / 125) << 1 | 1) << 8
 
+
 def encode_voltage_ncp5392p(v):
     if (v == 0):
-        return 0xff00;
+        return 0xff00
 
-    return rev8(((0x59 - (v - 5000) / 125) & 0xff) << 1 | 1) << 8;
+    return rev8(((0x59 - (v - 5000) / 125) & 0xff) << 1 | 1) << 8
+
 
 def run_modular_test(usbdev, endpin, endpout):
     global asic_cnt, miner_cnt
     while True:
         print("Reading result ...")
-        hw = run_detect(usbdev, endpin, endpout, mm_package(TYPE_DETECT, module_id = options.module_id))
+        hw = run_detect(usbdev, endpin, endpout, mm_package(TYPE_DETECT, module_id=options.module_id))
         if hw == "50":
             asic_cnt = 16
             miner_cnt = 2
@@ -456,9 +449,10 @@ def run_modular_test(usbdev, endpin, endpout):
             txdata += g_freq_table[freqdata[0]]
             txdata += g_freq_table[freqdata[1]]
             txdata += g_freq_table[freqdata[2]]
-        run_test(usbdev, endpin, endpout, mm_package(TYPE_TEST, module_id = options.module_id, pdata = txdata))
-        run_require(usbdev, endpin, endpout, mm_package(TYPE_REQUIRE, module_id = options.module_id))
+        run_test(usbdev, endpin, endpout, mm_package(TYPE_TEST, module_id=options.module_id, pdata=txdata))
+        run_require(usbdev, endpin, endpout, mm_package(TYPE_REQUIRE, module_id=options.module_id))
         raw_input('Press enter to continue:')
+
 
 if __name__ == '__main__':
     auc_vid = 0x29f1
@@ -467,17 +461,16 @@ if __name__ == '__main__':
 
     ret = auc_xfer(usbdev, endpin, endpout, "00", "a1", "801A0600")
     if ret:
-        print "AUC ver: " +  ''.join([chr(x) for x in ret])
+        print "AUC ver: " + ''.join([chr(x) for x in ret])
     else:
         print "AUC ver null"
 
     if (options.status == '1'):
         while(1):
-            run_require(usbdev, endpin, endpout, mm_package(TYPE_REQUIRE, module_id = options.module_id))
+            run_require(usbdev, endpin, endpout, mm_package(TYPE_REQUIRE, module_id=options.module_id))
         sys.exit()
 
     if (options.statics == '1'):
         statics(usbdev, endpin, endpout)
     else:
         run_modular_test(usbdev, endpin, endpout)
-
