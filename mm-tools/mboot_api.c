@@ -222,7 +222,10 @@ void mboot(void)
 	mboot_mcs_file();
 	all_byte = gmcs1_len;
 
-	i2c_open(I2C_DEV);
+	if (i2c_open(I2C_DEV)) {
+		printf("i2c_open failed!\n");
+		return;
+	}
 
 	mboot_mcs_fp_new = fopen("./mm_new.mcs", "rt");
 
