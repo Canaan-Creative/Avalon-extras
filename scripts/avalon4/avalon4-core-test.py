@@ -51,6 +51,7 @@ parser.print_version()
 
 asic_cnt = 4
 miner_cnt = 10
+
 g_freq_table = {
         '100':'1e078547',
         '170':'340d0547',
@@ -289,47 +290,69 @@ def mm_package(cmd_type, idx = "01", cnt = "01", module_id = None, pdata = '0'):
 
 def run_test(usbdev, endpin, endpout, cmd):
         auc_req(usbdev, endpin, endpout, "00", "a3", cmd)
+        global asic_cnt, miner_cnt
 	for count in range(0, miner_cnt + 1):
-	    while True:
-		auc_req(usbdev, endpin, endpout, "00", "a4", cmd)
-		res_s = auc_read(usbdev, endpin)
-		if res_s != None:
-		    break
-
-	    if not res_s:
-		print(str(count) + ": Something is wrong or modular id not correct")
-	    else:
-		if count != (miner_cnt):
-                    if (count == 0):
-                        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                asics = asic_cnt;
+                if (count == 0):
                         print("= PG1 =")
 
-                    if (count == 5):
+                if (count == (miner_cnt / 2)):
                         print("= PG2 =")
 
-		    result = binascii.hexlify(res_s)
-		    for i in range(0, asic_cnt+1):
-			    if (i == 0):
-				    number = '{:03}'.format(int(result[DATA_OFFSET*2:(DATA_OFFSET+1)*2], 16) % 5 + 1)
-				    sys.stdout.write(number + ":\t")
-			    else :
-				    number = '{:04}'.format(int(result[(DATA_OFFSET+1+(i-1)*4)*2:(DATA_OFFSET+5+(i-1)*4)*2], 16))
-				    if (number != "0000"):
-					sys.stdout.write("\x1b[1;31m" + number + "\x1b[0m" + "\t")
-				    else:
-					sys.stdout.write(number + "\t")
-			    sys.stdout.flush()
-		    print("")
-		else:
-		    # format: pass(20), all(40), percent(50%)
-		    avalon_test = binascii.hexlify(res_s)
-		    passcore = int(avalon_test[DATA_OFFSET*2:(DATA_OFFSET+4)*2], 16)
-		    allcore = int(avalon_test[(DATA_OFFSET+4)*2:(DATA_OFFSET+8)*2], 16)
-		    result = "bad(" + str(allcore - passcore) + "), "
-		    result = result + "all(" + str(allcore) + "), "
-		    result = result + "bad percent(" + str(round((allcore - passcore) * 100.0/allcore, 2)) + "%)"
-                    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-		    print("Result:" + result)
+                if count != (miner_cnt):
+                        print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+                        while asics:
+                                while True:
+                                        auc_req(usbdev, endpin, endpout, "00", "a4", cmd)
+                                        res_s = auc_read(usbdev, endpin)
+                                        if res_s != None:
+                                                break
+
+                                if not res_s:
+                                        print(str(count) + ": Something is wrong or modular id not correct")
+                                else:
+                                        result = binascii.hexlify(res_s)
+                                        if (asics % 4):
+                                                column = asics
+                                        else:
+                                                column = 4
+
+                                        for i in range(0, column + 1):
+                                                if (i == 0):
+                                                        number = '{:03}'.format(int(result[DATA_OFFSET*2:(DATA_OFFSET+1)*2], 16) % 5 + 1)
+                                                        sys.stdout.write(number + ":\t")
+                                                else :
+                                                        number = '{:04}'.format(int(result[(DATA_OFFSET+1+(i-1)*4)*2:(DATA_OFFSET+5+(i-1)*4)*2], 16))
+                                                        if (number != "0000"):
+                                                                core = int(number, 10)
+                                                                if (core <= 5):
+                                                                    sys.stdout.write("\x1b[1;33m" + number + "\x1b[0m" + "\t")
+                                                                else:
+                                                                    sys.stdout.write("\x1b[1;31m" + number + "\x1b[0m" + "\t")
+                                                        else:
+                                                                sys.stdout.write(number + "\t")
+                                                sys.stdout.flush()
+                                        print("")
+                                if (asics >= 4):
+                                        asics -= 4;
+                                else:
+                                        asics = 0;
+                else:
+                        while True:
+                                auc_req(usbdev, endpin, endpout, "00", "a4", cmd)
+                                res_s = auc_read(usbdev, endpin)
+                                if res_s != None:
+                                        break
+
+                        # format: pass(20), all(40), percent(50%)
+                        avalon_test = binascii.hexlify(res_s)
+                        passcore = int(avalon_test[DATA_OFFSET*2:(DATA_OFFSET+4)*2], 16)
+                        allcore = int(avalon_test[(DATA_OFFSET+4)*2:(DATA_OFFSET+8)*2], 16)
+                        result = "bad(" + str(allcore - passcore) + "), "
+                        result = result + "all(" + str(allcore) + "), "
+                        result = result + "bad percent(" + str(round((allcore - passcore) * 100.0/allcore, 2)) + "%)"
+                        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                        print("Result:" + result)
 
 def run_detect(usbdev, endpin, endpout, cmd):
 	#version
@@ -340,7 +363,7 @@ def run_detect(usbdev, endpin, endpout, cmd):
 	else :
 		hw =  ''.join([chr(x) for x in res_s])[DATA_OFFSET+8:DATA_OFFSET+23]
 		print("ver:" + hw)
-		return hw[1]
+                return hw[0:2]
 
 def run_require(usbdev, endpin, endpout, cmd):
         res_s = auc_xfer(usbdev, endpin, endpout, "00", "a5", cmd)
@@ -389,15 +412,20 @@ def encode_voltage_ncp5392p(v):
     return rev8(((0x59 - (v - 5000) / 125) & 0xff) << 1 | 1) << 8;
 
 def run_modular_test(usbdev, endpin, endpout):
+    global asic_cnt, miner_cnt
     while True:
         print("Reading result ...")
         hw = run_detect(usbdev, endpin, endpout, mm_package(TYPE_DETECT, module_id = options.module_id))
+        if hw == "50":
+            asic_cnt = 16
+            miner_cnt = 2
+
         tmp = hex(int(options.test_cores, 10))[2:]
         txdata = tmp.rjust(8, '0')
 
-        if (hw == '1'):
+        if (hw == '41'):
             tmp = hex(encode_voltage_ncp5392p(int(options.voltage, 10)))[2:]
-        else:
+        if (hw == '40'):
             tmp = hex(encode_voltage_adp3208d(int(options.voltage, 10)))[2:]
 
         tmp = tmp.rjust(8, '0')
@@ -424,7 +452,7 @@ def run_modular_test(usbdev, endpin, endpout):
         tmp = hex(int(freqdata[0], 10) | (int(freqdata[1], 10) << 10) | (int(freqdata[2], 10) << 20))[2:]
         tmp = tmp.rjust(8, '0')
         txdata += tmp
-        if (hw == '1'):
+        if (hw == '41'):
             txdata += g_freq_table[freqdata[0]]
             txdata += g_freq_table[freqdata[1]]
             txdata += g_freq_table[freqdata[2]]
