@@ -43,6 +43,7 @@ parser = OptionParser(version="%prog ver:20150805_1323")
 parser.add_option("-m", "--module", dest="module_id", default="0", help="Module ID: 0 - 127, default:0")
 parser.add_option("-c", "--count", dest="test_count", default="1", help="Test count: 1,2,3... ")
 parser.add_option("-f", "--fastxfer", dest="fast_xfer", default="0", help="Fast Xfer switch 0-OFF/1-ON, default:0")
+# For fast core testing, 16 is the maximum for Avalon4 mini
 parser.add_option("-C", "--core", dest="test_cores", default="64", help="Test cores: 1-3968")
 parser.add_option("-V", "--voltage", dest="voltage", default="7875", help="Asic voltage, default:7875")
 parser.add_option("-F", "--freq", dest="freq", default="200,200,200", help="Asic freq, default:200,200,200")
