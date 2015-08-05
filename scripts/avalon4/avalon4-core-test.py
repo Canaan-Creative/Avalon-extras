@@ -38,7 +38,7 @@ import usb.util
 import sys
 import struct
 
-parser = OptionParser(version="%prog ver:20150708_1054")
+parser = OptionParser(version="%prog ver:20150805_1323")
 # TODO: Module id assignment
 parser.add_option("-m", "--module", dest="module_id", default="0", help="Module ID: 0 - 127, default:0")
 parser.add_option("-c", "--count", dest="test_count", default="1", help="Test count: 1,2,3... ")
@@ -53,6 +53,8 @@ parser.print_version()
 
 asic_cnt = 4
 miner_cnt = 10
+auc_vid = 0x29f1
+auc_pid = 0x33f2
 
 g_freq_table = {
         '100': '1e078547',
@@ -147,9 +149,11 @@ def enum_usbdev(vendor_id, product_id):
     usbdev = usb.core.find(idVendor=vendor_id, idProduct=product_id)
 
     if not usbdev:
-        sys.exit("No Avalon USB Converter can be found!")
-    else:
-        print "Find an Avalon USB Converter"
+        return None, None, None
+
+    if (product_id == 0x40f1):
+        if usbdev.is_kernel_driver_active(1) is True:
+            usbdev.detach_kernel_driver(1)
 
     try:
         # usbdev[iConfiguration][(bInterfaceNumber,bAlternateSetting)]
@@ -270,25 +274,31 @@ def mm_package(cmd_type, idx="01", cnt="01", module_id=None, pdata='0'):
 
 
 def run_test(usbdev, endpin, endpout, cmd):
-        auc_req(usbdev, endpin, endpout, "00", "a3", cmd)
         global asic_cnt, miner_cnt
+        global auc_pid
+
+        if auc_pid == 0x40f1:
+            usbdev.write(endpout, cmd.decode("hex"))
+        else:
+            auc_req(usbdev, endpin, endpout, "00", "a3", cmd)
+
         for count in range(0, miner_cnt + 1):
                 asics = asic_cnt
-                if (count == 0):
-                        print("= PG1 =")
-
-                if (count == (miner_cnt / 2)):
-                        print("= PG2 =")
+                if ((count == 0) and (count != miner_cnt + 1)):
+                        print "= PG", count + 1, "="
 
                 if count != (miner_cnt):
                         print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
                         while asics:
                                 while True:
-                                        auc_req(usbdev, endpin, endpout,
-                                                "00",
-                                                "a4",
-                                                cmd)
-                                        res_s = auc_read(usbdev, endpin)
+                                        if auc_pid == 0x40f1:
+                                            res_s = usbdev.read(endpin, 40)
+                                        else:
+                                            auc_req(usbdev, endpin, endpout,
+                                                    "00",
+                                                    "a4",
+                                                    cmd)
+                                            res_s = auc_read(usbdev, endpin)
                                         if res_s is not None:
                                                 break
 
@@ -296,7 +306,7 @@ def run_test(usbdev, endpin, endpout, cmd):
                                         print(str(count) + ": Something is wrong or modular id not correct")
                                 else:
                                         result = binascii.hexlify(res_s)
-                                        if (asics % 4):
+                                        if (asics < 4):
                                                 column = asics
                                         else:
                                                 column = 4
@@ -323,8 +333,11 @@ def run_test(usbdev, endpin, endpout, cmd):
                                         asics = 0
                 else:
                         while True:
-                                auc_req(usbdev, endpin, endpout, "00", "a4", cmd)
-                                res_s = auc_read(usbdev, endpin)
+                                if auc_pid == 0x40f1:
+                                    res_s = usbdev.read(endpin, 40)
+                                else:
+                                    auc_req(usbdev, endpin, endpout, "00", "a4", cmd)
+                                    res_s = auc_read(usbdev, endpin)
                                 if res_s is not None:
                                         break
 
@@ -341,7 +354,12 @@ def run_test(usbdev, endpin, endpout, cmd):
 
 def run_detect(usbdev, endpin, endpout, cmd):
     # version
-    res_s = auc_xfer(usbdev, endpin, endpout, "00", "a5", cmd)
+    global auc_pid
+    if auc_pid == 0x40f1:
+        usbdev.write(endpout, cmd.decode("hex"))
+        res_s = usbdev.read(endpin, 40)
+    else:
+        res_s = auc_xfer(usbdev, endpin, endpout, "00", "a5", cmd)
     if not res_s:
         print("ver:Something is wrong or modular id not correct")
         return None
@@ -392,10 +410,8 @@ def rev8(x):
             result |= 1 << (7 - i)
     return result
 
-
 def encode_voltage_adp3208d(v):
     return rev8((0x78 - v / 125) << 1 | 1) << 8
-
 
 def encode_voltage_ncp5392p(v):
     if (v == 0):
@@ -403,19 +419,30 @@ def encode_voltage_ncp5392p(v):
 
     return rev8(((0x59 - (v - 5000) / 125) & 0xff) << 1 | 1) << 8
 
+def encode_voltage_ncp5392p_mini(v):
+    if (v == 0):
+        return 0xff
+
+    return (((0x59 - (v - 5000) / 125) & 0xff) << 1 | 1)
 
 def run_modular_test(usbdev, endpin, endpout):
     global asic_cnt, miner_cnt
     while True:
         print("Reading result ...")
         hw = run_detect(usbdev, endpin, endpout, mm_package(TYPE_DETECT, module_id=options.module_id))
-        if hw == "50":
+        if hw == '50':
             asic_cnt = 16
             miner_cnt = 2
+
+        if hw == '4M':
+            asic_cnt = 5
+            miner_cnt = 1
 
         tmp = hex(int(options.test_cores, 10))[2:]
         txdata = tmp.rjust(8, '0')
 
+        if (hw == '4M'):
+            tmp = hex(encode_voltage_ncp5392p_mini(int(options.voltage, 10)))[2:]
         if (hw == '41'):
             tmp = hex(encode_voltage_ncp5392p(int(options.voltage, 10)))[2:]
         if (hw == '40'):
@@ -445,25 +472,37 @@ def run_modular_test(usbdev, endpin, endpout):
         tmp = hex(int(freqdata[0], 10) | (int(freqdata[1], 10) << 10) | (int(freqdata[2], 10) << 20))[2:]
         tmp = tmp.rjust(8, '0')
         txdata += tmp
-        if (hw == '41'):
+        if (hw == '41') or (hw == '4M'):
             txdata += g_freq_table[freqdata[0]]
             txdata += g_freq_table[freqdata[1]]
             txdata += g_freq_table[freqdata[2]]
         run_test(usbdev, endpin, endpout, mm_package(TYPE_TEST, module_id=options.module_id, pdata=txdata))
-        run_require(usbdev, endpin, endpout, mm_package(TYPE_REQUIRE, module_id=options.module_id))
+        if (hw != '4M'):
+            run_require(usbdev, endpin, endpout, mm_package(TYPE_REQUIRE, module_id=options.module_id))
         raw_input('Press enter to continue:')
 
 
 if __name__ == '__main__':
-    auc_vid = 0x29f1
-    auc_pid = 0x33f2
+    # Detect AUC
     usbdev, endpin, endpout = enum_usbdev(auc_vid, auc_pid)
+    if usbdev:
+        ret = auc_xfer(usbdev, endpin, endpout, "00", "a1", "801A0600")
+        if ret:
+            print "AUC ver: " + ''.join([chr(x) for x in ret])
+        else:
+            print "AUC ver null"
 
-    ret = auc_xfer(usbdev, endpin, endpout, "00", "a1", "801A0600")
-    if ret:
-        print "AUC ver: " + ''.join([chr(x) for x in ret])
+    if usbdev is None:
+        # Try Avalon4 mini
+        auc_vid = 0x29f1
+        auc_pid = 0x40f1
+        usbdev, endpin, endpout = enum_usbdev(auc_vid, auc_pid)
+
+    if usbdev is None:
+        print "No Avalon USB Converter or compatible device can be found!"
+        sys.exit("Enum failed!")
     else:
-        print "AUC ver null"
+        print "Find an Avalon USB Converter or comatible device"
 
     if (options.status == '1'):
         while(1):
