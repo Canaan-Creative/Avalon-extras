@@ -206,5 +206,5 @@ echo "cgminer-openwrt-packages: $OW_GIT_VERSION$OW_GIT_STATUS"  >> ${OPENWRT_PAT
 echo ""					                        >> ${OPENWRT_PATH}/files/etc/avalon_version     && \
 echo ""					                        >> ${OPENWRT_PATH}/files/etc/avalon_version     && \
 ( make -j${CORE_NUM} -C ${OPENWRT_PATH} V=s IGNORE_ERRORS=m || make -C ${OPENWRT_PATH} V=s IGNORE_ERRORS=m )    && \
-mkdir -p bin/${AVA_TARGET_BOARD}/${DATE}/                                                                       && \
-cp -a ${OPENWRT_PATH}/bin/${AVA_TARGET_PLATFORM}/*  bin/${AVA_TARGET_BOARD}/${DATE}/
+mkdir -p bin/${DATE}/${AVA_TARGET_BOARD}/                                                                       && \
+cp -a ${OPENWRT_PATH}/bin/${AVA_TARGET_PLATFORM}/*  bin/${DATE}/${AVA_TARGET_BOARD}/
