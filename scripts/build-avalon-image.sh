@@ -1,17 +1,17 @@
 #!/bin/bash
 
-#MACHINE=avalon1
-#MACHINE=avalon2                         # Support Avalon2/MM firmware
-#MACHINE=avalon4                          # Support Avalon4/MM firmware
-[ -z "${MACHINE}" ] && MACHINE=avalon4
+#AVA_MACHINE=avalon1
+#AVA_MACHINE=avalon2                         # Support Avalon2/MM firmware
+#AVA_MACHINE=avalon4                          # Support Avalon4/MM firmware
+[ -z "${AVA_MACHINE}" ] && AVA_MACHINE=avalon4
 
 #AVA_TARGET_BOARD=tl-wr703n-v1   # TP-Link WR703N-v1
 #AVA_TARGET_BOARD=pi-modelb-v2   # Raspberry-Pi ModelB-v2
 [ -z "${AVA_TARGET_BOARD}" ]  && AVA_TARGET_BOARD=tl-wr703n-v1  # TP-Link WR703N-v1
 
 OPENWRT_CONFIG=""
-[ "${AVA_TARGET_BOARD}" == "tl-wr703n-v1" ] && AVA_TARGET_PLATFORM=ar71xx && OPENWRT_CONFIG=config.${MACHINE}.703n
-[ "${AVA_TARGET_BOARD}" == "pi-modelb-v2" ] && AVA_TARGET_PLATFORM=brcm2708 && OPENWRT_CONFIG=config.${MACHINE}.raspberry-pi
+[ "${AVA_TARGET_BOARD}" == "tl-wr703n-v1" ] && AVA_TARGET_PLATFORM=ar71xx && OPENWRT_CONFIG=config.${AVA_MACHINE}.703n
+[ "${AVA_TARGET_BOARD}" == "pi-modelb-v2" ] && AVA_TARGET_PLATFORM=brcm2708 && OPENWRT_CONFIG=config.${AVA_MACHINE}.raspberry-pi
 [ -z "${OPENWRT_CONFIG}" ] && echo "[ERROR]: Target board not suported" && exit 1
 
 which wget > /dev/null && DL_PROG=wget && DL_PARA="-nv -O"
@@ -20,8 +20,8 @@ which curl > /dev/null && DL_PROG=curl && DL_PARA="-L -o"
 VERSION=20140415
 OPENWRT_PATH=./openwrt
 OPENWRT_VER=41240
-[ "${MACHINE}" == "avalon2" ] && OPENWRT_VER=41240
-[ "${MACHINE}" == "avalon4" ] && OPENWRT_VER=43076
+[ "${AVA_MACHINE}" == "avalon2" ] && OPENWRT_VER=41240
+[ "${AVA_MACHINE}" == "avalon4" ] && OPENWRT_VER=43076
 LUCI_PATH=./luci
 
 # According to http://wiki.openwrt.org/doc/howto/build
@@ -84,14 +84,14 @@ if [ "$1" == "--clone" ]; then
     git clone git://github.com/Canaan-Creative/cgminer-openwrt-packages.git
     git clone git://github.com/Canaan-Creative/luci.git
 
-    if [ "${MACHINE}" == "avalon1" ]; then
+    if [ "${AVA_MACHINE}" == "avalon1" ]; then
         (cd luci && git checkout -b cgminer-webui origin/cgminer-webui)
     fi
-    if [ "${MACHINE}" == "avalon2" ]; then
+    if [ "${AVA_MACHINE}" == "avalon2" ]; then
         (cd cgminer && git checkout -b avalon2 origin/avalon2)
         (cd luci && git checkout -b cgminer-webui-avalon2 origin/cgminer-webui-avalon2)
     fi
-    if [ "${MACHINE}" == "avalon4" ]; then
+    if [ "${AVA_MACHINE}" == "avalon4" ]; then
         (cd cgminer && git checkout -b avalon4 origin/avalon4)
         (cd luci && git checkout -b cgminer-webui-avalon4 origin/cgminer-webui-avalon4)
     fi
@@ -100,7 +100,7 @@ if [ "$1" == "--clone" ]; then
     [ -d ../../dl ] && ln -sf ../dl ../dl
     [ ! -e ../dl ] && mkdir ../dl
     ln -sf ../dl
-    if [ "${MACHINE}" == "avalon4" ]; then
+    if [ "${AVA_MACHINE}" == "avalon4" ]; then
         $DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.avalon4.conf $DL_PARA feeds.conf
     else
         $DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.conf $DL_PARA feeds.conf
@@ -192,7 +192,7 @@ if [ ! -z "`cd cgminer-openwrt-packages && git status -s -uno`" ]; then
     OW_GIT_STATUS="+"
 fi
 
-if [ "${MACHINE}" != "avalon4" ]; then
+if [ "${AVA_MACHINE}" != "avalon4" ]; then
     rm -rf ${LUCI_PATH}/applications/luci-cgminer/dist                                                              && \
     ( make -j${CORE_NUM} -C ${LUCI_PATH} || make -C ${LUCI_PATH} )                                                  && \
     cp -a  ${LUCI_PATH}/applications/luci-cgminer/dist/* ${OPENWRT_PATH}/files/

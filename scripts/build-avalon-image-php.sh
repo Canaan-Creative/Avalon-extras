@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#MACHINE=avalon
-MACHINE=avalon2                         # Support Avalon2/MM firmware
+#AVA_MACHINE=avalon
+AVA_MACHINE=avalon2                         # Support Avalon2/MM firmware
 
 #AVA_TARGET_BOARD=tl-wr703n-v1   # TP-Link WR703N-v1
 #AVA_TARGET_BOARD=tl-wr1043nd-v2 # TP-Link WR1043ND-v2
@@ -9,9 +9,9 @@ MACHINE=avalon2                         # Support Avalon2/MM firmware
 [ -z "${AVA_TARGET_BOARD}" ]  && AVA_TARGET_BOARD=tl-wr703n-v1  # TP-Link WR703N-v1
 
 OPENWRT_CONFIG=""
-[ "${AVA_TARGET_BOARD}" == "tl-wr703n-v1" ] && AVA_TARGET_PLATFORM=ar71xx && OPENWRT_CONFIG=config.${MACHINE}.703n
-[ "${AVA_TARGET_BOARD}" == "tl-wr1043nd-v2" ] && AVA_TARGET_PLATFORM=ar71xx && OPENWRT_CONFIG=config.${MACHINE}.1043nd-v2
-[ "${AVA_TARGET_BOARD}" == "pi-modelb-v2" ] && AVA_TARGET_PLATFORM=brcm2708 && OPENWRT_CONFIG=config.${MACHINE}.raspberry-pi
+[ "${AVA_TARGET_BOARD}" == "tl-wr703n-v1" ] && AVA_TARGET_PLATFORM=ar71xx && OPENWRT_CONFIG=config.${AVA_MACHINE}.703n
+[ "${AVA_TARGET_BOARD}" == "tl-wr1043nd-v2" ] && AVA_TARGET_PLATFORM=ar71xx && OPENWRT_CONFIG=config.${AVA_MACHINE}.1043nd-v2
+[ "${AVA_TARGET_BOARD}" == "pi-modelb-v2" ] && AVA_TARGET_PLATFORM=brcm2708 && OPENWRT_CONFIG=config.${AVA_MACHINE}.raspberry-pi
 [ -z "${OPENWRT_CONFIG}" ] && echo "[ERROR]: Target board not suported" && exit 1
 
 which wget > /dev/null && DL_PROG=wget && DL_PARA="-nv -O"
@@ -80,7 +80,7 @@ if [ "$1" == "--clone" ]; then
     git clone git://github.com/Canaan-Creative/cgminer.git
     git clone git://github.com/Canaan-Creative/cgminer-openwrt-packages.git
 
-    if [ "${MACHINE}" == "avalon2" ]; then
+    if [ "${AVA_MACHINE}" == "avalon2" ]; then
         (cd cgminer && git checkout -b avalon2 origin/avalon2)
         git clone git://github.com/Canaan-Creative/luci.git && (cd luci && git checkout -b cgminer-webui-avalon2 origin/cgminer-webui-avalon2)
     else

@@ -13,15 +13,15 @@ $DL_PROG https://github.com/Canaan-Creative/avalon-extras/raw/master/scripts/bui
 chmod 0755 build-avalon-image.sh
 mkdir -p avalon/bin
 
-MACHINE=$MACHINE AVA_TARGET_BOARD=pi-modelb-v2 ./build-avalon-image.sh --build        && \
-MACHINE=$MACHINE AVA_TARGET_BOARD=pi-modelb-v2 ./build-avalon-image.sh                && \
-MACHINE=$MACHINE AVA_TARGET_BOARD=pi-modelb-v2 ./build-avalon-image.sh --cgminer      && \
+AVA_MACHINE=$MACHINE AVA_TARGET_BOARD=pi-modelb-v2 ./build-avalon-image.sh --build        && \
+AVA_MACHINE=$MACHINE AVA_TARGET_BOARD=pi-modelb-v2 ./build-avalon-image.sh                && \
+AVA_MACHINE=$MACHINE AVA_TARGET_BOARD=pi-modelb-v2 ./build-avalon-image.sh --cgminer      && \
 echo "==========================================================="   && \
 echo "==================== pi-modelb-v2 DONE ===================="   && \
 echo "==========================================================="   && \
-MACHINE=$MACHINE AVA_TARGET_BOARD=tl-wr703n-v1 ./build-avalon-image.sh --build        && \
-MACHINE=$MACHINE AVA_TARGET_BOARD=tl-wr703n-v1 ./build-avalon-image.sh                && \
-MACHINE=$MACHINE AVA_TARGET_BOARD=tl-wr703n-v1 ./build-avalon-image.sh --cgminer      && \
+AVA_MACHINE=$MACHINE AVA_TARGET_BOARD=tl-wr703n-v1 ./build-avalon-image.sh --build        && \
+AVA_MACHINE=$MACHINE AVA_TARGET_BOARD=tl-wr703n-v1 ./build-avalon-image.sh                && \
+AVA_MACHINE=$MACHINE AVA_TARGET_BOARD=tl-wr703n-v1 ./build-avalon-image.sh --cgminer      && \
 echo "==========================================================="   && \
 echo "==================== tl-wr703n-v1 DONE ===================="   && \
 echo "==========================================================="
