@@ -2,7 +2,8 @@
 
 #MACHINE=avalon1
 #MACHINE=avalon2                         # Support Avalon2/MM firmware
-MACHINE=avalon4                          # Support Avalon4/MM firmware
+#MACHINE=avalon4                          # Support Avalon4/MM firmware
+[ -z "${MACHINE}" ] && MACHINE=avalon4
 
 #AVA_TARGET_BOARD=tl-wr703n-v1   # TP-Link WR703N-v1
 #AVA_TARGET_BOARD=pi-modelb-v2   # Raspberry-Pi ModelB-v2
@@ -208,3 +209,4 @@ echo ""					                        >> ${OPENWRT_PATH}/files/etc/avalon_version 
 ( make -j${CORE_NUM} -C ${OPENWRT_PATH} V=s IGNORE_ERRORS=m || make -C ${OPENWRT_PATH} V=s IGNORE_ERRORS=m )    && \
 mkdir -p bin/${DATE}/${AVA_TARGET_BOARD}/                                                                       && \
 cp -a ${OPENWRT_PATH}/bin/${AVA_TARGET_PLATFORM}/*  bin/${DATE}/${AVA_TARGET_BOARD}/
+rm -rf ${OPENWRT_PATH}/bin/${AVA_TARGET_PLATFORM}
