@@ -15,13 +15,11 @@ mkdir -p avalon/bin
 
 AVA_MACHINE=$MACHINE AVA_TARGET_BOARD=pi-modelb-v2 ./build-avalon-image.sh --build        && \
 AVA_MACHINE=$MACHINE AVA_TARGET_BOARD=pi-modelb-v2 ./build-avalon-image.sh                && \
-AVA_MACHINE=$MACHINE AVA_TARGET_BOARD=pi-modelb-v2 ./build-avalon-image.sh --cgminer      && \
 echo "==========================================================="   && \
 echo "==================== pi-modelb-v2 DONE ===================="   && \
 echo "==========================================================="   && \
 AVA_MACHINE=$MACHINE AVA_TARGET_BOARD=tl-wr703n-v1 ./build-avalon-image.sh --build        && \
 AVA_MACHINE=$MACHINE AVA_TARGET_BOARD=tl-wr703n-v1 ./build-avalon-image.sh                && \
-AVA_MACHINE=$MACHINE AVA_TARGET_BOARD=tl-wr703n-v1 ./build-avalon-image.sh --cgminer      && \
 echo "==========================================================="   && \
 echo "==================== tl-wr703n-v1 DONE ===================="   && \
 echo "==========================================================="
