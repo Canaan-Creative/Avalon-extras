@@ -66,12 +66,12 @@ static void avalon4_pkg_init(struct avalon4_pkg *mmpkg, uint8_t type, uint8_t id
 
 static int32_t avalon4_pkg_send(AUC_HANDLE handle, const struct avalon4_pkg *mmpkg, uint8_t module_id)
 {
-	return auc_xfer(handle, module_id, (uint8_t *)mmpkg, AVA4_P_COUNT, NULL, 0);
+	return auc_xfer(handle, module_id, (uint8_t *)mmpkg, AVA4_P_COUNT, NULL, 0, NULL);
 }
 
 static int32_t avalon4_pkg_receive(AUC_HANDLE handle, struct avalon4_pkg *mmpkg, uint8_t module_id)
 {
-	return auc_xfer(handle, module_id, NULL, 0, (uint8_t *)mmpkg, AVA4_P_COUNT);
+	return auc_xfer(handle, module_id, NULL, 0, (uint8_t *)mmpkg, AVA4_P_COUNT, NULL);
 }
 
 static int32_t mmpkg_parse(const struct avalon4_pkg *mmpkg, uint8_t module_id)

@@ -32,7 +32,11 @@ static void enable_download(void)
 	i2c_setslave(IIC_SLAVE_CTL);
 	/* enable download */
 	buf[0] = 0x2;
-	i2c_write(buf, 1);
+	if (i2c_write(buf, 1)) {
+		printf("%s failed\n", __FUNCTION__);
+		exit(1);
+	}
+
 	i2c_setslave(IIC_SLAVE_DAT);
 }
 
@@ -43,7 +47,10 @@ static void set_cs(unsigned char dat)
 	i2c_setslave(IIC_SLAVE_CTL);
 	/* set cs */
 	buf[0] = dat;
-	i2c_write(buf, 1);
+	if (i2c_write(buf, 1)) {
+		printf("%s failed\n", __FUNCTION__);
+		exit(1);
+	}
 	i2c_setslave(IIC_SLAVE_DAT);
 }
 
@@ -53,13 +60,19 @@ static void set_reboot(void)
 
 	i2c_setslave(IIC_SLAVE_CTL);
 	buf[0] = 4;
-	i2c_write(buf, 1);
+	if (i2c_write(buf, 1)) {
+		printf("%s failed\n", __FUNCTION__);
+		exit(1);
+	}
 }
 
 static void set_mosi_dat(unsigned char *buf, unsigned int len)
 {
 	i2c_setslave(IIC_SLAVE_DAT);
-	i2c_write(buf, len);
+	if (i2c_write(buf, len)) {
+		printf("%s failed\n", __FUNCTION__);
+		exit(1);
+	}
 }
 
 static void flash_prog_en(void)
