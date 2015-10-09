@@ -67,6 +67,7 @@ const char *auc_version(uint32_t index);
 int32_t auc_init(AUC_HANDLE handle, uint32_t clk_rate, uint32_t xfer_delay);
 int32_t auc_close(AUC_HANDLE handle);
 int32_t auc_reset(AUC_HANDLE handle);
+int32_t auc_deinit(AUC_HANDLE handle);
 int32_t auc_xfer(AUC_HANDLE handle, uint8_t slaveAddr, uint8_t *wbuf, uint32_t wlen, uint8_t *rbuf, uint32_t rlen);
 
 #endif /* __AUC_H__ */

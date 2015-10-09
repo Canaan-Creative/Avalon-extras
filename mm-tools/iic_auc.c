@@ -23,7 +23,9 @@ int i2c_open(char *dev)
 	for (i = 0; i < g_auc_cnts; i++) {
 		g_hauc[i] = auc_open(i);
 		if (g_hauc[i]) {
+			auc_deinit(g_hauc[i]);
 			auc_init(g_hauc[i], I2C_CLK_1M, 9600);
+			auc_reset(g_hauc[i]);
 			printf("i2c_open: auc-%d, ver:%s\n", i, auc_version(i));
 		} else
 			printf("i2c_open: auc-%d init failed!\n", i);
@@ -56,8 +58,10 @@ int i2c_write(unsigned char *wbuf, unsigned int wlen)
 
 	for (i = 0; i < g_auc_cnts; i++) {
 		ret = auc_xfer(g_hauc[i], g_slaveaddr, wbuf, wlen, NULL, 0);
-		if (ret)
+		if (ret) {
 			printf("i2c_write: auc-%d Write to %x failed!(ret = %d)\n", i, g_slaveaddr, ret);
+			return 1;
+		}
 	}
 
 	return 0;
