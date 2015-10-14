@@ -10,6 +10,9 @@
 #define MCS1_INFO_ADDR_BASE 0xfff80
 #define MCS1_INFO_LEN 16 //bytes
 #define MCS1_ADDR_BASE 0x80000
+#define SPI_FLASH_BLOCK 0x10000
+#define SPI_FLASH_32K	0x8000
+#define SPI_FLASH_SEC 0x1000
 #define SPI_FLASH_PAGE 256 //byte
 #define CMD_LEN 4
 #define IIC_SLAVE_CTL 0x40
@@ -86,27 +89,57 @@ static void flash_prog_en(void)
 	sleep_ms(3);
 }
 
-static void flash_earse(void)
+static void flash_erase_op(unsigned int addr, unsigned char op)
 {
 	unsigned char buf[4];
+
+	buf[0] = op;
+	buf[1] = ((addr >> 16) & 0xff);
+	buf[2] = ((addr >> 8) & 0xff);
+	buf[3] = (addr & 0xff);
+
+	flash_prog_en();
+	set_cs(CS_ENABLE);
+	set_mosi_dat(buf, 4);
+	set_cs(CS_DISABLE);
+	sleep_ms(1000);
+}
+
+static void flash_earse(void)
+{
 	unsigned int addr = MCS1_ADDR_BASE;
 	int i;
 
-	buf[0] = 0xd8;
-	for (i = 0; i < 8; i++) {
-		flash_prog_en();
-		set_cs(CS_ENABLE);
-		buf[1] = ((addr >> 16) & 0xff);
-		buf[2] = ((addr >> 8) & 0xff);
-		buf[3] = (addr & 0xff);
-
-		set_mosi_dat(buf, 4);
-		set_cs(CS_DISABLE);
-		addr += 0x10000;
-		sleep_ms(1000);
+	printf("BE64 addr = %x\n", addr);
+	for (i = 0; i < 7; i++) {
+		flash_erase_op(addr, 0xd8);
+		addr += SPI_FLASH_BLOCK;
 		printf("+");
 		fflush(stdout);
 	}
+
+	printf("\n");
+	printf("BE32 addr = %x\n", addr);
+	flash_erase_op(addr, 0x52);
+	addr += SPI_FLASH_32K;
+	printf("+");
+	fflush(stdout);
+
+	printf("\n");
+	printf("SE addr = %x\n", addr);
+	for (i = 0; i < 4; i++) {
+		flash_erase_op(addr, 0x20);
+		addr += SPI_FLASH_SEC;
+		printf("+");
+		fflush(stdout);
+	}
+	/* mboot confg reserved, 3 sectors[0xfc000 ~ 0xfe000] */
+	printf("\n");
+	printf("SE addr = %x\n", 0xff000);
+	/* Last sector */
+	flash_erase_op(0xff000, 0x20);
+	printf("+");
+	fflush(stdout);
 	printf("\n");
 }
 
