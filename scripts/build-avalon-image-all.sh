@@ -17,11 +17,6 @@ AVA_MACHINE=$MACHINE AVA_TARGET_BOARD=pi-modelb-v2 ./build-avalon-image.sh --bui
 AVA_MACHINE=$MACHINE AVA_TARGET_BOARD=pi-modelb-v2 ./build-avalon-image.sh                && \
 echo "==========================================================="   && \
 echo "==================== pi-modelb-v2 DONE ===================="   && \
-echo "==========================================================="   && \
-AVA_MACHINE=$MACHINE AVA_TARGET_BOARD=tl-wr703n-v1 ./build-avalon-image.sh --build        && \
-AVA_MACHINE=$MACHINE AVA_TARGET_BOARD=tl-wr703n-v1 ./build-avalon-image.sh                && \
-echo "==========================================================="   && \
-echo "==================== tl-wr703n-v1 DONE ===================="   && \
 echo "==========================================================="
 
 rm -rf avalon/[cdlo]* build-avalon-image.sh
