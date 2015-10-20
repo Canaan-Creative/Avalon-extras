@@ -23,7 +23,9 @@ int i2c_open(char *dev)
 	for (i = 0; i < g_auc_cnts; i++) {
 		g_hauc[i] = auc_open(i);
 		if (g_hauc[i]) {
+			auc_deinit(g_hauc[i]);
 			auc_init(g_hauc[i], I2C_CLK_1M, 9600);
+			auc_reset(g_hauc[i]);
 			printf("i2c_open: auc-%d, ver:%s\n", i, auc_version(i));
 		} else
 			printf("i2c_open: auc-%d init failed!\n", i);
@@ -53,11 +55,14 @@ int i2c_write(unsigned char *wbuf, unsigned int wlen)
 {
 	int ret;
 	uint32_t i = 0;
+	uint8_t resp;
 
 	for (i = 0; i < g_auc_cnts; i++) {
-		ret = auc_xfer(g_hauc[i], g_slaveaddr, wbuf, wlen, NULL, 0);
-		if (ret)
-			printf("i2c_write: auc-%d Write to %x failed!(ret = %d)\n", i, g_slaveaddr, ret);
+		ret = auc_xfer(g_hauc[i], g_slaveaddr, wbuf, wlen, NULL, 0, &resp);
+		if (resp != CDC_I2C_RES_OK) {
+			printf("i2c_write: auc-%d Write to %x failed!(ret = %d, resp = %d)\n", i, g_slaveaddr, ret, resp);
+			return 1;
+		}
 	}
 
 	return 0;
@@ -67,11 +72,12 @@ int i2c_read(unsigned char *rbuf, unsigned int rlen)
 {
 	int ret;
 	uint32_t i;
+	uint8_t resp;
 
 	for (i = 0; i < g_auc_cnts; i++) {
-		ret = auc_xfer(g_hauc[i], g_slaveaddr, NULL, 0, rbuf, rlen);
-		if (ret != rlen) {
-			printf("i2c_read: auc-%d Read from %d failed!(%d-%d)\n", i, g_slaveaddr, ret, rlen);
+		ret = auc_xfer(g_hauc[i], g_slaveaddr, NULL, 0, rbuf, rlen, &resp);
+		if ((ret != rlen) || (resp != CDC_I2C_RES_OK)) {
+			printf("i2c_read: auc-%d Read from %d failed!(%d-%d-%d)\n", i, g_slaveaddr, ret, rlen, resp);
 			return 1;
 		}
 	}

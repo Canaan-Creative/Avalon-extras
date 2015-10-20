@@ -218,7 +218,22 @@ int32_t auc_reset(AUC_HANDLE handle)
 	return 0;
 }
 
-int32_t auc_xfer(AUC_HANDLE handle, uint8_t slaveAddr, uint8_t *wbuf, uint32_t wlen, uint8_t *rbuf, uint32_t rlen)
+int32_t auc_deinit(AUC_HANDLE handle)
+{
+	uint32_t count;
+	uint8_t buf[CDC_I2C_HEADER_SZ];
+
+	memset(buf, 0, CDC_I2C_HEADER_SZ);
+	count = auc_pkg_init(CDC_I2C_REQ_DEINIT_PORT, NULL, 0);
+	if (usb_transfer(handle, g_auc_pkg, count, buf, CDC_I2C_HEADER_SZ)) {
+		printf("auc_deinit usb_transfer failed!\n");
+		return 1;
+	}
+
+	return 0;
+}
+
+int32_t auc_xfer(AUC_HANDLE handle, uint8_t slaveAddr, uint8_t *wbuf, uint32_t wlen, uint8_t *rbuf, uint32_t rlen, uint8_t *respcode)
 {
 	struct cdc_i2c_xferparams params;
 	uint8_t buf[CDC_I2C_PACKET_SZ];
@@ -265,6 +280,9 @@ int32_t auc_xfer(AUC_HANDLE handle, uint8_t slaveAddr, uint8_t *wbuf, uint32_t w
 		wbuf += CDC_I2C_PAYLOAD_SZ;
 		rbuf += (CDC_I2C_PACKET_SZ - CDC_I2C_HEADER_SZ);
 	}
+
+	if (respcode)
+		*respcode = buf[CDC_I2C_HEADER_SZ - 1];
 
 	return pheader->length - CDC_I2C_HEADER_SZ;
 }
