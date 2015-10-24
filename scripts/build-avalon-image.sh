@@ -199,12 +199,10 @@ if [ "${AVA_MACHINE}" != "avalon4" ]; then
 else
     make -j${CORE_NUM} -C ${OPENWRT_PATH} package/luci/{clean,compile} V=s || make -C ${OPENWRT_PATH} package/luci/{clean,compile} V=s
 fi
-echo "Canaan A4-$DATE"                                          >  ${OPENWRT_PATH}/files/etc/avalon_version     && \
-echo ""					                        >> ${OPENWRT_PATH}/files/etc/avalon_version     && \
-echo "luci: $LUCI_GIT_VERSION$LUCI_GIT_STATUS"                  >> ${OPENWRT_PATH}/files/etc/avalon_version     && \
-echo "cgminer: $GIT_VERSION$GIT_STATUS"                         >> ${OPENWRT_PATH}/files/etc/avalon_version     && \
-echo "cgminer-openwrt-packages: $OW_GIT_VERSION$OW_GIT_STATUS"  >> ${OPENWRT_PATH}/files/etc/avalon_version     && \
-echo ""					                        >> ${OPENWRT_PATH}/files/etc/avalon_version     && \
+echo "Avalon Firmware - $DATE"                                  >  ${OPENWRT_PATH}/files/etc/avalon_version     && \
+echo "   luci: $LUCI_GIT_VERSION$LUCI_GIT_STATUS"               >> ${OPENWRT_PATH}/files/etc/avalon_version     && \
+echo "   cgminer: $GIT_VERSION$GIT_STATUS"                      >> ${OPENWRT_PATH}/files/etc/avalon_version     && \
+echo "   cgminer-packages: $OW_GIT_VERSION$OW_GIT_STATUS"       >> ${OPENWRT_PATH}/files/etc/avalon_version     && \
 echo ""					                        >> ${OPENWRT_PATH}/files/etc/avalon_version     && \
 ( make -j${CORE_NUM} -C ${OPENWRT_PATH} V=s IGNORE_ERRORS=m || make -C ${OPENWRT_PATH} V=s IGNORE_ERRORS=m )    && \
 mkdir -p bin/${DATE}/${AVA_TARGET_BOARD}/                                                                       && \
