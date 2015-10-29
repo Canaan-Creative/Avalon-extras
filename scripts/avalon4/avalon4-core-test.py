@@ -405,7 +405,7 @@ def run_testa6(usbdev, endpin, endpout, cmd):
                     if ((ec >> i) & 1):
                         errstr += errcode[i] + ' '
 
-                display = display + 'Error( ' + errstr + ')'
+                display = display + 'Status ( ' + errstr + ')'
                 print('Result:' + display)
 
 
