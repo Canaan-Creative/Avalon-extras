@@ -348,6 +348,66 @@ def run_test(usbdev, endpin, endpout, cmd):
                         print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                         print("Result:" + result)
 
+errcode = [
+        'IDLE',
+        '\x1b[1;31mTOOHOT\x1b[0m',
+        '\x1b[1;31mLOOP0FAILED\x1b[0m',
+        '\x1b[1;31mLOOP1FAILED\x1b[0m',
+        '\x1b[1;31mINVALIDMCU\x1b[0m',
+        'NOSTRATUM',
+        'RBOVERFLOW',
+        'MMCRCFAILED',
+        'MCUCRCFAILED',
+        '\x1b[1;31mNOFAN\x1b[0m',
+        '\x1b[1;31mPG0FAILED\x1b[0m',
+        '\x1b[1;31mPG1FAILED\x1b[0m',
+        '\x1b[1;31mCORETESTFAILED\x1b[0m'
+        ]
+
+def run_testa6(usbdev, endpin, endpout, cmd):
+        auc_req(usbdev, endpin, endpout, "00", "a3", cmd)
+        while True:
+                auc_req(usbdev, endpin, endpout,
+                        "00",
+                        "a4",
+                        cmd)
+                res_s = auc_read(usbdev, endpin)
+                if res_s is not None:
+                        break
+
+        if not res_s:
+                print(str(count) + ": Something is wrong or modular id not correct")
+        else:
+                result = binascii.hexlify(res_s)
+                for i in range(0, 2):
+                    sys.stdout.write("M-" + str(i) + ': ')
+                    c = result[(12 + i * 10) : (12 + i * 10) + 10]
+                    n = int(c, 16)
+                    r = ''
+                    cnt = 0;
+                    for j in range(40, 0, -8):
+                        for cnt in range(7, -1, -1):
+                            if ((n >> cnt) & 1) == 0:
+                                r = '\x1b[1;31mxx\x1b[0m {}'.format(r)
+                            else:
+                                r = '\x1b[1;32m{:02d}\x1b[0m {}'.format(j + cnt - 7 , r)
+                        n >>= 8
+                    print(r)
+
+                passcore = int(result[32: 36], 16)
+                allcore = int(result[36: 40], 16)
+                ec = int(result[40:48], 16)
+
+                display = 'bad(' + str(allcore - passcore) + '), '
+                display = display + 'all(' + str(allcore) + '), '
+                errstr = ''
+                for i in range(0, len(errcode)):
+                    if ((ec >> i) & 1):
+                        errstr += errcode[i] + ' '
+
+                display = display + 'Error( ' + errstr + ')'
+                print('Result:' + display)
+
 
 def run_detect(usbdev, endpin, endpout, cmd):
     # version
@@ -427,6 +487,9 @@ def run_modular_test(usbdev, endpin, endpout):
     while True:
         print("Reading result ...")
         hw = run_detect(usbdev, endpin, endpout, mm_package(TYPE_DETECT, module_id=options.module_id))
+        if hw == None:
+            sys.exit("Could not detect mm")
+
         if hw == '50':
             asic_cnt = 16
             miner_cnt = 2
@@ -473,8 +536,12 @@ def run_modular_test(usbdev, endpin, endpout):
             txdata += g_freq_table[freqdata[0]]
             txdata += g_freq_table[freqdata[1]]
             txdata += g_freq_table[freqdata[2]]
-        run_test(usbdev, endpin, endpout, mm_package(TYPE_TEST, module_id=options.module_id, pdata=txdata))
-        if (hw != '4M'):
+
+        if (hw == '60'):
+            run_testa6(usbdev, endpin, endpout, mm_package(TYPE_TEST, module_id=options.module_id, pdata=txdata))
+        else:
+            run_test(usbdev, endpin, endpout, mm_package(TYPE_TEST, module_id=options.module_id, pdata=txdata))
+        if (hw == '40') or (hw == '41') or (hw == '50'):
             run_require(usbdev, endpin, endpout, mm_package(TYPE_REQUIRE, module_id=options.module_id))
         raw_input('Press enter to continue:')
 
@@ -483,6 +550,8 @@ if __name__ == '__main__':
     # Detect AUC
     usbdev, endpin, endpout = enum_usbdev(auc_vid, auc_pid)
     if usbdev:
+        auc_xfer(usbdev, endpin, endpout, "00", "a2", "")
+        auc_xfer(usbdev, endpin, endpout, "00", "a0", "")
         ret = auc_xfer(usbdev, endpin, endpout, "00", "a1", "801A0600")
         if ret:
             print "AUC ver: " + ''.join([chr(x) for x in ret])
