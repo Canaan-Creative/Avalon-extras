@@ -3,6 +3,7 @@
 #AVA_MACHINE=avalon1
 #AVA_MACHINE=avalon2                         # Support Avalon2/MM firmware
 #AVA_MACHINE=avalon4                          # Support Avalon4/MM firmware
+AVA_MACHINE=avalon6                          # Support Avalon6/MM firmware
 [ -z "${AVA_MACHINE}" ] && AVA_MACHINE=avalon4
 
 #AVA_TARGET_BOARD=tl-wr703n-v1   # TP-Link WR703N-v1
@@ -22,6 +23,7 @@ OPENWRT_PATH=./openwrt
 OPENWRT_VER=41240
 [ "${AVA_MACHINE}" == "avalon2" ] && OPENWRT_VER=41240
 [ "${AVA_MACHINE}" == "avalon4" ] && OPENWRT_VER=43076
+[ "${AVA_MACHINE}" == "avalon6" ] && OPENWRT_VER=43076
 LUCI_PATH=./luci
 
 # According to http://wiki.openwrt.org/doc/howto/build
@@ -95,16 +97,22 @@ if [ "$1" == "--clone" ]; then
         (cd cgminer && git checkout -b avalon4 origin/avalon4)
         (cd luci && git checkout -b cgminer-webui-avalon4 origin/cgminer-webui-avalon4)
     fi
+    if [ "${AVA_MACHINE}" == "avalon6" ]; then
+        (cd cgminer && git checkout -b avalon4 origin/avalon4)
+        (cd luci && git checkout -b cgminer-webui-avalon6 origin/cgminer-webui-avalon6)
+    fi
+
 
     cd openwrt
     [ -d ../../dl ] && ln -sf ../dl ../dl
     [ ! -e ../dl ] && mkdir ../dl
     ln -sf ../dl
-    if [ "${AVA_MACHINE}" == "avalon4" ]; then
-        $DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.avalon4.conf $DL_PARA feeds.conf
+    if [ "${AVA_MACHINE}" == "avalon4" ] || [ "${AVA_MACHINE}" == "avalon6" ]; then
+        $DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.${AVA_MACHINE}.conf $DL_PARA feeds.conf
     else
         $DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.conf $DL_PARA feeds.conf
     fi
+
     ./scripts/feeds update -a && ./scripts/feeds install -a
 
     ln -s feeds/cgminer/cgminer/root-files files
