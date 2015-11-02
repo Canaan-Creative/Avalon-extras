@@ -3,7 +3,7 @@
 set -e
 
 # Target
-[ -z "${MACHINE}" ] && MACHINE=avalon4
+[ -z "${AVA_PRODUCT}" ] && AVA_PRODUCT=avalon4
 
 # We prefer curl because of wget bugs
 which wget > /dev/null && DL_PROG=wget && DL_PARA="-nv -O"
@@ -13,8 +13,8 @@ $DL_PROG https://github.com/Canaan-Creative/avalon-extras/raw/master/scripts/bui
 chmod 0755 build-avalon-image.sh
 mkdir -p avalon/bin
 
-AVA_MACHINE=$MACHINE AVA_TARGET_BOARD=pi-modelb-v2 ./build-avalon-image.sh --build        && \
-AVA_MACHINE=$MACHINE AVA_TARGET_BOARD=pi-modelb-v2 ./build-avalon-image.sh                && \
+AVA_MACHINE=$AVA_PRODUCT AVA_TARGET_BOARD=pi-modelb-v2 ./build-avalon-image.sh --build        && \
+AVA_MACHINE=$AVA_PRODUCT AVA_TARGET_BOARD=pi-modelb-v2 ./build-avalon-image.sh                && \
 echo "==========================================================="   && \
 echo "==================== pi-modelb-v2 DONE ===================="   && \
 echo "==========================================================="
