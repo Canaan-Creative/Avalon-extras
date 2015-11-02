@@ -3,7 +3,7 @@
 set -e
 
 # Target
-MACHINE=avalon4
+[ -z "${MACHINE}" ] && MACHINE=avalon4
 
 # We prefer curl because of wget bugs
 which wget > /dev/null && DL_PROG=wget && DL_PARA="-nv -O"
