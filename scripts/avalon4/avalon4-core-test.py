@@ -362,6 +362,9 @@ errcode = [
         '\x1b[1;31mPG0FAILED\x1b[0m',
         '\x1b[1;31mPG1FAILED\x1b[0m',
         '\x1b[1;31mCORETESTFAILED\x1b[0m'
+        '\x1b[1;31mADC0ERR\x1b[0m'
+        '\x1b[1;31mADC1ERR\x1b[0m'
+        '\x1b[1;31mVOLTERR\x1b[0m'
         ]
 
 def run_testa6(usbdev, endpin, endpout, cmd):
