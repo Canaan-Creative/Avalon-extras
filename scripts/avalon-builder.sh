@@ -2,12 +2,12 @@
 set -e
 
 AVA_MACHINE=avalon6
-AVA_TARGET_BOARD=pi2-modelb
 AVA_TARGET_PLATFORM=brcm2708
+[ -z $AVA_TARGET_BOARD ] && AVA_TARGET_BOARD=rpi2
 
 OPENWRT_URL=git://git.openwrt.org/15.05/openwrt.git
 OPENWRT_COMMIT=87d4425f9ac4ffe8b7d179d19939df16ad83e275
-OPENWRT_CONFIG=config.avalon6.rpi2
+OPENWRT_CONFIG=config.$AVA_MACHINE.$AVA_TARGET_BOARD
 
 unset SED
 unset GREP_OPTIONS
@@ -53,7 +53,7 @@ cp feeds/cgminer/cgminer/data/$OPENWRT_CONFIG .config
 yes "" | make oldconfig > /dev/null
 
 
-make -j$CORE_NUM
+make -j1 V=s
 
 
 cd ..
