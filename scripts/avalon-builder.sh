@@ -53,7 +53,7 @@ cp feeds/cgminer/cgminer/data/$OPENWRT_CONFIG .config
 yes "" | make oldconfig > /dev/null
 
 
-make -j1 V=s
+make -j$CORE_NUM
 
 
 cd ..
