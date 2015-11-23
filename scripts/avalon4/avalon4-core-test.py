@@ -38,7 +38,7 @@ import usb.util
 import sys
 import struct
 
-parser = OptionParser(version="%prog ver:20151029_1744")
+parser = OptionParser(version="%prog ver:20151123_1109")
 # TODO: Module id assignment
 parser.add_option("-m", "--module", dest="module_id", default="0", help="Module ID: 0 - 127, default:0")
 parser.add_option("-c", "--count", dest="test_count", default="1", help="Test count: 1,2,3... ")
@@ -233,7 +233,6 @@ TYPE_DETECT = "10"
 TYPE_REQUIRE = "31"
 DATA_OFFSET = 6
 
-
 def CRC16(message):
     # CRC-16-CITT poly, the CRC sheme used by ymodem protocol
     poly = 0x1021
@@ -361,9 +360,9 @@ errcode = [
         '\x1b[1;31mNOFAN\x1b[0m',
         '\x1b[1;31mPG0FAILED\x1b[0m',
         '\x1b[1;31mPG1FAILED\x1b[0m',
-        '\x1b[1;31mCORETESTFAILED\x1b[0m'
-        '\x1b[1;31mADC0ERR\x1b[0m'
-        '\x1b[1;31mADC1ERR\x1b[0m'
+        '\x1b[1;31mCORETESTFAILED\x1b[0m',
+        '\x1b[1;31mADC0ERR\x1b[0m',
+        '\x1b[1;31mADC1ERR\x1b[0m',
         '\x1b[1;31mVOLTERR\x1b[0m'
         ]
 
@@ -410,7 +409,6 @@ def run_testa6(usbdev, endpin, endpout, cmd):
 
                 display = display + 'Status ( ' + errstr + ')'
                 print('Result:' + display)
-
 
 def run_detect(usbdev, endpin, endpout, cmd):
     # version
