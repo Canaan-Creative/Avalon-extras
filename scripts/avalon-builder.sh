@@ -6,7 +6,6 @@ AVA_TARGET_PLATFORM=brcm2708
 [ -z $AVA_TARGET_BOARD ] && AVA_TARGET_BOARD=rpi2
 
 OPENWRT_URL=git://git.openwrt.org/15.05/openwrt.git
-OPENWRT_COMMIT=87d4425f9ac4ffe8b7d179d19939df16ad83e275
 OPENWRT_CONFIG=config.$AVA_MACHINE.$AVA_TARGET_BOARD
 
 unset SED
@@ -20,12 +19,14 @@ CORE_NUM="$(expr $(nproc) + 1)"
 cd avalon
 [ ! -d openwrt ] && git clone $OPENWRT_URL openwrt
 cd openwrt
-git checkout $OPENWRT_COMMIT
+wget https://github.com/archangdcc/avalon-extras/raw/master/openwrt-patches/toolchain-uclibc-xattr.patch
+patch -p0 < toolchain-uclibc-xattr.patch
+
 cat > feeds.conf << EOL
-src-git packages git://github.com/openwrt/packages.git;for-15.05
-src-git routing git://github.com/openwrt-routing/packages.git;for-15.05
-src-git telephony git://github.com/openwrt/telephony.git;for-15.05
-src-git management git://github.com/openwrt-management/packages.git;for-15.05
+src-git packages git://github.com/openwrt/packages.git
+src-git routing git://github.com/openwrt-routing/packages.git
+src-git telephony git://github.com/openwrt/telephony.git
+src-git management git://github.com/openwrt-management/packages.git
 src-git luci git://github.com/archangdcc/luci.git;avalon6
 src-git cgminer git://github.com/Canaan-Creative/cgminer-openwrt-packages.git
 EOL
