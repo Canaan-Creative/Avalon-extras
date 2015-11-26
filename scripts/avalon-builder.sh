@@ -19,7 +19,7 @@ CORE_NUM="$(expr $(nproc) + 1)"
 cd avalon
 [ ! -d openwrt ] && git clone $OPENWRT_URL openwrt
 cd openwrt
-[ ! -f toolchain-uclibc-xattr.patch] &&\
+[ ! -f toolchain-uclibc-xattr.patch ] &&\
 	wget https://github.com/archangdcc/avalon-extras/raw/master/openwrt-patches/toolchain-uclibc-xattr.patch &&\
 	patch -p0 < toolchain-uclibc-xattr.patch
 
