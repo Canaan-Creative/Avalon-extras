@@ -25,9 +25,6 @@ cd openwrt
 
 cat > feeds.conf << EOL
 src-git packages git://github.com/openwrt/packages.git
-src-git routing git://github.com/openwrt-routing/packages.git
-src-git telephony git://github.com/openwrt/telephony.git
-src-git management git://github.com/openwrt-management/packages.git
 src-git luci git://github.com/archangdcc/luci.git;avalon6
 src-git cgminer git://github.com/Canaan-Creative/cgminer-openwrt-packages.git
 EOL
