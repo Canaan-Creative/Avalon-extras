@@ -2,8 +2,15 @@
 set -e
 
 AVA_MACHINE=avalon6
-AVA_TARGET_PLATFORM=brcm2708
 [ -z $AVA_TARGET_BOARD ] && AVA_TARGET_BOARD=rpi2
+case $AVA_TARGET_BOARD in
+	"raspberry-pi" | "rpi2" )
+		AVA_TARGET_PLATFORM=brcm2708
+		;;
+	"mr3020" )
+		AVA_TARGET_PLATFORM=ar71xx
+		;;
+esac
 
 OPENWRT_URL=git://git.openwrt.org/15.05/openwrt.git
 OPENWRT_CONFIG=config.$AVA_MACHINE.$AVA_TARGET_BOARD
