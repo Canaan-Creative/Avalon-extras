@@ -53,8 +53,6 @@ Avalon Firmware - $DATE
 EOL
 
 
-make defconfig
-make prereq
 cp feeds/cgminer/cgminer/data/$OPENWRT_CONFIG .config
 yes "" | make oldconfig > /dev/null
 
