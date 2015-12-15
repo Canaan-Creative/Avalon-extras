@@ -31,8 +31,8 @@ cd openwrt
 	patch -p0 < toolchain-uclibc-xattr.patch
 
 cat > feeds.conf << EOL
-src-git packages git://github.com/openwrt/packages.git
-src-git luci git://github.com/archangdcc/luci.git;avalon6
+src-git packages git://github.com/openwrt/packages.git;for-15.05
+src-git luci git://github.com/archangdcc/luci.git;avalon6-15.05
 src-git cgminer git://github.com/Canaan-Creative/cgminer-openwrt-packages.git
 EOL
 ./scripts/feeds update -a
