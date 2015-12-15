@@ -62,4 +62,5 @@ make -j$CORE_NUM
 
 cd ..
 mkdir -p bin/${DATE}/
+rm -rf bin/${DATE}/${AVA_TARGET_BOARD}
 mv openwrt/bin/${AVA_TARGET_PLATFORM} bin/${DATE}/${AVA_TARGET_BOARD}
