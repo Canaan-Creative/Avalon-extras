@@ -29,7 +29,7 @@ FEEDS_CONF=feeds.${AVA_MACHINE}.conf
 rpi2_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.rpi2")
 rpi1_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.raspberry-pi")
 tl_wr703n_v1_brdcfg=("ar71xx" "config.${AVA_MACHINE}.703n")
-tl_mr3020_v1_brdcfg=("ar71xx" "config.${AVA_MACHINE}.703n")
+tl_mr3020_v1_brdcfg=("ar71xx" "config.${AVA_MACHINE}.mr3020")
 
 which wget > /dev/null && DL_PROG=wget && DL_PARA="-nv -O"
 which curl > /dev/null && DL_PROG=curl && DL_PARA="-L -o"
