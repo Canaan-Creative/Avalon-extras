@@ -20,13 +20,13 @@ SCRIPT_VERSION=20151223
 
 # OpenWrt repo
 avalon4_owrepo="svn://svn.openwrt.org/openwrt/trunk@43076"
-avalon6_owrepo="svn://svn.openwrt.org/openwrt/trunk@43076"
+avalon6_owrepo="git://git.openwrt.org/15.05/openwrt.git@master"
 
 # OpenWrt feeds
 FEEDS_CONF=feeds.${AVA_MACHINE}.conf
 
 # Board config: target(get it in the OpenWrt bin), config
-rpi2_modelb_brdcfg=("brcm2709" "config.${AVA_MACHINE}.rpi2")
+rpi2_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.rpi2")
 rpi1_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.raspberry-pi")
 tl_wr703n_v1_brdcfg=("ar71xx" "config.${AVA_MACHINE}.703n")
 tl_mr3020_v1_brdcfg=("ar71xx" "config.${AVA_MACHINE}.703n")
@@ -38,8 +38,8 @@ which curl > /dev/null && DL_PROG=curl && DL_PARA="-L -o"
 unset SED
 unset GREP_OPTIONS
 [ "`id -u`" == "0" ] && echo "[ERROR]: Please use non-root user" && exit 1
-CORE_NUM="$(expr $(nproc) + 1)"
-[ -z "$CORE_NUM" ] && CORE_NUM=2
+# Adjust CORE_NUM by yourself
+[ -z "${CORE_NUM}" ] && CORE_NUM="$(expr $(nproc) + 1)"
 DATE=`date +%Y%m%d`
 SCRIPT_FILE="$(readlink -f $0)"
 SCRIPT_DIR=`dirname ${SCRIPT_FILE}`
@@ -101,6 +101,9 @@ prepare_source() {
                 ;;
         esac
     fi
+    [ ! -e dl ] && mkdir dl
+    cd ${OPENWRT_DIR}
+    ln -sf ../dl
 }
 
 build_image() {
