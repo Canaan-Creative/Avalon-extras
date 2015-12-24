@@ -1,3 +1,3 @@
 # Documents:	https://en.bitcoin.it/wiki/Avalon
-# Group:	http://canaan-creative.com
-# Shop:		https://ehash.com
+# Group:	http://www.canaan-creative.com
+# Mailing list: http://lists.canaan-creative.com
