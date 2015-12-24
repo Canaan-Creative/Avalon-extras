@@ -15,8 +15,8 @@ SCRIPT_VERSION=20151223
 # Support machine: avalon6, avalon4
 [ -z "${AVA_MACHINE}" ] && AVA_MACHINE=avalon6
 
-# Support target board: pi-modelb-v2, pi-modelb-v1, tl-wr703n-v1, tl-mr3020-v1
-[ -z "${AVA_TARGET_BOARD}" ] && AVA_TARGET_BOARD=pi-modelb-v1
+# Support target board: rpi2-modelb, rpi1-modelb, tl-wr703n-v1, tl-mr3020-v1
+[ -z "${AVA_TARGET_BOARD}" ] && AVA_TARGET_BOARD=rpi2-modelb
 
 # OpenWrt repo
 avalon4_owrepo="svn://svn.openwrt.org/openwrt/trunk@43076"
@@ -26,8 +26,8 @@ avalon6_owrepo="svn://svn.openwrt.org/openwrt/trunk@43076"
 FEEDS_CONF=feeds.${AVA_MACHINE}.conf
 
 # Board config: target(get it in the OpenWrt bin), config
-pi_modelb_v2_brdcfg=("brcm2709" "config.${AVA_MACHINE}.rpi2")
-pi_modelb_v1_brdcfg=("brcm2708" "config.${AVA_MACHINE}.raspberry-pi")
+rpi2_modelb_brdcfg=("brcm2709" "config.${AVA_MACHINE}.rpi2")
+rpi1_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.raspberry-pi")
 tl_wr703n_v1_brdcfg=("ar71xx" "config.${AVA_MACHINE}.703n")
 tl_mr3020_v1_brdcfg=("ar71xx" "config.${AVA_MACHINE}.703n")
 
