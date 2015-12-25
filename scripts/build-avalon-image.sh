@@ -109,7 +109,8 @@ prepare_source() {
 build_image() {
     cd ${OPENWRT_DIR}
     yes "" | make oldconfig > /dev/null
-    make -j${CORE_NUM}
+    # clean before build
+    make -j${CORE_NUM} clean world
 }
 
 build_cgminer() {
