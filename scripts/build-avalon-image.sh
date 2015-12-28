@@ -1,12 +1,15 @@
 #!/bin/bash
 # This is a script for build avalon controller image
-# ROOT_DIR is avalon
-# OPENWRT_DIR is ${ROOT_DIR}/openwrt, build the image in it
 #
+#  Copyright 2014-2015 Mikeqin <Fengling.Qin@gmail.com>
+#  Copyright 2012-2015 Xiangfu <xiangfu@openmobilefree.com>
+#
+# OPENWRT_DIR is ${ROOT_DIR}/openwrt, build the image in it
 # Controller's image should include the following configurations:
-# ${AVA_MACHINE}_owrepo : OpenWrt repo, format: repo_url@repo_ver
-# feeds.${AVA_MACHINE}.conf : OpenWrt feeds, file locate in cgminer-openwrt-packages
-# ${AVA_TARGET_BOARD}_brdcfg : OpenWrt target and config, file locate in cgminer-openwrt-packages
+#    ${AVA_MACHINE}_owrepo : OpenWrt repo, format: repo_url@repo_ver
+#    feeds.${AVA_MACHINE}.conf : OpenWrt feeds, file locate in cgminer-openwrt-packages
+#    ${AVA_TARGET_BOARD}_brdcfg : OpenWrt target and config, file locate in cgminer-openwrt-packages
+#
 # Learn bash: http://explainshell.com/
 set -e
 
