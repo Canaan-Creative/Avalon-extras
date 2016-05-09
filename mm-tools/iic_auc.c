@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <unistd.h>
+#include "iic.h"
 #include "auc.h"
 
 static AUC_HANDLE g_hauc[AUC_DEVCNT];
 static uint32_t g_auc_cnts = 0;
 static uint8_t g_slaveaddr = 0;
 
-int i2c_open(char *dev)
+static int i2c_open(char *dev)
 {
 	uint32_t i;
 
@@ -33,7 +34,7 @@ int i2c_open(char *dev)
 	return 0;
 }
 
-int i2c_close()
+static int i2c_close()
 {
 	uint32_t i = 0;
 
@@ -45,13 +46,13 @@ int i2c_close()
 	return 0;
 }
 
-int i2c_setslave(uint8_t addr)
+static int i2c_setslave(uint8_t addr)
 {
 	g_slaveaddr = addr;
 	return 0;
 }
 
-int i2c_write(unsigned char *wbuf, unsigned int wlen)
+static int i2c_write(unsigned char *wbuf, unsigned int wlen)
 {
 	int ret;
 	uint32_t i = 0;
@@ -68,7 +69,7 @@ int i2c_write(unsigned char *wbuf, unsigned int wlen)
 	return 0;
 }
 
-int i2c_read(unsigned char *rbuf, unsigned int rlen)
+static int i2c_read(unsigned char *rbuf, unsigned int rlen)
 {
 	int ret;
 	uint32_t i;
@@ -85,3 +86,11 @@ int i2c_read(unsigned char *rbuf, unsigned int rlen)
 	return 0;
 }
 
+struct i2c_drv auc_drv = {
+	.name = "auc",
+	.i2c_open = i2c_open,
+	.i2c_close = i2c_close,
+	.i2c_setslave = i2c_setslave,
+	.i2c_write = i2c_write,
+	.i2c_read = i2c_read,
+};

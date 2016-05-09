@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <pthread.h>
+#include "uthash.h"
 #include "hexdump.c"
 #include "crc.h"
 #include "iic.h"
@@ -21,6 +23,14 @@
 #define CS_DISABLE 1
 #define IIC2SPI_DISABLE 3
 
+#define THR_NAME_LEN    10
+struct thread {
+	pthread_t pth;
+	char name[THR_NAME_LEN];
+	UT_hash_handle hh;
+};
+
+struct thread *thread_pool = NULL;
 static int gmcs1_len;
 
 static void sleep_ms(unsigned int ms)
@@ -28,68 +38,79 @@ static void sleep_ms(unsigned int ms)
     usleep(ms * 1000);
 }
 
-static void enable_download(void)
+static int enable_download(struct i2c_drv *iic)
 {
 	unsigned char buf[1];
 
-	i2c_setslave(IIC_SLAVE_CTL);
+	iic->i2c_setslave(IIC_SLAVE_CTL);
 	/* enable download */
 	buf[0] = 0x2;
-	if (i2c_write(buf, 1)) {
-		printf("%s failed\n", __FUNCTION__);
-		exit(1);
+	if (iic->i2c_write(buf, 1)) {
+		printf("%s-%s failed!\n", iic->name, __FUNCTION__);
+		return 1;
 	}
 
-	i2c_setslave(IIC_SLAVE_DAT);
+	iic->i2c_setslave(IIC_SLAVE_DAT);
+	return 0;
 }
 
-static void set_cs(unsigned char dat)
+static int set_cs(struct i2c_drv *iic, unsigned char dat)
 {
 	unsigned char buf[1];
 
-	i2c_setslave(IIC_SLAVE_CTL);
+	iic->i2c_setslave(IIC_SLAVE_CTL);
 	/* set cs */
 	buf[0] = dat;
-	if (i2c_write(buf, 1)) {
-		printf("%s failed\n", __FUNCTION__);
-		exit(1);
+	if (iic->i2c_write(buf, 1)) {
+		printf("%s-%s failed!\n", iic->name, __FUNCTION__);
+		return 1;
 	}
-	i2c_setslave(IIC_SLAVE_DAT);
+	iic->i2c_setslave(IIC_SLAVE_DAT);
+	return 0;
 }
 
-static void set_reboot(void)
+static int set_reboot(struct i2c_drv *iic)
 {
 	unsigned char buf[1];
 
-	i2c_setslave(IIC_SLAVE_CTL);
+	iic->i2c_setslave(IIC_SLAVE_CTL);
 	buf[0] = 4;
-	if (i2c_write(buf, 1)) {
-		printf("%s failed\n", __FUNCTION__);
-		exit(1);
+	if (iic->i2c_write(buf, 1)) {
+		printf("%s-%s failed!\n", iic->name, __FUNCTION__);
+		return 1;
 	}
+	return 0;
 }
 
-static void set_mosi_dat(unsigned char *buf, unsigned int len)
+static int set_mosi_dat(struct i2c_drv *iic, unsigned char *buf, unsigned int len)
 {
-	i2c_setslave(IIC_SLAVE_DAT);
-	if (i2c_write(buf, len)) {
-		printf("%s failed\n", __FUNCTION__);
-		exit(1);
+	iic->i2c_setslave(IIC_SLAVE_DAT);
+	if (iic->i2c_write(buf, len)) {
+		printf("%s-%s failed!\n", iic->name, __FUNCTION__);
+		return 1;
 	}
+	return 0;
 }
 
-static void flash_prog_en(void)
+static int flash_prog_en(struct i2c_drv *iic)
 {
 	unsigned char buf_cmd[1];
 
-	set_cs(CS_ENABLE);
+	if (set_cs(iic, CS_ENABLE))
+		return 1;
+
 	buf_cmd[0] = 0x06;
-	set_mosi_dat(buf_cmd, 1);
-	set_cs(CS_DISABLE);
+	if (set_mosi_dat(iic, buf_cmd, 1))
+		return 1;
+
+	if (set_cs(iic, CS_DISABLE))
+		return 1;
+
 	sleep_ms(3);
+	return 0;
 }
 
-static void flash_erase_op(unsigned int addr, unsigned char op)
+static int flash_erase_op(struct i2c_drv *iic, unsigned int addr, unsigned char op)
 {
 	unsigned char buf[4];
 
@@ -98,68 +119,93 @@ static void flash_erase_op(unsigned int addr, unsigned char op)
 	buf[2] = ((addr >> 8) & 0xff);
 	buf[3] = (addr & 0xff);
 
-	flash_prog_en();
-	set_cs(CS_ENABLE);
-	set_mosi_dat(buf, 4);
-	set_cs(CS_DISABLE);
+	if (flash_prog_en(iic))
+		return 1;
+
+	if (set_cs(iic, CS_ENABLE))
+		return 1;
+
+	if (set_mosi_dat(iic, buf, 4))
+		return 1;
+
+	if (set_cs(iic, CS_DISABLE))
+		return 1;
+
 	sleep_ms(1000);
+	return 0;
 }
 
-static void flash_earse(void)
+static int flash_earse(struct i2c_drv *iic)
 {
 	unsigned int addr = MCS1_ADDR_BASE;
 	int i;
 
-	printf("BE64 addr = %x\n", addr);
+	printf("%s-BE64 addr = %x\n", iic->name, addr);
 	for (i = 0; i < 7; i++) {
-		flash_erase_op(addr, 0xd8);
+		if (flash_erase_op(iic, addr, 0xd8))
+			return 1;
 		addr += SPI_FLASH_BLOCK;
 		printf("+");
 		fflush(stdout);
 	}
 
 	printf("\n");
-	printf("BE32 addr = %x\n", addr);
-	flash_erase_op(addr, 0x52);
+	printf("%s-BE32 addr = %x\n", iic->name, addr);
+	if (flash_erase_op(iic, addr, 0x52))
+		return 1;
 	addr += SPI_FLASH_32K;
 	printf("+");
 	fflush(stdout);
 
 	printf("\n");
-	printf("SE addr = %x\n", addr);
+	printf("%s-SE addr = %x\n", iic->name, addr);
 	for (i = 0; i < 4; i++) {
-		flash_erase_op(addr, 0x20);
+		if (flash_erase_op(iic, addr, 0x20))
+			return 1;
 		addr += SPI_FLASH_SEC;
 		printf("+");
 		fflush(stdout);
 	}
 	/* mboot confg reserved, 3 sectors[0xfc000 ~ 0xfe000] */
 	printf("\n");
-	printf("SE addr = %x\n", 0xff000);
+	printf("%s-SE addr = %x\n", iic->name, 0xff000);
 	/* Last sector */
-	flash_erase_op(0xff000, 0x20);
+	if (flash_erase_op(iic, 0xff000, 0x20))
+		return 1;
 	printf("+");
 	fflush(stdout);
 	printf("\n");
+	return 0;
 }
 
-static void flash_prog_page(unsigned char *buf, unsigned int addr, unsigned int len)
+static int flash_prog_page(struct i2c_drv *iic, unsigned char *buf, unsigned int addr, unsigned int len)
 {
 	unsigned char buf_cmd[4];
 
-	flash_prog_en();
-	set_cs(CS_ENABLE);
+	if (flash_prog_en(iic))
+		return 1;
+
+	if (set_cs(iic, CS_ENABLE))
+		return 1;
+
 	buf_cmd[0] = 0x02;
 	buf_cmd[1] = ((addr >> 16) & 0xff);
 	buf_cmd[2] = ((addr >> 8) & 0xff);
 	buf_cmd[3] = (addr & 0xff);
-	set_mosi_dat(buf_cmd, 4);
-	set_mosi_dat(buf, len);
-	set_cs(CS_DISABLE);
+	if (set_mosi_dat(iic, buf_cmd, 4))
+		return 1;
+
+	if (set_mosi_dat(iic, buf, len))
+		return 1;
+
+	if (set_cs(iic, CS_DISABLE))
+		return 1;
+
 	sleep_ms(3);
+	return 0;
 }
 
-static void flash_prog_info(unsigned short crc, unsigned int len)
+static int flash_prog_info(struct i2c_drv *iic, unsigned short crc, unsigned int len)
 {
 	unsigned char mcs1_info[16];
 
@@ -185,7 +231,10 @@ static void flash_prog_info(unsigned short crc, unsigned int len)
 
         mcs1_info[14] = 0x00;
         mcs1_info[15] = 0x00;
-	flash_prog_page(mcs1_info, MCS1_INFO_ADDR_BASE, 16);
+	if (flash_prog_page(iic, mcs1_info, MCS1_INFO_ADDR_BASE, 16))
+		return 1;
+
+	return 0;
 }
 
 static char char2byte(char char0, char char1)
@@ -205,13 +254,13 @@ static char char2byte(char char0, char char1)
 
 static int mboot_mcs_file(void)
 {
-	int i, byte_num, mm_flg = 0, mm_info = 0;
+	int i, byte_num, mm_flg = 0, mm_info = 0, mcs1_len = 0;
 	unsigned char tmp[1000];
 	unsigned char data;
 	FILE *mboot_mcs_fp;
 	FILE *mboot_mcs_fp_new;
 
-	gmcs1_len = 0;
+	mcs1_len = 0;
 	mboot_mcs_fp = fopen("./mm.mcs", "rt");
 	if (mboot_mcs_fp == NULL) {
 	    printf("open mm.mcs error!\n");
@@ -244,7 +293,7 @@ static int mboot_mcs_file(void)
 			for (i = 0; i < byte_num * 2; i += 2) {
 				data = char2byte(tmp[9 + i], tmp[9 + i + 1]);
 				fputc(data, mboot_mcs_fp_new);
-				gmcs1_len++;
+				mcs1_len++;
 			}
 		} else if (tmp[7] == '0' && tmp[8] == '1' && mm_flg && !mm_info)
 			break;
@@ -253,35 +302,42 @@ static int mboot_mcs_file(void)
 
 	fclose(mboot_mcs_fp);
 	fclose(mboot_mcs_fp_new);
-	return 0;
+	return mcs1_len;
 }
 
-void mboot(void)
+static void *upgrade_op(void *arg)
 {
+	struct i2c_drv *iic = (struct i2c_drv *)arg;
 	unsigned char FLASH_PAGE[SPI_FLASH_PAGE];
 	unsigned int addr = MCS1_ADDR_BASE;
 	int byte_num, all_byte;
 	unsigned short crc_init = 0;
 	FILE *mboot_mcs_fp_new;
-	int j;
+	int i, j;
 
-	mboot_mcs_file();
 	all_byte = gmcs1_len;
-
-	if (i2c_open(I2C_DEV)) {
-		printf("i2c_open failed!\n");
+	if (iic->i2c_open(I2C_DEV)) {
+		printf(" %s-i2c_open failed!\n", iic->name);
 		return;
 	}
 
 	mboot_mcs_fp_new = fopen("./mm_new.mcs", "rt");
+	printf(" (1) %s-MM Flash Erase Begin! Please Wait...\n", iic->name);
+	if (enable_download(iic))
+		goto ret;
 
-	printf("(1) MM Flash Erase Begin! Please Wait...\n");
-	enable_download();
-	flash_prog_en();
-	flash_earse();
-	printf("    MM Flash Erase Success!\n");
+	if (flash_prog_en(iic)) {
+		printf("%s-flash_prog_en failed!\n", iic->name);
+		goto ret;
+	}
 
-	printf("(2) Flash Program Begin! Please Wait...\n");
+	if (flash_earse(iic)) {
+		printf("%s-flash_earse failed!\n", iic->name);
+		goto ret;
+	}
+	printf("    %s-MM Flash Erase Success!\n", iic->name);
+
+	printf("(2) %s-Flash Program Begin! Please Wait...\n", iic->name);
 	while (all_byte) {
 		if (all_byte >= SPI_FLASH_PAGE) {
 			byte_num = SPI_FLASH_PAGE;
@@ -295,49 +351,73 @@ void mboot(void)
 			FLASH_PAGE[j] = fgetc(mboot_mcs_fp_new);
 			crc_init = mboot_crc16(crc_init, &FLASH_PAGE[j], 1);
 		}
-		flash_prog_page(FLASH_PAGE, addr, byte_num);
+		if (flash_prog_page(iic, FLASH_PAGE, addr, byte_num)) {
+			printf("%s-flash_prog_page failed!\n", iic->name);
+			goto ret;
+		}
 		addr += byte_num;
 		printf("+");
 		fflush(stdout);
 	}
-	printf("\n    MM Flash Program Success!\n");
+	printf("\n    %s-MM Flash Program Success!\n", iic->name);
 
-	flash_prog_info(crc_init, gmcs1_len);
-	fclose(mboot_mcs_fp_new);
-	printf("    MM Flash Program Done!\n");
-	set_cs(IIC2SPI_DISABLE);
-	printf("(3) Reboot!\n");
-	set_reboot();
-	i2c_close();
-}
-
-void mm_detect(void)
-{
-#define I2C_SLAVE_ADDR	1
-	unsigned char mmpkg[40];
-	i2c_open(I2C_DEV);
-	i2c_setslave(I2C_SLAVE_ADDR);
-
-	/* MM DETECT PACKAGE */
-	memset(mmpkg, 0, 40);
-	mmpkg[0] = 0x43;
-	mmpkg[1] = 0x4e;
-	mmpkg[2] = 0x10;
-	mmpkg[3] = 0x00;
-	mmpkg[4] = 0x01;
-	mmpkg[5] = 0x01;
-
-	printf("Detect MM:\n");
-	hexdump(mmpkg, 40);
-
-	/* Wait mm ack */
-	sleep_ms(20);
-
-	if (!i2c_read(mmpkg, 40)) {
-		printf("Ack MM:\n");
-		hexdump(mmpkg, 40);
+	if (flash_prog_info(iic, crc_init, gmcs1_len)) {
+		printf("%s-flash_prog_info failed!\n", iic->name);
+		goto ret;
 	}
 
-	i2c_close();
+	fclose(mboot_mcs_fp_new);
+	printf("    %s-MM Flash Program Done!\n", iic->name);
+	if (set_cs(iic, IIC2SPI_DISABLE)) {
+		printf("%s-IIC2SPI_DISABLE failed!\n", iic->name);
+		goto ret;
+	}
+
+	printf("(3) %s-Reboot!\n", iic->name);
+	if (set_reboot(iic)) {
+		printf("%s-set_reboot failed!\n", iic->name);
+		goto ret;
+	}
+
+ret:
+	iic->i2c_close();
+}
+
+#define DRIVER_UPGRADE_MCS(X) mboot_upgrade(&X##_drv);
+void mboot_upgrade(struct i2c_drv *iic)
+{
+	struct thread *thr = NULL;
+
+	thr = (struct thread *)malloc(sizeof(struct thread));
+	if (!thr) {
+		printf("%s-Failed to malloc struct thread!", iic->name);
+		exit(1);
+	}
+	strncpy(thr->name, iic->name, THR_NAME_LEN);
+
+	pthread_create(&thr->pth, NULL, upgrade_op, (void *)iic);
+	HASH_ADD_STR(thread_pool, name, thr);
+}
+
+#define DRIVER_CHECK_FINISH(X) mboot_check(&X##_drv);
+void mboot_check(struct i2c_drv *iic)
+{
+	struct thread *thr = NULL;
+
+	HASH_FIND_STR(thread_pool, iic->name, thr);
+	if (thr) {
+		pthread_join(thr->pth, NULL);
+		HASH_DEL(thread_pool, thr);
+		free(thr);
+	}
+}
+
+void mboot(void)
+{
+	gmcs1_len = mboot_mcs_file();
+
+	DRIVERS_DO(DRIVER_UPGRADE_MCS);
+	DRIVERS_DO(DRIVER_CHECK_FINISH);
+	printf("finish mboot!\n");
 }
 

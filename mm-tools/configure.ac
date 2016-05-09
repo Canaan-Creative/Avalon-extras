@@ -44,15 +44,6 @@ AC_SUBST(LIBUSB_LIBS)
 AC_SUBST(JANSSON_LIBS)
 AC_SUBST(MATH_LIBS)
 
-iic_rpi="no"
-
-AC_ARG_ENABLE([iic_rpi],
-	      [AC_HELP_STRING([--enable-iic-rpi], [Compile support for mm upgrade by Raspberry Pi B(default disabled)])],
-	      [iic_rpi=$enableval]
-	      )
-AM_CONDITIONAL([USE_IIC_RPI], [test x$iic_rpi = xyes])
-AM_CONDITIONAL([USE_IIC_AUC], [test x$iic_rpi = xno])
-
 AC_CONFIG_FILES([
 	Makefile
 	compat/Makefile
@@ -69,13 +60,8 @@ echo
 echo
 echo "Configuration Options Summary:"
 echo
-
-if test "x$iic_rpi" = xyes; then
-    echo "  USE_IIC_RPI  :  Enable"
-else
-    echo "  USE_IIC_AUC  :  Enable"
-fi
-
+echo "  USE_IIC_RPI  :  Enable"
+echo "  USE_IIC_AUC  :  Enable"
 echo
 echo "Compilation............: make (or gmake)"
 echo "  CPPFLAGS.............: $CPPFLAGS"
