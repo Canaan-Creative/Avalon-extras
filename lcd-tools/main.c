@@ -10,23 +10,68 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
+#include <getopt.h>
 #include "lcd.h"
+
+static struct option opts[] = {
+	{ "help", no_argument, NULL, 'h' },
+	{ "control", required_argument, NULL, 'c' },
+	{ "string", required_argument, NULL, 's' },
+	{ NULL, 0, NULL, 0 }
+};
+
+static void help(void)
+{
+	printf("Usage: lcd-tools [options] ...\n"
+		"  -h --help\t\t\tPrint this help message\n"
+		"  -c --control\t\t\tTurn off or on (0/1)\n"
+		"  -s --string\t\t\tDisplay string\n"
+	);
+}
+
+static void display(char *str)
+{
+	int row = 0;
+
+	lcd_init();
+	lcd_on();
+
+	while (*str) {
+		/* process \n */
+		if ((*str == '\\') && (*(str + 1) == 'n')) {
+			row++;
+			lcd_setcursor(0, row);
+			str += 2;
+			continue;
+		}
+		lcd_write(*str);
+		str++;
+	}
+}
 
 int main(int argc, char *argv[])
 {
-	lcd_init();
+	int c, option_index = 0;
 
-	lcd_on();
-	lcd_puts("Ver: 601511-f4f59c70");
-
-	while (1) {
-		lcd_setcursor(0, 1);
-		lcd_puts("GHS1m: 3236.24");
-		usleep(1000 * 100);
-		lcd_setcursor(0, 1);
-		lcd_puts("GHS1m: 3236.25");
-		usleep(1000 * 100);
+	c = getopt_long(argc, argv, "hc:s:", opts, &option_index);
+	switch (c) {
+		case 'h':
+			help();
+			break;
+		case 'c':
+			if (atoi(optarg))
+				lcd_on();
+			else
+				lcd_off();
+			break;
+		case 's':
+			display(optarg);
+			break;
+		default:
+			help();
+			break;
 	}
 
 	return 0;
