@@ -75,18 +75,14 @@ static void lcd_op(uint8_t data, uint8_t mode, uint8_t rs)
 	iic_write_byte(LCD_ADDR, (data & 0xf0) | g_lcd_bg | rs);
 	/* enable command */
 	iic_write_byte(LCD_ADDR, (data & 0xf0) | g_lcd_bg | rs | LCD_EN);
-	usleep(50);
 	iic_write_byte(LCD_ADDR, (data & 0xf0) | g_lcd_bg | rs);
-	usleep(800);
 
 	if (mode == LCD_FULLMODE) {
 		/* write low 8bit */
 		iic_write_byte(LCD_ADDR, ((data << 4) & 0xf0) | g_lcd_bg | rs);
 		/* enable command */
 		iic_write_byte(LCD_ADDR, ((data << 4) & 0xf0) | g_lcd_bg | rs | LCD_EN);
-		usleep(50);
 		iic_write_byte(LCD_ADDR, ((data << 4) & 0xf0) | g_lcd_bg | rs);
-		usleep(800);
 	}
 }
 
@@ -99,11 +95,9 @@ void lcd_init(void)
 
 	/* Initializing HD44780.pdf P.45 */
 	lcd_op(0, LCD_HALFMODE, 0);
-	usleep(50 * 1000);
 
 	for (i = 0; i < 3; i++) {
 		lcd_op(0x30, LCD_HALFMODE, 0);
-		usleep(5 * 1000);
 	}
 
 	/* set to 4-Bit Interface */
@@ -142,13 +136,11 @@ void lcd_off(void)
 void lcd_clear(void)
 {
 	lcd_op(LCD_CLEAR, LCD_FULLMODE, 0);
-	usleep(2 * 1000);
 }
 
 void lcd_home(void)
 {
 	lcd_op(LCD_HOME, LCD_FULLMODE, 0);
-	usleep(2 * 1000);
 }
 
 void lcd_setcursor(uint8_t col, uint8_t row)
