@@ -19,6 +19,7 @@ static struct option opts[] = {
 	{ "help", no_argument, NULL, 'h' },
 	{ "control", required_argument, NULL, 'c' },
 	{ "string", required_argument, NULL, 's' },
+	{ "init", no_argument, NULL, 'i' },
 	{ NULL, 0, NULL, 0 }
 };
 
@@ -28,6 +29,7 @@ static void help(void)
 		"  -h --help\t\t\tPrint this help message\n"
 		"  -c --control\t\t\tTurn off or on (0/1)\n"
 		"  -s --string\t\t\tDisplay string\n"
+		"  -i --init\t\t\tInit LCD\n"
 	);
 }
 
@@ -35,9 +37,7 @@ static void display(char *str)
 {
 	int row = 0;
 
-	lcd_init();
-	lcd_on();
-
+	lcd_home();
 	while (*str) {
 		/* process \n */
 		if ((*str == '\\') && (*(str + 1) == 'n')) {
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 {
 	int c, option_index = 0;
 
-	c = getopt_long(argc, argv, "hc:s:", opts, &option_index);
+	c = getopt_long(argc, argv, "hc:s:i", opts, &option_index);
 	switch (c) {
 		case 'h':
 			help();
@@ -68,6 +68,9 @@ int main(int argc, char *argv[])
 			break;
 		case 's':
 			display(optarg);
+			break;
+		case 'i':
+			lcd_init();
 			break;
 		default:
 			help();

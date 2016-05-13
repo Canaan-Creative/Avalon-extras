@@ -58,7 +58,7 @@
 #define LCD_5X8DOTS	0x0
 
 #define LCD_ADDR	0x27
-static uint8_t g_lcd_bg = 0;
+static uint8_t g_lcd_bg = LCD_BGON;
 static uint8_t g_lcd_dispctrl = 0;
 
 static void iic_write_byte(uint8_t addr, uint8_t byte)
