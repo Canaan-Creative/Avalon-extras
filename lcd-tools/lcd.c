@@ -11,6 +11,8 @@
 
 #include <stdint.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "iic.h"
 #include "lcd.h"
 
@@ -57,9 +59,11 @@
 #define LCD_2LINE	0x8
 #define LCD_5X8DOTS	0x0
 
-#define LCD_ADDR	0x27
+#define DEFAULT_LCD_ADDR	0x27
 static uint8_t g_lcd_bg = LCD_BGON;
 static uint8_t g_lcd_dispctrl = 0;
+/* Only support 7 bit address */
+static uint8_t g_lcd_addr = DEFAULT_LCD_ADDR;
 
 static void iic_write_byte(uint8_t addr, uint8_t byte)
 {
@@ -72,17 +76,17 @@ static void iic_write_byte(uint8_t addr, uint8_t byte)
 static void lcd_op(uint8_t data, uint8_t mode, uint8_t rs)
 {
 	/* write command or high 8 bits data */
-	iic_write_byte(LCD_ADDR, (data & 0xf0) | g_lcd_bg | rs);
+	iic_write_byte(g_lcd_addr, (data & 0xf0) | g_lcd_bg | rs);
 	/* enable command */
-	iic_write_byte(LCD_ADDR, (data & 0xf0) | g_lcd_bg | rs | LCD_EN);
-	iic_write_byte(LCD_ADDR, (data & 0xf0) | g_lcd_bg | rs);
+	iic_write_byte(g_lcd_addr, (data & 0xf0) | g_lcd_bg | rs | LCD_EN);
+	iic_write_byte(g_lcd_addr, (data & 0xf0) | g_lcd_bg | rs);
 
 	if (mode == LCD_FULLMODE) {
 		/* write low 8bit */
-		iic_write_byte(LCD_ADDR, ((data << 4) & 0xf0) | g_lcd_bg | rs);
+		iic_write_byte(g_lcd_addr, ((data << 4) & 0xf0) | g_lcd_bg | rs);
 		/* enable command */
-		iic_write_byte(LCD_ADDR, ((data << 4) & 0xf0) | g_lcd_bg | rs | LCD_EN);
-		iic_write_byte(LCD_ADDR, ((data << 4) & 0xf0) | g_lcd_bg | rs);
+		iic_write_byte(g_lcd_addr, ((data << 4) & 0xf0) | g_lcd_bg | rs | LCD_EN);
+		iic_write_byte(g_lcd_addr, ((data << 4) & 0xf0) | g_lcd_bg | rs);
 	}
 }
 
@@ -90,7 +94,12 @@ static void lcd_op(uint8_t data, uint8_t mode, uint8_t rs)
 void lcd_init(void)
 {
 	uint8_t i;
+	char *lcd_addr = getenv("IIC_LCD_ADDR");
 
+	if (lcd_addr)
+		g_lcd_addr = atoi(lcd_addr);
+
+	printf("LCD addr is %d\n", g_lcd_addr);
 	iic_init();
 
 	/* Initializing HD44780.pdf P.45 */
