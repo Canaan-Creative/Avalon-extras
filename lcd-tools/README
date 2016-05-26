@@ -1,0 +1,56 @@
+# lcd tools
+
+## Introduction
+lcd tools is a demo. It use bitbang driver to display simple strings on a 1602 LCD device.
+
+It maybe run on any Linux OS. I use Raspberry Pi 1 Model B for testing.
+
+The LCD is usually attach a 8-bit I/O expander with IIC bus interface
+
+(pcf8574 or pcf8574a like device). So we can use just two wire to operate the device.
+
+## How to use it ?
+### Preparation
+Raspberry Pi 1 Model B x 1, 
+
+IIC LCD x 1 (http://yourduino.com/sunshop2/index.php?l=product_detail&p=170), 
+
+and some wires.
+
+### Configure the hardware
+
+SCL_PIN <---> GPIO_27
+
+SDA_PIN <---> GPIO_17
+
+Don't foget connect +5V and GND.
+
+You can find the pin from here: http://elinux.org/RPi_Low-level_peripherals
+
+### Go
+Init LCD: lcd-tools -i
+
+Display strings: lcd-tools -s "lcd\ntools"
+
+Turn on/off: lcd-tools -c 1 or lcd-tools -c 1
+
+Help: lcd-tools -h
+
+Note:
+
+The default IIC address for LCD is 39, so if you want to change it, 
+
+then set the IIC_LCD_ADDR environment variable as you want, It only 
+
+support decimal string. 
+
+eg: IIC_LCD_ADDR=16 lcd-tools -i
+
+If you cann't find the address, you can use i2c-tools to find it.
+the helpful link https://learn.adafruit.com/adafruits-raspberry-pi-lesson-4-gpio-setup/configuring-i2c
+
+If you use Arduino, then you can find the demo here: 
+https://arduino-info.wikispaces.com/LCD-Blue-I2C
+
+### Links
+http://www.ti.com/lit/ds/symlink/pcf8574a.pdf
