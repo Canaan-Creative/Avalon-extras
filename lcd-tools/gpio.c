@@ -23,7 +23,7 @@ static int gpio_export(int pin)
 	char buffer[PIN_BUFLEN];
 	FILE *fp = NULL;
 
-	fp = fopen("/sys/class/gpio/export", "r+");
+	fp = fopen("/sys/class/gpio/export", "w");
 	if (!fp) {
 		printf("Failed to open export %d!\n", pin);
 		return 1;
@@ -45,7 +45,7 @@ static int gpio_unexport(int pin)
 	char buffer[PIN_BUFLEN];
 	FILE *fp = NULL;
 
-	fp = fopen("/sys/class/gpio/unexport", "r+");
+	fp = fopen("/sys/class/gpio/unexport", "w");
 	if (!fp) {
 		printf("Failed to open unexport %d!\n", pin);
 		return 1;
