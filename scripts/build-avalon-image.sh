@@ -13,17 +13,18 @@
 # Learn bash: http://explainshell.com/
 set -e
 
-SCRIPT_VERSION=20151223
+SCRIPT_VERSION=20160604
 
-# Support machine: avalon6, avalon4
+# Support machine: avalon6, avalon4, abc
 [ -z "${AVA_MACHINE}" ] && AVA_MACHINE=avalon6
 
-# Support target board: rpi2-modelb, rpi1-modelb, tl-wr703n-v1, tl-mr3020-v1
+# Support target board: rpi2-modelb, rpi1-modelb, tl-wr703n-v1, tl-mr3020-v1, wrt1200ac
 [ -z "${AVA_TARGET_BOARD}" ] && AVA_TARGET_BOARD=rpi2-modelb
 
 # OpenWrt repo
 avalon4_owrepo="svn://svn.openwrt.org/openwrt/trunk@43076"
 avalon6_owrepo="git://git.openwrt.org/15.05/openwrt.git@master"
+abc_owrepo="git://git.openwrt.org/openwrt.git"
 
 # OpenWrt feeds
 FEEDS_CONF=feeds.${AVA_MACHINE}.conf
@@ -33,6 +34,7 @@ rpi2_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.rpi2")
 rpi1_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.raspberry-pi")
 tl_wr703n_v1_brdcfg=("ar71xx" "config.${AVA_MACHINE}.703n")
 tl_mr3020_v1_brdcfg=("ar71xx" "config.${AVA_MACHINE}.mr3020")
+abc_brdcfg=("mvebu", "config.${AVA_MACHINE}.wrt1200ac")
 
 which wget > /dev/null && DL_PROG=wget && DL_PARA="-nv -O"
 which curl > /dev/null && DL_PROG=curl && DL_PARA="-L -o"
@@ -90,14 +92,19 @@ prepare_source() {
 
         case "${PROTOCOL}" in
             git)
-                GITBRANCH="`echo ${OPENWRT_URL} | cut -d @ -f 2`"
+                GITBRANCH="`echo ${OPENWRT_URL} | cut -s -d @ -f 2`"
                 GITREPO="`echo ${OPENWRT_URL} | cut -d @ -f 1`"
+                [ -z ${GITBRANCH} ] && GITBRANCH=master
                 git clone -b ${GITBRANCH} ${GITREPO} openwrt
                 ;;
             svn)
-                SVNVER="`echo ${OPENWRT_URL} | cut -d @ -f 2`"
+                SVNVER="`echo ${OPENWRT_URL} | cut -s -d @ -f 2`"
                 SVNREPO="`echo ${OPENWRT_URL} | cut -d @ -f 1`"
-                svn co ${SVNREPO}@${SVNVER} openwrt
+                if [ -z ${SVNVER} ]; then
+                    svn co ${SVNREPO}@${SVNVER} openwrt
+                else
+                    svn co ${SVNREPO} openwrt
+                fi
                 ;;
             *)
                 echo "Protocol not supported"; exit 1;
