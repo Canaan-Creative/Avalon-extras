@@ -13,17 +13,17 @@
 # Learn bash: http://explainshell.com/
 set -e
 
-SCRIPT_VERSION=20160604
+SCRIPT_VERSION=20160628
 
 # Support machine: avalon6, avalon4, abc, avalon7
 [ -z "${AVA_MACHINE}" ] && AVA_MACHINE=avalon6
 
-# Support target board: rpi2-modelb, rpi1-modelb, tl-wr703n-v1, tl-mr3020-v1, wrt1200ac, zedboard
-[ -z "${AVA_TARGET_BOARD}" ] && AVA_TARGET_BOARD=rpi2-modelb
+# Support target board: rpi3-modelb, rpi2-modelb, rpi1-modelb, tl-wr703n-v1, tl-mr3020-v1, wrt1200ac, zedboard
+[ -z "${AVA_TARGET_BOARD}" ] && AVA_TARGET_BOARD=rpi3-modelb
 
 # OpenWrt repo
 avalon4_owrepo="svn://svn.openwrt.org/openwrt/trunk@43076"
-avalon6_owrepo="git://git.openwrt.org/15.05/openwrt.git@master"
+avalon6_owrepo="git://git.openwrt.org/openwrt.git@cac971da"
 abc_owrepo="git://git.openwrt.org/openwrt.git"
 avalon7_owrepo="git://git.openwrt.org/openwrt.git"
 
@@ -31,6 +31,7 @@ avalon7_owrepo="git://git.openwrt.org/openwrt.git"
 FEEDS_CONF=feeds.${AVA_MACHINE}.conf
 
 # Board config: target(get it in the OpenWrt bin), config
+rpi3_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.rpi3")
 rpi2_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.rpi2")
 rpi1_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.raspberry-pi")
 tl_wr703n_v1_brdcfg=("ar71xx" "config.${AVA_MACHINE}.703n")
@@ -83,6 +84,13 @@ prepare_feeds() {
     fi
 }
 
+prepare_patches() {
+    cd ${OPENWRT_DIR}
+    $DL_PROG https://raw.github.com/Canaan-Creative/Avalon-extras/master/openwrt-patches/fstools-fixes-mount_root.patch $DL_PARA fstools-fixes-mount_root.patch
+    patch -p1 < ./fstools-fixes-mount_root.patch
+    rm -f fstools-fixes-mount_root.patch
+}
+
 prepare_source() {
     echo "Gen firmware for ${AVA_TARGET_BOARD}:${AVA_MACHINE}"
     cd ${SCRIPT_DIR}
@@ -97,7 +105,9 @@ prepare_source() {
                 GITBRANCH="`echo ${OPENWRT_URL} | cut -s -d @ -f 2`"
                 GITREPO="`echo ${OPENWRT_URL} | cut -d @ -f 1`"
                 [ -z ${GITBRANCH} ] && GITBRANCH=master
-                git clone -b ${GITBRANCH} ${GITREPO} openwrt
+                git clone ${GITREPO} openwrt
+                cd openwrt && git checkout ${GITBRANCH}
+                cd ..
                 ;;
             svn)
                 SVNVER="`echo ${OPENWRT_URL} | cut -s -d @ -f 2`"
@@ -190,10 +200,10 @@ do
             exit
             ;;
         --build)
-            prepare_source && prepare_feeds && prepare_config && prepare_version && build_image && do_release
+            prepare_source && prepare_patches && prepare_feeds && prepare_config && prepare_version && build_image && do_release
             ;;
         --cgminer)
-            prepare_source && prepare_feeds && prepare_config && prepare_version && build_cgminer
+            prepare_source && prepare_patches && prepare_feeds && prepare_config && prepare_version && build_cgminer
             ;;
         --cleanup)
             cleanup
