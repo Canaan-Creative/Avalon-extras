@@ -86,9 +86,7 @@ prepare_feeds() {
 
 prepare_patches() {
     cd ${OPENWRT_DIR}
-    $DL_PROG https://raw.github.com/Canaan-Creative/Avalon-extras/master/openwrt-patches/fstools-fixes-mount_root.patch $DL_PARA fstools-fixes-mount_root.patch
-    patch -p1 < ./fstools-fixes-mount_root.patch
-    rm -f fstools-fixes-mount_root.patch
+    $DL_PROG https://raw.github.com/Canaan-Creative/Avalon-extras/master/openwrt-patches/fstools-fixes-mount_root.patch $DL_PARA fstools-fixes-mount_root.patch && patch -p1 < ./fstools-fixes-mount_root.patch && rm -f fstools-fixes-mount_root.patch
 }
 
 prepare_source() {
@@ -203,7 +201,7 @@ do
             prepare_source && prepare_patches && prepare_feeds && prepare_config && prepare_version && build_image && do_release
             ;;
         --cgminer)
-            prepare_source && prepare_patches && prepare_feeds && prepare_config && prepare_version && build_cgminer
+            prepare_source && prepare_feeds && prepare_config && prepare_version && build_cgminer
             ;;
         --cleanup)
             cleanup
