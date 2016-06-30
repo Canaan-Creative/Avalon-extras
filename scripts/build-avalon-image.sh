@@ -86,7 +86,11 @@ prepare_feeds() {
 
 prepare_patches() {
     cd ${OPENWRT_DIR}
-    $DL_PROG https://raw.github.com/Canaan-Creative/Avalon-extras/master/openwrt-patches/fstools-fixes-mount_root.patch $DL_PARA fstools-fixes-mount_root.patch && patch -p1 < ./fstools-fixes-mount_root.patch && rm -f fstools-fixes-mount_root.patch
+    $DL_PROG https://raw.github.com/Canaan-Creative/Avalon-extras/master/openwrt-patches/fstools-fixes-mount_root.patch $DL_PARA fstools-fixes-mount_root.patch
+    if ! patch -R -p1 --dry-run < ./fstools-fixes-mount_root.patch; then
+        patch -p1 < ./fstools-fixes-mount_root.patch
+    fi
+    rm -f fstools-fixes-mount_root.patch
 }
 
 prepare_source() {
