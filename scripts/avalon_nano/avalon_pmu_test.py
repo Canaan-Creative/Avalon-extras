@@ -47,9 +47,11 @@ def mm_package(cmd_type, idx = "01", cnt = "01", module_id = None, pdata = '0'):
 	return "434E" + cmd_type + "00" + idx + cnt + data + hex(crc)[2:].rjust(4, '0')
 
 # AVAM_P_SET_VOLT:
-#    One Byte Input Voltage Value:
-#    First Half Byte Is The Second Power
-#    Last Half Byte Is The First Power
+#    Two Byte Input Voltage Value:
+#    First Byte: 0 Open  Voltage Value Output
+#                1 Close Voltage Value Output
+#    Last  Byte: High 4 Bits Is The Second Road Power
+#                Low  4 Bits Is The First  Road Power
 # AVAM_P_TEST:
 #    First  Byte: 01 Open Power;  02 Close Power;  03 Power Resutl
 #    Second Byte: 01 First Power; 02 Second Power; 03 First And Second Power
