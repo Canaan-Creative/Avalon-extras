@@ -1,7 +1,7 @@
 #!/bin/bash
 # This is a script for build avalon controller image
 #
-#  Copyright 2014-2015 Mikeqin <Fengling.Qin@gmail.com>
+#  Copyright 2014-2016 Mikeqin <Fengling.Qin@gmail.com>
 #  Copyright 2012-2015 Xiangfu <xiangfu@openmobilefree.com>
 #
 # OPENWRT_DIR is ${ROOT_DIR}/openwrt, build the image in it
@@ -13,7 +13,7 @@
 # Learn bash: http://explainshell.com/
 set -e
 
-SCRIPT_VERSION=20160628
+SCRIPT_VERSION=20160708
 
 # Support machine: avalon6, avalon4, abc, avalon7
 [ -z "${AVA_MACHINE}" ] && AVA_MACHINE=avalon6
@@ -25,7 +25,7 @@ SCRIPT_VERSION=20160628
 avalon4_owrepo="svn://svn.openwrt.org/openwrt/trunk@43076"
 avalon6_owrepo="git://git.openwrt.org/openwrt.git@cac971da"
 abc_owrepo="git://git.openwrt.org/openwrt.git"
-avalon7_owrepo="git://git.openwrt.org/openwrt.git"
+avalon7_owrepo="git://github.com/openwrt/openwrt.git"
 
 # OpenWrt feeds
 FEEDS_CONF=feeds.${AVA_MACHINE}.conf
