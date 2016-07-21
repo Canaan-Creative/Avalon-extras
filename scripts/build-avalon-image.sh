@@ -18,7 +18,7 @@ SCRIPT_VERSION=20160708
 # Support machine: avalon6, avalon4, abc, avalon7
 [ -z "${AVA_MACHINE}" ] && AVA_MACHINE=avalon6
 
-# Support target board: rpi3-modelb, rpi2-modelb, rpi1-modelb, tl-wr703n-v1, tl-mr3020-v1, wrt1200ac, zedboard
+# Support target board: rpi3-modelb, rpi2-modelb, rpi1-modelb, tl-wr703n-v1, tl-mr3020-v1, wrt1200ac, zedboard, orangepi-2
 [ -z "${AVA_TARGET_BOARD}" ] && AVA_TARGET_BOARD=rpi3-modelb
 
 # OpenWrt repo
@@ -38,6 +38,7 @@ tl_wr703n_v1_brdcfg=("ar71xx" "config.${AVA_MACHINE}.703n")
 tl_mr3020_v1_brdcfg=("ar71xx" "config.${AVA_MACHINE}.mr3020")
 wrt1200ac_brdcfg=("mvebu" "config.${AVA_MACHINE}.wrt1200ac")
 zedboard_brdcfg=("zynq" "config.${AVA_MACHINE}.zedboard")
+orangepi_2_brdcfg=("sunxi" "config.${AVA_MACHINE}.orangepi2")
 
 which wget > /dev/null && DL_PROG=wget && DL_PARA="-nv -O"
 which curl > /dev/null && DL_PROG=curl && DL_PARA="-L -o"
