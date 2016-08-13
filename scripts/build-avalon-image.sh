@@ -25,7 +25,7 @@ SCRIPT_VERSION=20160708
 avalon4_owrepo="svn://svn.openwrt.org/openwrt/trunk@43076"
 avalon6_owrepo="git://git.openwrt.org/openwrt.git@cac971da"
 abc_owrepo="git://git.openwrt.org/openwrt.git"
-avalon7_owrepo="git://github.com/openwrt/openwrt.git"
+avalon7_owrepo="git://github.com/openwrt/openwrt.git@d175c09b"
 
 # OpenWrt feeds
 FEEDS_CONF=feeds.${AVA_MACHINE}.conf
@@ -57,7 +57,11 @@ OPENWRT_DIR=${ROOT_DIR}/openwrt
 
 prepare_version() {
     cd ${OPENWRT_DIR}
-    GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer avalon4 | cut -f1 | cut -c1-7`
+    if [ "${AVA_MACHINE}" == "avalon7" ]; then
+	GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer master | cut -f1 | cut -c1-7`
+    else
+	GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer avalon4 | cut -f1 | cut -c1-7`
+    fi
     LUCI_GIT_VERSION=`git --git-dir=./feeds/luci/.git rev-parse HEAD | cut -c1-7`
     OW_GIT_VERSION=`git --git-dir=./feeds/cgminer/.git rev-parse HEAD | cut -c1-7`
 
@@ -83,15 +87,6 @@ prepare_feeds() {
     if [ ! -e files ]; then
         ln -s feeds/cgminer/cgminer/root-files files
     fi
-}
-
-prepare_patches() {
-    cd ${OPENWRT_DIR}
-    $DL_PROG https://raw.github.com/Canaan-Creative/Avalon-extras/master/openwrt-patches/fstools-fixes-mount_root.patch $DL_PARA fstools-fixes-mount_root.patch
-    if ! patch -R -p1 --dry-run -f < ./fstools-fixes-mount_root.patch; then
-        patch -p1 < ./fstools-fixes-mount_root.patch
-    fi
-    rm -f fstools-fixes-mount_root.patch
 }
 
 prepare_source() {
@@ -203,7 +198,7 @@ do
             exit
             ;;
         --build)
-            prepare_source && prepare_patches && prepare_feeds && prepare_config && prepare_version && build_image && do_release
+            prepare_source && prepare_feeds && prepare_config && prepare_version && build_image && do_release
             ;;
         --cgminer)
             prepare_source && prepare_feeds && prepare_config && prepare_version && build_cgminer
