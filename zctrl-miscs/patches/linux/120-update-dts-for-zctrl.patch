@@ -1,6 +1,6 @@
 --- a/arch/arm/boot/dts/zynq-zed.dts
 +++ b/arch/arm/boot/dts/zynq-zed.dts
-@@ -15,47 +15,30 @@
+@@ -15,17 +15,16 @@
  /include/ "zynq-7000.dtsi"
  
  / {
@@ -20,19 +20,7 @@
  	};
  
  	chosen {
- 		bootargs = "earlyprintk";
- 		stdout-path = "serial0:115200n8";
- 	};
--	usb_phy0: phy0 {
--		compatible = "ulpi-phy";
--		#phy-cells = <0>;
--		reg = <0xe0002000 0x1000>;
--		view-port = <0x0170>;
--		drv-vbus;
--	};
- };
- 
- &clkc {
+@@ -45,17 +44,8 @@
  	ps-clk-frequency = <33333333>;
  };
  
