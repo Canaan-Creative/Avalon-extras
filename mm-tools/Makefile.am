@@ -14,4 +14,9 @@ mm_tools_LDADD	= @JANSSON_LIBS@ @LIBUSB_LIBS@ \
 # common sources
 mm_tools_SOURCES = main.c
 mm_tools_SOURCES += api.h auc.h crc.h iic.h \
-		   auc.c crc16.c mboot_api.c mm_api.c iic_rpi.c iic_auc.c
+		   auc.c mboot_api.c mm_api.c iic_rpi.c iic_auc.c
+if USE_SOFT_CRC
+mm_tools_SOURCES += crc16_soft.c
+else
+mm_tools_SOURCES += crc16.c
+endif

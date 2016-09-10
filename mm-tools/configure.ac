@@ -44,6 +44,14 @@ AC_SUBST(LIBUSB_LIBS)
 AC_SUBST(JANSSON_LIBS)
 AC_SUBST(MATH_LIBS)
 
+soft_crc="no"
+
+AC_ARG_ENABLE([soft_crc],
+             [AC_HELP_STRING([--enable-soft-crc], [Enable soft crc algorithm (default disabled)])],
+             [soft_crc=$enableval]
+             )
+AM_CONDITIONAL([USE_SOFT_CRC], [test x$soft_crc = xyes])
+
 AC_CONFIG_FILES([
 	Makefile
 	compat/Makefile
@@ -60,8 +68,13 @@ echo
 echo
 echo "Configuration Options Summary:"
 echo
-echo "  USE_IIC_RPI  :  Enable"
-echo "  USE_IIC_AUC  :  Enable"
+if test "x$soft_crc" = xyes; then
+echo "  USE_SOFT_CRC....: Enable"
+else
+echo "  USE_SOFT_CRC....: Disable"
+fi
+echo "  USE_IIC_RPI.....: Enable"
+echo "  USE_IIC_AUC.....: Enable"
 echo
 echo "Compilation............: make (or gmake)"
 echo "  CPPFLAGS.............: $CPPFLAGS"
