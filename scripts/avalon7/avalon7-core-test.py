@@ -1,8 +1,7 @@
 #!/usr/bin/env python2.7
 
 # This simple script was for test A3212 modular.
-# There are 128 cores in one A3212 chip.
-# If all cores are working the core num should display.
+# If test pass, then it will display asic index.
 # If some of them not working, it will display 'X'.
 # The script can support separate miner test with '-m'.
 # 0 means all miners, 1-n choose miner.
@@ -35,22 +34,16 @@ import usb.core
 import usb.util
 import sys
 
-parser = OptionParser(version="%prog ver:20160827_1405")
-# TODO: Add test core count
-#       Add voltage control
+auc_vid = 0x29f1
+auc_pid = 0x33f2
+TYPE_TEST = "32"
+parser = OptionParser(version="%prog ver:20160912_1546")
+# TODO: Add voltage control
 #       Add miner support
-parser.add_option("-C", "--core", dest="test_cores",
-                  default="4", help="Test cores")
-parser.add_option("-F", "--freq", dest="freq", default="200",
-                  help="Asic freq, default:200")
+#       Add frequency support
 (options, args) = parser.parse_args()
 parser.print_version()
 
-auc_vid = 0x29f1
-auc_pid = 0x33f2
-
-global hu_total
-hu_total = 1
 
 def CRC16(message):
     # CRC-16-CITT poly, the CRC sheme used by ymodem protocol
@@ -99,11 +92,10 @@ def enum_usbdev(vendor_id, product_id):
 
     return usbdev, endpin, endpout
 
+
 # addr : iic slaveaddr
 # req : see bridge format
 # data: 40 bytes payload
-
-
 def auc_req(usbdev, endpin, endpout, addr, req, data):
     req = req.rjust(2, '0')
 
@@ -168,8 +160,6 @@ def auc_xfer(usbdev, endpin, endpout, addr, req, data):
     auc_req(usbdev, endpin, endpout, addr, req, data)
     return auc_read(usbdev, endpin)
 
-TYPE_TEST = "32"
-
 
 def mm_package(cmd_type, idx="01", cnt="01", module_id=None, pdata='0'):
     if module_id is None:
@@ -179,16 +169,17 @@ def mm_package(cmd_type, idx="01", cnt="01", module_id=None, pdata='0'):
 
     crc = CRC16(data.decode("hex"))
 
-    return "434e" + cmd_type + "00" + idx + cnt + data + hex(crc)[2:].rjust(4, '0')
+    return "434e" + cmd_type + "00" + idx + \
+        cnt + data + hex(crc)[2:].rjust(4, '0')
 
 errcode = [
     'IDLE',
-    '\x1b[1;31mMMCRCFALIED\x1b[0m',
+    'MMCRCFALIED',
     '\x1b[1;31mNOFAN\x1b[0m',
-    '\x1b[1;31mLOCK\x1b[0m',
-    '\x1b[1;31mAPIFIF00VERFLOW\x1b[0m',
+    'LOCK',
+    'APIFIF00VERFLOW',
     'RBOVERFLOW',
-    'TOOHOT',
+    '\x1b[1;31mTOOHOT\x1b[0m',
     '\x1b[1;31mHOTBEFORE\x1b[0m',
     '\x1b[1;31mLOOPFAILD\x1b[0m',
     '\x1b[1;31mCORETESTFAILED\x1b[0m',
@@ -196,12 +187,12 @@ errcode = [
     '\x1b[1;31mPGFAILD\x1b[0m',
     '\x1b[1;31mNTC_ERR\x1b[0m',
     '\x1b[1;31mVOL_ERR\x1b[0m',
-    '\x1b[1;31mVCORE_ERR\x1b[0m'
-    ]
+    '\x1b[1;31mVCORE_ERR\x1b[0m',
+    'PMUCRCFAILED'
+]
+
 
 def run_testa7(usbdev, endpin, endpout, cmd):
-    global hu_total
-
     try:
         auc_req(usbdev, endpin, endpout,
                 "00",
@@ -227,18 +218,19 @@ def run_testa7(usbdev, endpin, endpout, cmd):
     else:
         result = binascii.hexlify(res_s)
 
-        hu_index = int(result[8:10], 16)
-        hu_total = int(result[10:12], 16)
-        pass_chips = int(result[12:16], 16)
-        test_chips = int(result[16:20], 16)
+        miner_index = int(result[8:10], 16)
+        miner_count = int(result[10:12], 16)
+        pass_cnts = int(result[12:16], 16)
+        loop_cnts = int(result[16:20], 16)
+        total_cnts = int(result[20:24], 16)
 
-        sys.stdout.write("M-" + str(hu_index) + ': ')
-        if (test_chips % 8) == 0:
-            c = result[40: (test_chips / 8) * 2 + 40]
+        sys.stdout.write("M-" + str(miner_index) + ': ')
+        if (total_cnts % 8) == 0:
+            c = result[40: (total_cnts / 8) * 2 + 40]
             n = int(c, 16)
             r = ''
             cnt = 0
-            for j in range(test_chips, 0, -8):
+            for j in range(total_cnts, 0, -8):
                 for cnt in range(7, -1, -1):
                     if ((n >> cnt) & 1) == 0:
                         r = '\x1b[1;31mxx\x1b[0m {}'.format(r)
@@ -249,45 +241,50 @@ def run_testa7(usbdev, endpin, endpout, cmd):
                 n >>= 8
             print(r)
         else:
-            c = result[40: (test_chips / 8 + 1) * 2 + 40]
+            c = result[40: (total_cnts / 8 + 1) * 2 + 40]
             n = int(c, 16)
             r = ''
             cnt = 0
-            for j in range(test_chips, 0, -8):
-                if j == test_chips:
-                    for cnt in range(test_chips % 8 - 1, -1, -1):
+            for j in range(total_cnts, 0, -8):
+                if j == total_cnts:
+                    for cnt in range(total_cnts % 8 - 1, -1, -1):
                         if ((n >> cnt) & 1) == 0:
                             r = '\x1b[1;31mxx\x1b[0m {}'.format(r)
                         else:
                             r = '\x1b[1;32m{:02d}\x1b[0m {}'.format(
-                                j + cnt - test_chips % 8 + 1, r)
+                                j + cnt - total_cnts % 8 + 1, r)
                 else:
                     for cnt in range(7, -1, -1):
                         if ((n >> cnt) & 1) == 0:
                             r = '\x1b[1;31mxx\x1b[0m {}'.format(r)
                         else:
                             r = '\x1b[1;32m{:02d}\x1b[0m {}'.format(
-                                j + cnt - test_chips % 8 + 1, r)
-
+                                j + cnt - total_cnts % 8 + 1, r)
                 n >>= 8
             print(r)
 
-        hu_ec = int(result[24:32], 16)
-        mm_ec = int(result[32:40], 16)
-        display = 'bad(' + str(test_chips - pass_chips) + '), '
-        display = display + 'all(' + str(test_chips) + '), '
-        hu_errstr = ''
-        for i in range(0, len(errcode)):
-            if ((hu_ec >> i) & 1):
-                hu_errstr += errcode[i] + ' '
+        ec_hu = int(result[24:32], 16)
+        ec_mm = int(result[32:40], 16)
 
-        mm_errstr = ''
-        for i in range(0, len(errcode)):
-            if ((mm_ec >> i) & 1):
-                mm_errstr += errcode[i] + ' '
+        display = 'loop(' + str(loop_cnts) + '), '
+        display = display + 'bad(' + str(total_cnts - pass_cnts) + '), '
+        display = display + 'all(' + str(total_cnts) + '), '
 
-        display = display + 'Status ( ' + 'HU:' + hu_errstr + ', MM:' + mm_errstr + ')'
+        ec_hu_str = ''
+        for i in range(0, len(errcode)):
+            if ((ec_hu >> i) & 1):
+                ec_hu_str += errcode[i] + ' '
+
+        ec_mm_str = ''
+        for i in range(0, len(errcode)):
+            if ((ec_mm >> i) & 1):
+                ec_mm_str += errcode[i] + ' '
+
+        display = display + \
+            'Error code (' + 'ECHU:' + ec_hu_str + ', ECMM:' + ec_mm_str + ')'
         print('Result:' + display)
+
+        return miner_count
 
 if __name__ == '__main__':
     # Detect AUC
@@ -302,38 +299,14 @@ if __name__ == '__main__':
     if usbdev is None:
         print "No Avalon USB Converter or compatible device can be found!"
         sys.exit("Enum failed!")
-    else:
-        print "Find an Avalon USB Converter or compatible device"
-
-    freqdata = {}
-    tmp = options.freq.split(",")
-    if len(tmp) == 0:
-        freqdata[0] = 200
-        freqdata[1] = freqdata[2] = 200
-    if len(tmp) == 1:
-        freqdata[2] = freqdata[1] = freqdata[0] = tmp[0]
-    if len(tmp) == 2:
-        freqdata[0] = tmp[0]
-        freqdata[2] = freqdata[1] = tmp[1]
-    if len(tmp) == 3:
-        freqdata[0] = tmp[0]
-        freqdata[1] = tmp[1]
-        freqdata[2] = tmp[2]
-
-    tmp = hex(int(options.test_cores, 10))[2:]
-    txdata = tmp.rjust(8, '0')
-    tmp = tmp.rjust(8, '0')
-    txdata += tmp
-    tmp = hex(int(freqdata[0], 10) | (int(freqdata[1], 10) << 10) | (
-        int(freqdata[2], 10) << 20))[2:]
-    tmp = tmp.rjust(8, '0')
-    txdata += tmp
 
     idx_index = 1
     while True:
-        run_testa7(usbdev, endpin, endpout, mm_package(TYPE_TEST, idx=str(idx_index).rjust(2, '0'), pdata=txdata))
+        miner_count = run_testa7(
+            usbdev, endpin, endpout,
+            mm_package(TYPE_TEST,
+                       idx=str(idx_index).rjust(2, '0')))
         idx_index += 1
-        if (idx_index > hu_total):
+        if (idx_index > miner_count):
             idx_index = 1
-            hu_total = 1
-            raw_input("Please enter any key to continue!")
+            raw_input("Please enter any key to continue")
