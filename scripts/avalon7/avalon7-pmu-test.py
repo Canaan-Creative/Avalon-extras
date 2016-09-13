@@ -9,7 +9,7 @@ import time
 
 parser = OptionParser()
 parser.add_option("-s", "--serial", dest="serial_port", default="/dev/ttyUSB0", help="Serial port")
-parser.add_option("-c", "--choose", dest="is_rig", default="1", help="1 Is For Rig Testing")
+parser.add_option("-c", "--choose", dest="is_rig", default="0", help="0 Is For Rig Testing")
 (options, args) = parser.parse_args()
 
 ser = Serial(options.serial_port, 115200, 8, timeout=1) # 1 second
@@ -98,19 +98,25 @@ def judge_led_range(led):
 	return True
 
 def detect_version():
-	input_str = mm_package("10", module_id = None)
-	ser.flushInput()
-	ser.write(input_str.decode('hex'))
-	res=ser.readall()
-        print("AVAM_DNA:" + binascii.hexlify(res[6:14]))
-	print("AVAM_VERSION: " + res[14:29])
+        input_str = mm_package("10", module_id = None)
+        ser.flushInput()
+        ser.write(input_str.decode('hex'))
+        res=ser.readall()
+        print("PMU VER:" + res[14:29])
+
+def detect_dna_version():
+        input_str = mm_package("10", module_id = None)
+        ser.flushInput()
+        ser.write(input_str.decode('hex'))
+        res=ser.readall()
+        print("PMU DNA:" + binascii.hexlify(res[6:14]))
+        print("PMU VER:" + res[14:29])
 
 def set_voltage(vol_value):
 	if (judge_vol_range(vol_value)):
 		input_str = mm_package("22", module_id = None, pdata = vol_value);
 		ser.flushInput()
 		ser.write(input_str.decode('hex'))
-		time.sleep(1)
 	else:
 		print("Bad voltage vaule!")
 
@@ -119,66 +125,107 @@ def set_led_state(led):
 		input_str = mm_package("24", module_id = None, pdata = led);
 		ser.flushInput()
 		ser.write(input_str.decode('hex'))
-		time.sleep(1)
 	else:
 		print("Bad led's state vaule!")
 
-def get_pmu_state():
-	input_str = mm_package("30", module_id = None);
-	ser.flushInput()
-	ser.write(input_str.decode('hex'))
+def get_test_result():
+        input_str = mm_package("30", module_id = None);
+        ser.flushInput()
+        ser.write(input_str.decode('hex'))
+        time.sleep(1)
+        res=ser.readall()
+        a = int(binascii.hexlify(res[6:8]), 16)
+        if (a < 800) or (a > 1000):
+            return 1
+        a = int(binascii.hexlify(res[8:10]), 16)
+        if (a < 800) or (a > 1000):
+            return 1
+        a = int(binascii.hexlify(res[10:12]), 16)
+        if (a < 900) or (a > 1023):
+            return 1
+        a = int(binascii.hexlify(res[12:14]), 16)
+        if (a < 900) or (a > 1023):
+            return 1
+        a = int(binascii.hexlify(res[14:16]), 16)
+        if (a < 880) or (a > 915):
+            return 1
+        a = int(binascii.hexlify(res[16:18]), 16)
+        if (a < 880) or (a > 915):
+            return 1
+        a = int(binascii.hexlify(res[18:20]), 16)
+        if (a < 740) or (a > 810):
+            return 1
+        a = binascii.hexlify(res[20:22])
+        if (a != "0001"):
+            return 1
+        a = binascii.hexlify(res[22:24])
+        if (a != "0001"):
+            return 1
+        a = binascii.hexlify(res[24:26])
+        if (a != "0000"):
+            return 1
+        a = binascii.hexlify(res[26:28])
+        if (a != "0000"):
+            return 1
+
+        return 0
+
+def get_state():
+        input_str = mm_package("30", module_id = None);
+        ser.flushInput()
+        ser.write(input_str.decode('hex'))
         time.sleep(1);
-	res=ser.readall()
-	print("NTC1:   " + '%d' %int(binascii.hexlify(res[6:8]), 16))
-	print("NTC2:   " + '%d' %int(binascii.hexlify(res[8:10]), 16))
-	a = int(binascii.hexlify(res[10:12]), 16)
-	print("V12-1:  " + '%.2f' %a)
-	a = int(binascii.hexlify(res[12:14]), 16)
-	print("V12-2:  " + '%.2f' %a)
-	a = int(binascii.hexlify(res[14:16]), 16)
-	print("VCORE1: " + '%.2f' %a)
-	a = int(binascii.hexlify(res[16:18]), 16)
-	print("VCORE2: " + '%.2f' %a)
-	a = int(binascii.hexlify(res[18:20]), 16)
-	print("VBASE:  " + '%.2f' %a)
-	a = binascii.hexlify(res[20:22])
-	if (a == "0001"):
-		print("PG1 Good")
-	if (a == "0002"):
-		print("PG1 Bad")
-	a = binascii.hexlify(res[22:24])
-	if (a == "0001"):
-		print("PG2 Good")
-	if (a == "0002"):
-		print("PG2 Bad")
-	a = binascii.hexlify(res[24:26])
-	if (a == "0000"):
-		print("LED1: all led off")
-	if (a == "0001"):
-		print("LED1: green led on")
-	if (a == "0002"):
-		print("LED1: red led on")
-	if (a == "0003"):
-		print("LED1: all led on")
-	if (a == "0004"):
-		print("LED1: green led blink")
-	if (a == "0008"):
-		print("LED1: red led blink")
-	a = binascii.hexlify(res[26:28])
-	if (a == "0000"):
-		print("LED2: all led off")
-	if (a == "0001"):
-		print("LED2: green led on")
-	if (a == "0002"):
-		print("LED2: red led on")
-	if (a == "0003"):
-		print("LED2: all led on")
-	if (a == "0004"):
-		print("LED2: green led blink")
-	if (a == "0008"):
-		print("LED2: red led blink")
+        res=ser.readall()
+        print("NTC1:   " + '%d' %int(binascii.hexlify(res[6:8]), 16))
+        print("NTC2:   " + '%d' %int(binascii.hexlify(res[8:10]), 16))
+        a = int(binascii.hexlify(res[10:12]), 16)
+        print("V12-1:  " + '%d' %a)
+        a = int(binascii.hexlify(res[12:14]), 16)
+        print("V12-2:  " + '%d' %a)
+        a = int(binascii.hexlify(res[14:16]), 16)
+        print("VCORE1: " + '%d' %a)
+        a = int(binascii.hexlify(res[16:18]), 16)
+        print("VCORE2: " + '%d' %a)
+        a = int(binascii.hexlify(res[18:20]), 16)
+        print("VBASE:  " + '%d' %a)
+        a = binascii.hexlify(res[20:22])
+        if (a == "0001"):
+            print("PG1 Good")
+        if (a == "0002"):
+            print("PG1 Bad")
+        a = binascii.hexlify(res[22:24])
+        if (a == "0001"):
+            print("PG2 Good")
+        if (a == "0002"):
+            print("PG2 Bad")
+        a = binascii.hexlify(res[24:26])
+        if (a == "0000"):
+            print("LED1: all led off")
+        if (a == "0001"):
+            print("LED1: green led on")
+        if (a == "0002"):
+            print("LED1: red led on")
+        if (a == "0003"):
+            print("LED1: all led on")
+        if (a == "0004"):
+            print("LED1: green led blink")
+        if (a == "0008"):
+            print("LED1: red led blink")
+        a = binascii.hexlify(res[26:28])
+        if (a == "0000"):
+            print("LED2: all led off")
+        if (a == "0001"):
+            print("LED2: green led on")
+        if (a == "0002"):
+            print("LED2: red led on")
+        if (a == "0003"):
+            print("LED2: all led on")
+        if (a == "0004"):
+            print("LED2: green led blink")
+        if (a == "0008"):
+            print("LED2: red led blink")
 
-def get_pmu_state_vol():
+def get_voltage():
 	input_str = mm_package("30", module_id = None);
 	ser.flushInput()
 	ser.write(input_str.decode('hex'))
@@ -187,15 +234,15 @@ def get_pmu_state_vol():
 	print("NTC1:   " + '%d' %int(binascii.hexlify(res[6:8]), 16))
 	print("NTC2:   " + '%d' %int(binascii.hexlify(res[8:10]), 16))
 	a = int(binascii.hexlify(res[10:12]), 16)
-	print("V12-1:  " + '%.2f' %a)
+	print("V12-1:  " + '%d' %a)
 	a = int(binascii.hexlify(res[12:14]), 16)
-	print("V12-2:  " + '%.2f' %a)
+	print("V12-2:  " + '%d' %a)
 	a = int(binascii.hexlify(res[14:16]), 16)
-	print("VCORE1: " + '%.2f' %a)
+	print("VCORE1: " + '%d' %a)
 	a = int(binascii.hexlify(res[16:18]), 16)
-	print("VCORE2: " + '%.2f' %a)
+	print("VCORE2: " + '%d' %a)
 	a = int(binascii.hexlify(res[18:20]), 16)
-	print("VBASE:  " + '%.2f' %a)
+	print("VBASE:  " + '%d' %a)
 
 def test_polling():
 	while (1):
@@ -213,19 +260,32 @@ def test_polling():
 			led = raw_input("Please input the led state:")
 			set_led_state(led)
 		elif (h == '4'):
-                        get_pmu_state();
+                        get_state();
 		else:
 			show_help()
 
 if __name__ == '__main__':
-	while (1):
-		if (options.is_rig == '1'):
-			detect_version()
-			set_voltage("88AA")
-			get_pmu_state()
-                        time.sleep(1)
-		elif (options.is_rig == '0'):
-			test_polling()
-		elif (options.is_rig == '2'):
-			get_pmu_state_vol()
-                        time.sleep(1)
+        while (1):
+            if (options.is_rig == '0'):
+                set_voltage("0000")
+                set_led_state("0000")
+                set_voltage("88aa")
+                detect_version()
+                ret = get_test_result()
+                if (ret == 1):
+                    set_led_state("0202")
+                    print("PMU test fail")
+                else:
+                    set_led_state("0101")
+                    print("PMU test pass")
+                raw_input("Please enter to continue:")
+            elif (options.is_rig == '1'):
+                test_polling()
+            elif (options.is_rig == '2'):
+                detect_dna_version()
+                set_voltage("88aa")
+                get_state()
+                time.sleep(1)
+            else:
+                raw_input("Input option wrong, please try again")
+                sys.exit(0)
