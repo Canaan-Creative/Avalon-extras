@@ -5,7 +5,8 @@
 
 /* MBOOT API */
 void mm_detect(void);
-void mboot(void);
+void mboot(char *mcs_filepath);
+void mreboot();
 
 /* MM API */
 void mm_coretest(uint16_t testcores, uint16_t freq[], uint16_t voltage);
