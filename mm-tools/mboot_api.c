@@ -319,9 +319,16 @@ static int mboot_mcs_file(char *mcs_filepath)
 static void *reboot_op(void *arg)
 {
     struct i2c_drv *iic = (struct i2c_drv *)arg;
+
+    if (iic->i2c_open(I2C_DEV)) {
+        printf(" %s-i2c_open failed!\n", iic->name);
+        return;
+    }
+
     if (set_reboot(iic)) {
         printf("%s-set_reboot failed!\n", iic->name);
     }
+
     iic->i2c_close();
 }
 
@@ -450,8 +457,9 @@ void mboot_check(struct i2c_drv *iic)
 
 void mboot(char *mcs_filepath)
 {
-    if (!mcs_filepath)
+    if (!mcs_filepath) {
         mcs_filepath = "./mm.mcs"; // Fallback to the hardcoded path if the user doesn't specify the path
+    }
 
     gmcs1_len = mboot_mcs_file(mcs_filepath);
 
