@@ -1,0 +1,4 @@
+Add specific upgrade file support, -f (--file)
+Add reboot mm support, -R (--reboot)
+Add a licence. UNLICENSE
+Add iic or auc selection.
