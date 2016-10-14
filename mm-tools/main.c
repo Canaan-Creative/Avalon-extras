@@ -16,6 +16,7 @@ static void help(void)
 	       "  -c --coretest\t\t\tEnter coretest function\n"
 	       "  -r --radiator\t\t\tEnter radiator mode\n"
            "  -f --file\t\t\tSpecifies the upgrade file\n"
+           "  -R --reboot\t\t\tReboot devices\n"
 	       " <run without options will enter the basic function>\n\n"
 		);
 }
