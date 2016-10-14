@@ -272,7 +272,7 @@ static int mboot_mcs_file(char *mcs_filepath)
         printf("open %s error: %s!\n", mcs_filepath, strerror(errno)); // Detailed error reporting
 	    exit(1);
 	} else
-	    printf("open mm.mcs success!\n");
+        printf("open %s success!\n", mcs_filepath);
 
     newmcs_filepath = alloca(strlen(mcs_filepath)+4+1); // Allocate memory to hold the string of new file path
     sprintf(newmcs_filepath, "%s_new", mcs_filepath); // Concatenate strings
@@ -284,7 +284,7 @@ static int mboot_mcs_file(char *mcs_filepath)
         printf("open %s error: %s!\n", newmcs_filepath, strerror(errno));
 	    exit(1);
 	} else
-	    printf("open mm_new.mcs success!\n");
+        printf("open %s success!\n", newmcs_filepath);
 
 	while (1) {
 		i = 0;

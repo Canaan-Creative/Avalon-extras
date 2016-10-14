@@ -25,7 +25,7 @@ static struct option opts[] = {
 	{ "help", 0, 0, 'h' },
 	{ "coretest", 0, 0, 'c' },
 	{ "radiator", 0, 0, 'r' },
-    { "file", 0, 0, 'f' },
+    { "file", 1, 0, 'f' },
     { "reboot", 0, 0, 'R' },
 	{ 0, 0, 0, 0 }
 };
@@ -36,11 +36,12 @@ int main(int argc, char **argv)
 	uint16_t freq[3], voltage = 200;
     char *filepath = NULL;
 
-    c = getopt_long(argc, argv, "hcrfR", opts, &option_index);
+    while ( (c = getopt_long(argc, argv, "hcrf:R", opts, &option_index)) != -1 )
 	switch (c) {
         case 'f':
             filepath = optarg;
-            printf("Upgrade file: %s\r\n",filepath);
+            printf("Enter mboot mode with upgrade file: %s\r\n",filepath);
+            mboot(filepath);
             break;
 		case 'h':
 			help();
