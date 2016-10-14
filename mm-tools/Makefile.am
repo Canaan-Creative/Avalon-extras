@@ -1,6 +1,8 @@
 JANSSON_CPPFLAGS= -I$(top_builddir)/compat/jansson-2.6/src -I$(top_srcdir)/compat/jansson-2.6/src
 USBUTILS_CPPFLAGS = -I$(top_builddir)/compat/libusb-1.0/libusb -I$(top_srcdir)/compat/libusb-1.0/libusb
 
+ACLOCAL_AMFLAGS = -I m4
+
 EXTRA_DIST	= mm.mcs hexdump.c
 
 SUBDIRS		= compat

@@ -14,6 +14,7 @@ AC_PREREQ(2.59)
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([main.c])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
+AC_CONFIG_MACRO_DIR([m4])
 
 dnl Check for programs
 AC_PROG_CC
