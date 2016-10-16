@@ -267,24 +267,24 @@ static int mboot_mcs_file(char *mcs_filepath)
 	FILE *mboot_mcs_fp_new;
 
 	mcs1_len = 0;
-    mboot_mcs_fp = fopen(mcs_filepath, "rt");
+	mboot_mcs_fp = fopen(mcs_filepath, "rt");
 	if (mboot_mcs_fp == NULL) {
-        printf("open %s error: %s!\n", mcs_filepath, strerror(errno)); // Detailed error reporting
-	    exit(1);
+		printf("open %s error: %s!\n", mcs_filepath, strerror(errno)); // Detailed error reporting
+		exit(1);
 	} else
-        printf("open %s success!\n", mcs_filepath);
+		printf("open %s success!\n", mcs_filepath);
 
-    newmcs_filepath = alloca(strlen(mcs_filepath)+4+1); // Allocate memory to hold the string of new file path
-    sprintf(newmcs_filepath, "%s_new", mcs_filepath); // Concatenate strings
+	newmcs_filepath = alloca(strlen(mcs_filepath)+4+1); // Allocate memory to hold the string of new file path
+	sprintf(newmcs_filepath, "%s_new", mcs_filepath); // Concatenate strings
 
-    mboot_mcs_fp_new = fopen(newmcs_filepath, "wb");
+	mboot_mcs_fp_new = fopen(newmcs_filepath, "wb");
 
 
 	if (mboot_mcs_fp_new == NULL) {
-        printf("open %s error: %s!\n", newmcs_filepath, strerror(errno));
-	    exit(1);
+		printf("open %s error: %s!\n", newmcs_filepath, strerror(errno));
+		exit(1);
 	} else
-        printf("open %s success!\n", newmcs_filepath);
+		printf("open %s success!\n", newmcs_filepath);
 
 	while (1) {
 		i = 0;
@@ -318,18 +318,18 @@ static int mboot_mcs_file(char *mcs_filepath)
 
 static void *reboot_op(void *arg)
 {
-    struct i2c_drv *iic = (struct i2c_drv *)arg;
+	struct i2c_drv *iic = (struct i2c_drv *)arg;
 
-    if (iic->i2c_open(I2C_DEV)) {
-        printf(" %s-i2c_open failed!\n", iic->name);
-        return;
-    }
+	if (iic->i2c_open(I2C_DEV)) {
+		printf(" %s-i2c_open failed!\n", iic->name);
+		return;
+	}
 
-    if (set_reboot(iic))
-        printf("%s-set_reboot failed!\n", iic->name);
+	if (set_reboot(iic))
+		printf("%s-set_reboot failed!\n", iic->name);
 
 
-    iic->i2c_close();
+	iic->i2c_close();
 }
 
 static void *upgrade_op(void *arg)
@@ -348,7 +348,7 @@ static void *upgrade_op(void *arg)
 		return;
 	}
 
-    mboot_mcs_fp_new = fopen(newmcs_filepath, "rt");
+	mboot_mcs_fp_new = fopen(newmcs_filepath, "rt");
 	printf(" (1) %s-MM Flash Erase Begin! Please Wait...\n", iic->name);
 	if (enable_download(iic))
 		goto ret;
@@ -429,17 +429,17 @@ void mboot_upgrade(struct i2c_drv *iic)
 #define DRIVER_REBOOT_MM(X) mm_reboot(&X##_drv);
 void mm_reboot(struct i2c_drv *iic)
 {
-    struct thread *thr = NULL;
+	struct thread *thr = NULL;
 
-    thr = (struct thread *)malloc(sizeof(struct thread));
-    if (!thr) {
-        printf("%s-Failed to malloc struct thread!", iic->name);
-        exit(1);
-    }
-    strncpy(thr->name, iic->name, THR_NAME_LEN);
+	thr = (struct thread *)malloc(sizeof(struct thread));
+	if (!thr) {
+		printf("%s-Failed to malloc struct thread!", iic->name);
+		exit(1);
+	}
+	strncpy(thr->name, iic->name, THR_NAME_LEN);
 
-    pthread_create(&thr->pth, NULL, reboot_op, (void *)iic);
-    HASH_ADD_STR(thread_pool, name, thr);
+	pthread_create(&thr->pth, NULL, reboot_op, (void *)iic);
+	HASH_ADD_STR(thread_pool, name, thr);
 }
 
 #define DRIVER_CHECK_FINISH(X) mboot_check(&X##_drv); // Function name change is suggested
@@ -457,20 +457,20 @@ void mboot_check(struct i2c_drv *iic)
 
 void mboot(char *mcs_filepath)
 {
-    if (!mcs_filepath)
-        mcs_filepath = "./mm.mcs"; // Fallback to the hardcoded path if the user doesn't specify the path
+	if (!mcs_filepath)
+		mcs_filepath = "./mm.mcs"; // Fallback to the hardcoded path if the user doesn't specify the path
 
 
-    gmcs1_len = mboot_mcs_file(mcs_filepath);
+	gmcs1_len = mboot_mcs_file(mcs_filepath);
 
 	DRIVERS_DO(DRIVER_UPGRADE_MCS);
 	DRIVERS_DO(DRIVER_CHECK_FINISH);
-    printf("finished mboot!\n");
+	printf("finished mboot!\n");
 }
 
 void mreboot()
 {
-    DRIVERS_DO(DRIVER_REBOOT_MM);
-    DRIVERS_DO(DRIVER_CHECK_FINISH);
-    printf("finished mreboot!\n");
+	DRIVERS_DO(DRIVER_REBOOT_MM);
+	DRIVERS_DO(DRIVER_CHECK_FINISH);
+	printf("finished mreboot!\n");
 }
