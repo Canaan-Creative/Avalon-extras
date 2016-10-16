@@ -36,7 +36,7 @@ int main(int argc, char **argv)
 	uint16_t freq[3], voltage = 200;
     char *filepath = NULL;
 
-    while ( (c = getopt_long(argc, argv, "hcrf:R", opts, &option_index)) != -1 )
+    c = getopt_long(argc, argv, "hcrf:R", opts, &option_index);
 	switch (c) {
         case 'f':
             filepath = optarg;
