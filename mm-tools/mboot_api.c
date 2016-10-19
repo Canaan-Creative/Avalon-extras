@@ -5,7 +5,6 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <errno.h>      /* For detailed file I/O error reporting */
-#include <alloca.h>     /* For alloca() */
 #include "uthash.h"
 #include "hexdump.c"
 #include "crc.h"
@@ -27,7 +26,7 @@
 
 #define THR_NAME_LEN    10
 
-static char *newmcs_filepath = NULL;
+static char *g_newmcs_filepath = NULL;
 
 struct thread {
 	pthread_t pth;
@@ -259,7 +258,6 @@ static char char2byte(char char0, char char1)
 
 static int mboot_mcs_file(char *mcs_filepath)
 {
-
 	int i, byte_num, mm_flg = 0, mm_info = 0, mcs1_len = 0;
 	unsigned char tmp[1000];
 	unsigned char data;
@@ -274,17 +272,15 @@ static int mboot_mcs_file(char *mcs_filepath)
 	} else
 		printf("open %s success!\n", mcs_filepath);
 
-	newmcs_filepath = alloca(strlen(mcs_filepath)+4+1); // Allocate memory to hold the string of new file path
-	sprintf(newmcs_filepath, "%s_new", mcs_filepath); // Concatenate strings
+	g_newmcs_filepath = malloc(strlen(mcs_filepath) + 4 + 1);
+	sprintf(g_newmcs_filepath, "%s_new", mcs_filepath);
 
-	mboot_mcs_fp_new = fopen(newmcs_filepath, "wb");
-
-
+	mboot_mcs_fp_new = fopen(g_newmcs_filepath, "wb");
 	if (mboot_mcs_fp_new == NULL) {
-		printf("open %s error: %s!\n", newmcs_filepath, strerror(errno));
+		printf("open %s error: %s!\n", g_newmcs_filepath, strerror(errno));
 		exit(1);
 	} else
-		printf("open %s success!\n", newmcs_filepath);
+		printf("open %s success!\n", g_newmcs_filepath);
 
 	while (1) {
 		i = 0;
@@ -322,7 +318,7 @@ static void *reboot_op(void *arg)
 
 	if (iic->i2c_open(I2C_DEV)) {
 		printf(" %s-i2c_open failed!\n", iic->name);
-		return;
+		return NULL;
 	}
 
 	if (set_reboot(iic))
@@ -330,6 +326,7 @@ static void *reboot_op(void *arg)
 
 
 	iic->i2c_close();
+	return NULL;
 }
 
 static void *upgrade_op(void *arg)
@@ -340,15 +337,15 @@ static void *upgrade_op(void *arg)
 	int byte_num, all_byte;
 	unsigned short crc_init = 0;
 	FILE *mboot_mcs_fp_new;
-	int i, j;
+	int i;
 
 	all_byte = gmcs1_len;
 	if (iic->i2c_open(I2C_DEV)) {
 		printf(" %s-i2c_open failed!\n", iic->name);
-		return;
+		return NULL;
 	}
 
-	mboot_mcs_fp_new = fopen(newmcs_filepath, "rt");
+	mboot_mcs_fp_new = fopen(g_newmcs_filepath, "rt");
 	printf(" (1) %s-MM Flash Erase Begin! Please Wait...\n", iic->name);
 	if (enable_download(iic))
 		goto ret;
@@ -374,9 +371,9 @@ static void *upgrade_op(void *arg)
 			all_byte = 0;
 		}
 
-		for (j = 0; j < byte_num; j++) {
-			FLASH_PAGE[j] = fgetc(mboot_mcs_fp_new);
-			crc_init = mboot_crc16(crc_init, &FLASH_PAGE[j], 1);
+		for (i = 0; i < byte_num; i++) {
+			FLASH_PAGE[i] = fgetc(mboot_mcs_fp_new);
+			crc_init = mboot_crc16(crc_init, &FLASH_PAGE[i], 1);
 		}
 		if (flash_prog_page(iic, FLASH_PAGE, addr, byte_num)) {
 			printf("%s-flash_prog_page failed!\n", iic->name);
@@ -408,6 +405,7 @@ static void *upgrade_op(void *arg)
 
 ret:
 	iic->i2c_close();
+	return NULL;
 }
 
 #define DRIVER_UPGRADE_MCS(X) mboot_upgrade(&X##_drv);
@@ -442,8 +440,8 @@ void mm_reboot(struct i2c_drv *iic)
 	HASH_ADD_STR(thread_pool, name, thr);
 }
 
-#define DRIVER_CHECK_FINISH(X) mboot_check(&X##_drv); // Function name change is suggested
-void mboot_check(struct i2c_drv *iic)
+#define DRIVER_CHECK_FINISH(X) mboot_finish(&X##_drv);
+void mboot_finish(struct i2c_drv *iic)
 {
 	struct thread *thr = NULL;
 
@@ -453,14 +451,12 @@ void mboot_check(struct i2c_drv *iic)
 		HASH_DEL(thread_pool, thr);
 		free(thr);
 	}
+	free(g_newmcs_filepath);
+	g_newmcs_filepath = NULL;
 }
 
 void mboot(char *mcs_filepath)
 {
-	if (!mcs_filepath)
-		mcs_filepath = "./mm.mcs"; // Fallback to the hardcoded path if the user doesn't specify the path
-
-
 	gmcs1_len = mboot_mcs_file(mcs_filepath);
 
 	DRIVERS_DO(DRIVER_UPGRADE_MCS);

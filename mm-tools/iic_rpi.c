@@ -40,11 +40,11 @@ static int i2c_setslave(uint8_t addr)
 
 static int i2c_write(unsigned char *wbuf, unsigned int wlen)
 {
-	int ret;
+	ssize_t ret;
 
 	ret = write(g_i2cfd, wbuf, wlen);
 	if (ret != wlen) {
-		printf("Write to %x failed!(%d-%d)\n", curslave_addr, ret, wlen);
+		printf("Write to %x failed!(%d-%d)\n", curslave_addr, (int)ret, wlen);
 		if (ret < 0)
 			return -1;
 
@@ -56,11 +56,11 @@ static int i2c_write(unsigned char *wbuf, unsigned int wlen)
 
 static int i2c_read(unsigned char *rbuf, unsigned int rlen)
 {
-	int ret;
+	ssize_t ret;
 
 	ret = read(g_i2cfd, rbuf, rlen);
 	if (ret != rlen) {
-		printf("Read from %x failed!(%d-%d)\n", curslave_addr, ret, rlen);
+		printf("Read from %x failed!(%d-%d)\n", curslave_addr, (int)ret, rlen);
 		if (ret < 0)
 			return -1;
 		return 1;
