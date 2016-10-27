@@ -53,22 +53,22 @@ h: help\n\
 1: detect the pmu version\n\
 2: set	  the pmu output voltage\n\
 	  0000: close the voltage output\n\
-	  8800: 7.00V\n\
-	  8811: 7.14V\n\
-	  8822: 7.28V\n\
-	  8833: 7.42V\n\
-	  8844: 7.56V\n\
-	  8855: 7.70V\n\
-	  8866: 7.84V\n\
-	  8877: 7.98V\n\
-	  8888: 8.12V\n\
-	  8899: 8.26V\n\
-	  88AA: 8.40V\n\
-	  88BB: 8.54V\n\
-	  88CC: 8.68V\n\
-	  88DD: 8.82V\n\
-	  88EE: 8.96V\n\
-	  88FF: 9.10V\n\
+	  8800: 6.35V\n\
+	  8811: 6.48V\n\
+	  8822: 6.61V\n\
+	  8833: 6.73V\n\
+	  8844: 6.83V\n\
+	  8855: 6.97V\n\
+	  8866: 7.08V\n\
+	  8877: 7.22V\n\
+	  8888: 7.40V\n\
+	  8899: 7.53V\n\
+	  88AA: 7.65V\n\
+	  88BB: 7.79V\n\
+	  88CC: 7.88V\n\
+	  88DD: 8.01V\n\
+	  88EE: 8.14V\n\
+	  88FF: 8.27V\n\
 3: set    the pmu led state\n\
           0000: all   led off\n\
           0101: green led on\n\
@@ -132,7 +132,6 @@ def get_test_result():
         input_str = mm_package("30", module_id = None);
         ser.flushInput()
         ser.write(input_str.decode('hex'))
-        time.sleep(1)
         res=ser.readall()
         a = int(binascii.hexlify(res[6:8]), 16)
         if (a < 800) or (a > 1000):
@@ -141,19 +140,19 @@ def get_test_result():
         if (a < 800) or (a > 1000):
             return 1
         a = int(binascii.hexlify(res[10:12]), 16)
-        if (a < 900) or (a > 1023):
+        if (a < 931):
             return 1
         a = int(binascii.hexlify(res[12:14]), 16)
-        if (a < 900) or (a > 1023):
+        if (a < 931):
             return 1
         a = int(binascii.hexlify(res[14:16]), 16)
-        if (a < 880) or (a > 915):
+        if (a < 804) or (a > 889):
             return 1
         a = int(binascii.hexlify(res[16:18]), 16)
-        if (a < 880) or (a > 915):
+        if (a < 804) or (a > 889):
             return 1
         a = int(binascii.hexlify(res[18:20]), 16)
-        if (a < 740) or (a > 810):
+        if (a < 736) or (a > 813):
             return 1
         a = binascii.hexlify(res[20:22])
         if (a != "0001"):
@@ -267,10 +266,11 @@ def test_polling():
 if __name__ == '__main__':
         while (1):
             if (options.is_rig == '0'):
-                set_voltage("0000")
                 set_led_state("0000")
-                set_voltage("88aa")
+                set_voltage("88dd")
+                time.sleep(1)
                 detect_version()
+                time.sleep(2)
                 ret = get_test_result()
                 if (ret == 1):
                     set_led_state("0202")
@@ -278,6 +278,7 @@ if __name__ == '__main__':
                 else:
                     set_led_state("0101")
                     print("PMU test pass")
+                set_voltage("0000")
                 raw_input("Please enter to continue:")
             elif (options.is_rig == '1'):
                 test_polling()
