@@ -25,7 +25,7 @@ SCRIPT_VERSION=20160708
 avalon4_owrepo="svn://svn.openwrt.org/openwrt/trunk@43076"
 avalon6_owrepo="git://git.openwrt.org/openwrt.git@cac971da"
 abc_owrepo="git://git.openwrt.org/openwrt.git"
-avalon7_owrepo="git://github.com/openwrt/openwrt.git@d175c09b"
+avalon7_owrepo="git://github.com/openwrt/openwrt.git@851a8906"
 
 # OpenWrt feeds
 FEEDS_CONF=feeds.${AVA_MACHINE}.conf
