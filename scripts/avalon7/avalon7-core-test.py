@@ -37,7 +37,9 @@ import sys
 auc_vid = 0x29f1
 auc_pid = 0x33f2
 TYPE_TEST = "32"
-parser = OptionParser(version="%prog ver:20160912_1546")
+TYPE_DETECT = "10"
+DATA_OFFSET = 6
+parser = OptionParser(version="%prog ver: 20161227_1745")
 # TODO: Add voltage control
 #       Add miner support
 #       Add frequency support
@@ -122,13 +124,6 @@ def auc_req(usbdev, endpin, endpout, addr, req, data):
         usbdev.write(endpout, txdat.decode("hex"))
 
     if req == 'a5':
-        if options.fast_xfer == '1':
-            datalen = 8 + (len(data) / 2)
-            data = data.ljust(112, '0')
-            txdat = hex(datalen)[2:].rjust(2, '0') + "0000" + \
-                "a5" + "282800" + addr.rjust(2, '0') + data
-            usbdev.write(endpout, txdat.decode("hex"))
-        else:
             datalen = 8 + (len(data) / 2)
             data = data.ljust(112, '0')
             txdat = hex(datalen)[2:].rjust(2, '0') + "0000" + \
@@ -188,7 +183,9 @@ errcode = [
     '\x1b[1;31mNTC_ERR\x1b[0m',
     '\x1b[1;31mVOL_ERR\x1b[0m',
     '\x1b[1;31mVCORE_ERR\x1b[0m',
-    'PMUCRCFAILED'
+    'PMUCRCFAILED',
+    'INVALID_PLL_VALUE',
+    'HUFAILED'
 ]
 
 
@@ -282,9 +279,20 @@ def run_testa7(usbdev, endpin, endpout, cmd):
 
         display = display + \
             'Error code (' + 'ECHU:' + ec_hu_str + ', ECMM:' + ec_mm_str + ')'
-        print('Result:' + display)
+        print('Result: ' + display)
 
         return miner_count
+
+
+def run_detect(usbdev, endpin, endpout, cmd):
+    res_s = auc_xfer(usbdev, endpin, endpout, "00", "a5", cmd)
+    if not res_s:
+        return None
+    else:
+        ver = ''.join([chr(x) for x in res_s])[DATA_OFFSET+8:DATA_OFFSET+23]
+        print("MM ver: " + ver)
+        return ver
+
 
 if __name__ == '__main__':
     # Detect AUC
@@ -294,7 +302,7 @@ if __name__ == '__main__':
         if ret:
             print "AUC ver: " + ''.join([chr(x) for x in ret])
         else:
-            print "AUC ver null"
+            print "AUC ver: null"
 
     if usbdev is None:
         print "No Avalon USB Converter or compatible device can be found!"
@@ -302,6 +310,15 @@ if __name__ == '__main__':
 
     idx_index = 1
     while True:
+        if idx_index == 1:
+            # Detect MM
+            mm_ver = run_detect(usbdev, endpin, endpout,
+                                mm_package(TYPE_DETECT))
+            if mm_ver is None:
+                print("MM ver: Something is wrong or modular id not correct")
+                sys.exit("Detect mm failed!")
+
+        # Run core test
         miner_count = run_testa7(
             usbdev, endpin, endpout,
             mm_package(TYPE_TEST,
