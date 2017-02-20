@@ -1,0 +1,86 @@
+--- /dev/null
++++ b/arch/arm/dts/zynq-zctrl.dts
+@@ -0,0 +1,71 @@
++/*
++ * Canaan Z Controller DTS
++ *
++ *  Copyright (C) 2017 Canaan
++ *
++ * SPDX-License-Identifier:	GPL-2.0+
++ */
++/dts-v1/;
++#include "zynq-7000.dtsi"
++
++/ {
++	model = "Canaan Z Controller";
++	compatible = "xlnx,zynq-zed", "xlnx,zynq-7000";
++
++	aliases {
++		ethernet0 = &gem0;
++		serial0 = &uart1;
++		spi0 = &qspi;
++		mmc0 = &sdhci0;
++	};
++
++	memory {
++		device_type = "memory";
++		reg = <0x0 0x40000000>;
++	};
++
++	chosen {
++		bootargs = "";
++		stdout-path = "serial0:115200n8";
++	};
++
++	usb_phy0: phy0 {
++		compatible = "usb-nop-xceiv";
++		#phy-cells = <0>;
++	};
++};
++
++&clkc {
++	ps-clk-frequency = <33333333>;
++};
++
++&gem0 {
++	status = "okay";
++	phy-mode = "rgmii-id";
++	phy-handle = <&ethernet_phy>;
++
++	ethernet_phy: ethernet-phy@0 {
++		reg = <0>;
++	};
++};
++
++&qspi {
++	u-boot,dm-pre-reloc;
++	status = "okay";
++};
++
++&sdhci0 {
++	u-boot,dm-pre-reloc;
++	status = "okay";
++};
++
++&uart1 {
++	u-boot,dm-pre-reloc;
++	status = "okay";
++};
++
++&usb0 {
++	status = "okay";
++	dr_mode = "host";
++	usb-phy = <&usb_phy0>;
++};
+--- a/arch/arm/dts/Makefile
++++ b/arch/arm/dts/Makefile
+@@ -90,7 +90,8 @@ dtb-$(CONFIG_ARCH_ZYNQ) += zynq-zc702.dt
+ 	zynq-zc770-xm010.dtb \
+ 	zynq-zc770-xm011.dtb \
+ 	zynq-zc770-xm012.dtb \
+-	zynq-zc770-xm013.dtb
++	zynq-zc770-xm013.dtb \
++	zynq-zctrl.dtb
+ dtb-$(CONFIG_ARCH_ZYNQMP) += \
+ 	zynqmp-ep108.dtb			\
+ 	zynqmp-zcu102.dtb			\
