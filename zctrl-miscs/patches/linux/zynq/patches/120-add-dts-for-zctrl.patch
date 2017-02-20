@@ -1,0 +1,63 @@
+--- /dev/null
++++ b/arch/arm/boot/dts/zynq-zctrl.dts
+@@ -0,0 +1,60 @@
++/*
++ *  Copyright (C) 2011 - 2014 Xilinx
++ *  Copyright (C) 2012 National Instruments Corp.
++ *
++ * This software is licensed under the terms of the GNU General Public
++ * License version 2, as published by the Free Software Foundation, and
++ * may be copied, distributed, and modified under those terms.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++/dts-v1/;
++/include/ "zynq-7000.dtsi"
++
++/ {
++	model = "Canaan Z Controller";
++	compatible = "xlnx,zynq-zed", "xlnx,zynq-7000";
++
++	aliases {
++		serial0 = &uart1;
++	};
++
++	memory {
++		device_type = "memory";
++		reg = <0x0 0x40000000>;
++	};
++
++	chosen {
++		bootargs = "earlyprintk";
++		stdout-path = "serial0:115200n8";
++	};
++	usb_phy0: phy0 {
++		compatible = "ulpi-phy";
++		#phy-cells = <0>;
++		reg = <0xe0002000 0x1000>;
++		view-port = <0x0170>;
++		drv-vbus;
++	};
++};
++
++&clkc {
++	ps-clk-frequency = <33333333>;
++};
++
++&sdhci0 {
++	disable-wp;
++	status = "okay";
++};
++
++&uart1 {
++	status = "okay";
++};
++
++&usb0 {
++	status = "okay";
++	dr_mode = "host";
++	usb-phy = <&usb_phy0>;
++};
