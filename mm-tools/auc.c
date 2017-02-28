@@ -103,7 +103,9 @@ static int32_t usb_transfer(AUC_HANDLE handle, uint8_t *wbuf, uint32_t wlen, uin
 				wlen,
 				&transfered,
 				AUC_TIMEOUT_MS)) {
+#ifdef DEBUG_VERBOSE
 		printf("usb_transfer AUC_EP_OUT failed!\n");
+#endif
 		return 1;
 	}
 
@@ -113,7 +115,9 @@ static int32_t usb_transfer(AUC_HANDLE handle, uint8_t *wbuf, uint32_t wlen, uin
 				rlen,
 				&transfered,
 				AUC_TIMEOUT_MS)) {
+#ifdef DEBUG_VERBOSE
 		printf("usb_transfer AUC_EP_IN failed!\n");
+#endif
 		return 1;
 	}
 #ifdef DEBUG_VERBOSE
@@ -266,7 +270,9 @@ int32_t auc_xfer(AUC_HANDLE handle, uint8_t slaveAddr, uint8_t *wbuf, uint32_t w
 		memset(buf, 0, CDC_I2C_PACKET_SZ);
 		count = auc_pkg_init(CDC_I2C_REQ_DEVICE_XFER, (uint8_t*)&params, params.txLength + sizeof(struct cdc_i2c_header));
 		if (usb_transfer(handle, g_auc_pkg, count, buf, CDC_I2C_PACKET_SZ)) {
+#ifdef DEBUG_VERBOSE
 			printf("auc_xfer usb_transfer failed!\n");
+#endif
 			return 0;
 		}
 

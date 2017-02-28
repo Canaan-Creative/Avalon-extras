@@ -61,7 +61,9 @@ static int i2c_write(unsigned char *wbuf, unsigned int wlen)
 	for (i = 0; i < g_auc_cnts; i++) {
 		ret = auc_xfer(g_hauc[i], g_slaveaddr, wbuf, wlen, NULL, 0, &resp);
 		if (resp == CDC_I2C_RES_NAK) {
+#ifdef DEBUG_VERBOSE
 			printf("i2c_write: auc-%d skip write to %x\n", i, g_slaveaddr);
+#endif
 			continue;
 		}
 
