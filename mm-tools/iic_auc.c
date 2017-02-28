@@ -60,8 +60,13 @@ static int i2c_write(unsigned char *wbuf, unsigned int wlen)
 
 	for (i = 0; i < g_auc_cnts; i++) {
 		ret = auc_xfer(g_hauc[i], g_slaveaddr, wbuf, wlen, NULL, 0, &resp);
+		if (resp == CDC_I2C_RES_NAK) {
+			printf("i2c_write: auc-%d skip write to %x\n", i, g_slaveaddr);
+			continue;
+		}
+
 		if (resp != CDC_I2C_RES_OK) {
-			printf("i2c_write: auc-%d Write to %x failed!(ret = %d, resp = %d)\n", i, g_slaveaddr, ret, resp);
+			printf("i2c_write: auc-%d write to %x failed!(ret = %d, resp = %d)\n", i, g_slaveaddr, ret, resp);
 			return 1;
 		}
 	}
