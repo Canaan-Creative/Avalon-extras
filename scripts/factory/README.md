@@ -23,6 +23,6 @@ following steps:
 	sh install.sh
 
 # Synchronize with the latest version
-cd ~/Avalon-extras
-git pull
+	cd ~/Avalon-extras
+	git pull
 
