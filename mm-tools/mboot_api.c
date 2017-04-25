@@ -37,6 +37,8 @@ struct thread {
 struct thread *thread_pool = NULL;
 static int gmcs1_len;
 
+static unsigned char mm_type[16]; /* Firmware Type */
+
 static void sleep_ms(unsigned int ms)
 {
     usleep(ms * 1000);
@@ -243,12 +245,16 @@ static int flash_prog_info(struct i2c_drv *iic, unsigned short crc, unsigned int
 
 static char char2byte(char char0, char char1)
 {
-	if (char0 >= 'A' && char0 <= 'F')
+	if (char0 >= 'a' && char0 <= 'f')
+		char0 = char0 - 'a' + 10;
+	else if (char0 >= 'A' && char0 <= 'F')
 		char0 = char0 - 'A' + 10;
 	else
 		char0 = char0 - '0';
 
-	if (char1 >= 'A' && char1 <= 'F')
+	if (char1 >= 'a' && char1 <= 'f')
+		char1 = char1 - 'a' + 10;
+	else if (char1 >= 'A' && char1 <= 'F')
 		char1 = char1 - 'A' + 10;
 	else
 		char1 = char1 - '0';
@@ -290,6 +296,12 @@ static int mboot_mcs_file(char *mcs_filepath)
 				break;
 			i++;
 		}
+		//:10fe0000
+		if(tmp[0] == ':' && tmp[1] == '1' && tmp[2] == '0' && tmp[3] == 'f' && tmp[4] == 'e' && tmp[5] == '0' && tmp[6] == '0' && tmp[7] == '0' && tmp[8] == '0') {
+			for (i = 0; i < 32; i += 2)
+				mm_type[i / 2] = char2byte(tmp[9 + i], tmp[9 + i + 1]);
+		}
+
 		if(tmp[0] == ':' && tmp[7] == '0' && tmp[8] == '4' && tmp[11] == '0' && tmp[12] == '8')
                         mm_flg = 1;
 		//:10ff8000
@@ -458,6 +470,11 @@ void mboot_finish(struct i2c_drv *iic)
 void mboot(char *mcs_filepath)
 {
 	gmcs1_len = mboot_mcs_file(mcs_filepath);
+
+	if ((mm_type[0] == 'M') && (mm_type[1] == 'M')) {
+		mm_send_upgrade_info(&mm_type[2], 3);
+		printf("mm type: %s\n", mm_type);
+	}
 
 	DRIVERS_DO(DRIVER_UPGRADE_MCS);
 	DRIVERS_DO(DRIVER_CHECK_FINISH);

@@ -21,6 +21,7 @@
 #define AVA4_P_REQUIRE	0x31
 #define AVA4_P_TEST	0x32
 #define AVA4_P_ACKDETECT	0x40
+#define AVA4_P_UPGRADE_INFO	0x18
 
 #define AVA4_MODULE_BROADCAST	0
 
@@ -183,6 +184,35 @@ static void mm_test(AUC_HANDLE handle, uint16_t testcores, uint16_t freq[], uint
 					}
 				}
 			}
+		}
+	}
+}
+
+void mm_send_upgrade_info(uint8_t *buf, uint8_t len)
+{
+	struct avalon4_pkg sendpkg;
+	AUC_HANDLE hauc;
+	uint32_t auc_cnts;
+	uint32_t i;
+
+	auc_cnts = auc_getcounts();
+	if (!auc_cnts)
+		printf("No AUC found!\n");
+
+	for (i = 0; i < auc_cnts; i++) {
+		hauc = auc_open(i);
+		if (hauc) {
+			g_auc_id = i;
+			auc_init(hauc, I2C_CLK_1M, 9600);
+			printf("auc-%d, ver:%s\n", i, auc_version(i));
+
+			memset(sendpkg.data, 0, AVA4_P_DATA_LEN);
+			memcpy(sendpkg.data, buf, len);
+			avalon4_pkg_init(&sendpkg, AVA4_P_UPGRADE_INFO, 1, 1);
+			avalon4_pkg_send(hauc, &sendpkg, 0);
+
+			auc_close(hauc);
+			hauc = NULL;
 		}
 	}
 }
