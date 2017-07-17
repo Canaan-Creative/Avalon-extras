@@ -2,7 +2,7 @@
 # This is a script for build avalon controller image
 #
 #  Copyright 2017 Yangjun <yangjun@canaan-creative.com>
-#  Copyright 2014-2016 Mikeqin <Fengling.Qin@gmail.com>
+#  Copyright 2014-2017 Mikeqin <Fengling.Qin@gmail.com>
 #  Copyright 2012-2015 Xiangfu <xiangfu@openmobilefree.com>
 #
 # OPENWRT_DIR is ${ROOT_DIR}/openwrt, build the image in it
@@ -14,7 +14,7 @@
 # Learn bash: http://explainshell.com/
 set -e
 
-SCRIPT_VERSION=20170214
+SCRIPT_VERSION=20170714
 
 # Support machine: avalon6, avalon4, abc, avalon7
 [ -z "${AVA_MACHINE}" ] && AVA_MACHINE=avalon6
@@ -28,8 +28,10 @@ avalon6_owrepo="git://git.openwrt.org/openwrt.git@cac971da"
 abc_owrepo="git://git.openwrt.org/openwrt.git"
 avalon7_owrepo="git://github.com/openwrt/openwrt.git@851a8906"
 
-# OpenWrt feeds
-FEEDS_CONF=feeds.${AVA_MACHINE}.conf
+# OpenWrt feeds, features: NULL(Default), NiceHash, DHCP
+[ -z "${FEATURE}" ] && FEEDS_CONF_URL=https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.${AVA_MACHINE}.conf
+[ "${FEATURE}" == "NiceHash" ] && FEEDS_CONF_URL=https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/xnsub/cgminer/data/feeds.${AVA_MACHINE}.conf
+[ "${FEATURE}" == "DHCP" ] && FEEDS_CONF_URL=https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/dhcp/cgminer/data/feeds.${AVA_MACHINE}.conf
 
 # Board config: target(get it in the OpenWrt bin), config
 rpi3_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.rpi3")
@@ -105,7 +107,7 @@ prepare_patch() {
 
 prepare_feeds() {
     cd ${OPENWRT_DIR}
-    $DL_PROG https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/${FEEDS_CONF} $DL_PARA feeds.conf && \
+    $DL_PROG ${FEEDS_CONF_URL} $DL_PARA feeds.conf && \
     ./scripts/feeds update -a && \
     ./scripts/feeds install -a
 
