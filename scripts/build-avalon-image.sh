@@ -14,7 +14,7 @@
 # Learn bash: http://explainshell.com/
 set -e
 
-SCRIPT_VERSION=20170714
+SCRIPT_VERSION=20170726
 
 # Support machine: avalon6, avalon4, abc, avalon7
 [ -z "${AVA_MACHINE}" ] && AVA_MACHINE=avalon6
@@ -28,10 +28,11 @@ avalon6_owrepo="git://git.openwrt.org/openwrt.git@cac971da"
 abc_owrepo="git://git.openwrt.org/openwrt.git"
 avalon7_owrepo="git://github.com/openwrt/openwrt.git@851a8906"
 
-# OpenWrt feeds, features: NULL(Default), NiceHash, DHCP
+# OpenWrt feeds, features: NULL(Default), NiceHash, DHCP, bitcoind
 [ -z "${FEATURE}" ] && FEEDS_CONF_URL=https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.${AVA_MACHINE}.conf
 [ "${FEATURE}" == "NiceHash" ] && FEEDS_CONF_URL=https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/xnsub/cgminer/data/feeds.${AVA_MACHINE}.conf
 [ "${FEATURE}" == "DHCP" ] && FEEDS_CONF_URL=https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/dhcp/cgminer/data/feeds.${AVA_MACHINE}.conf
+[ "${FEATURE}" == "bitcoind" ] && FEEDS_CONF_URL=https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/bitcoind/cgminer/data/feeds.${AVA_MACHINE}.conf
 
 # Board config: target(get it in the OpenWrt bin), config
 rpi3_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.rpi3")
