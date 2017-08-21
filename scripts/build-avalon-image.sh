@@ -14,13 +14,16 @@
 # Learn bash: http://explainshell.com/
 set -e
 
-SCRIPT_VERSION=20170727
+SCRIPT_VERSION=20170823
 
 # Support machine: avalon6, avalon4, abc, avalon7
 [ -z "${AVA_MACHINE}" ] && AVA_MACHINE=avalon6
 
-# Support target board: rpi3-modelb, rpi2-modelb, rpi1-modelb, tl-wr703n-v1, tl-mr3020-v1, wrt1200ac, zedboard, orangepi-2, zctrl
+# Support target board: rpi3-modelb, rpi2-modelb, rpi1-modelb, tl-wr703n-v1, tl-mr3020-v1, wrt1200ac, zedboard, orangepi-2, zctrl, xc7z100
 [ -z "${AVA_TARGET_BOARD}" ] && AVA_TARGET_BOARD=rpi3-modelb
+
+# Patch repo
+[ -z "${PATCH_REPO}" ] && PATCH_REPO=Canaan-Creative
 
 # OpenWrt repo
 avalon4_owrepo="svn://svn.openwrt.org/openwrt/trunk@43076"
@@ -43,6 +46,7 @@ tl_mr3020_v1_brdcfg=("ar71xx" "config.${AVA_MACHINE}.mr3020")
 wrt1200ac_brdcfg=("mvebu" "config.${AVA_MACHINE}.wrt1200ac")
 zedboard_brdcfg=("zynq" "config.${AVA_MACHINE}.zedboard")
 zctrl_brdcfg=("zynq" "config.${AVA_MACHINE}.zctrl")
+xc7z100_brdcfg=("zynq" "config.7z100")
 orangepi_2_brdcfg=("sunxi" "config.${AVA_MACHINE}.orangepi2")
 
 which wget > /dev/null && DL_PROG=wget && DL_PARA="-nv -O"
@@ -82,7 +86,12 @@ prepare_config() {
     cd ${OPENWRT_DIR}
 
     if [ "${AVA_TARGET_BOARD}" == "zctrl" ]; then
-        wget https://raw.githubusercontent.com/Canaan-Creative/Avalon-extras/master/zctrl-miscs/patches/linux/zynq/config-4.4 -O ./target/linux/zynq/config-4.4
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/zctrl-miscs/patches/linux/zynq/config-4.4 -O ./target/linux/zynq/config-4.4
+    fi
+
+    if [ "${AVA_TARGET_BOARD}" == "xc7z100" ]; then
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/7z100-miscs/patches/linux/zynq/config-4.4 -O ./target/linux/zynq/config-4.4
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/7z100-miscs/config.7z100 -O ./feeds/cgminer/cgminer/data/config.7z100
     fi
 
     eval OPENWRT_CONFIG=\${"`echo ${AVA_TARGET_BOARD//-/_}`"_brdcfg[1]} && cp ./feeds/cgminer/cgminer/data/${OPENWRT_CONFIG} .config
@@ -93,16 +102,30 @@ prepare_patch() {
 
     if [ "${AVA_TARGET_BOARD}" == "zctrl" ]; then
 	# Patch U-Boot
-        wget https://raw.githubusercontent.com/Canaan-Creative/Avalon-extras/master/zctrl-miscs/patches/u-boot/Makefile -O ./package/boot/uboot-zynq/Makefile
-        wget https://raw.githubusercontent.com/Canaan-Creative/Avalon-extras/master/zctrl-miscs/patches/u-boot/001-use-dtc-in-kernel.patch -O ./package/boot/uboot-zynq/patches/001-use-dtc-in-kernel.patch
-        wget https://raw.githubusercontent.com/Canaan-Creative/Avalon-extras/master/zctrl-miscs/patches/u-boot/030-add-dts-for-zctrl.patch -O ./package/boot/uboot-zynq/patches/030-add-dts-for-zctrl.patch
-        wget https://raw.githubusercontent.com/Canaan-Creative/Avalon-extras/master/zctrl-miscs/patches/u-boot/031-update-ddr-for-zctrl.patch -O ./package/boot/uboot-zynq/patches/031-update-ddr-for-zctrl.patch
-        wget https://raw.githubusercontent.com/Canaan-Creative/Avalon-extras/master/zctrl-miscs/patches/u-boot/032-add-defconfig-for-zctrl.patch -O ./package/boot/uboot-zynq/patches/032-add-defconfig-for-zctrl.patch
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/zctrl-miscs/patches/u-boot/Makefile -O ./package/boot/uboot-zynq/Makefile
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/zctrl-miscs/patches/u-boot/001-use-dtc-in-kernel.patch -O ./package/boot/uboot-zynq/patches/001-use-dtc-in-kernel.patch
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/zctrl-miscs/patches/u-boot/030-add-dts-for-zctrl.patch -O ./package/boot/uboot-zynq/patches/030-add-dts-for-zctrl.patch
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/zctrl-miscs/patches/u-boot/031-update-ddr-for-zctrl.patch -O ./package/boot/uboot-zynq/patches/031-update-ddr-for-zctrl.patch
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/zctrl-miscs/patches/u-boot/032-add-defconfig-for-zctrl.patch -O ./package/boot/uboot-zynq/patches/032-add-defconfig-for-zctrl.patch
 
 	# Patch Linux
-        wget https://raw.githubusercontent.com/Canaan-Creative/Avalon-extras/master/zctrl-miscs/patches/linux/zynq/image/Makefile -O ./target/linux/zynq/image/Makefile
-        wget https://raw.githubusercontent.com/Canaan-Creative/Avalon-extras/master/zctrl-miscs/patches/linux/zynq/patches/120-add-dts-for-zctrl.patch -O ./target/linux/zynq/patches/120-add-dts-for-zctrl.patch
-        wget https://raw.githubusercontent.com/Canaan-Creative/Avalon-extras/master/zctrl-miscs/patches/linux/zynq/profiles/zctrl.mk -O ./target/linux/zynq/profiles/zctrl.mk
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/zctrl-miscs/patches/linux/zynq/image/Makefile -O ./target/linux/zynq/image/Makefile
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/zctrl-miscs/patches/linux/zynq/patches/120-add-dts-for-zctrl.patch -O ./target/linux/zynq/patches/120-add-dts-for-zctrl.patch
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/zctrl-miscs/patches/linux/zynq/profiles/zctrl.mk -O ./target/linux/zynq/profiles/zctrl.mk
+    fi
+
+    if [ "${AVA_TARGET_BOARD}" == "xc7z100" ]; then
+	# Patch U-Boot
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/7z100-miscs/patches/u-boot/Makefile -O ./package/boot/uboot-zynq/Makefile
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/7z100-miscs/patches/u-boot/001-use-dtc-in-kernel.patch -O ./package/boot/uboot-zynq/patches/001-use-dtc-in-kernel.patch
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/7z100-miscs/patches/u-boot/040-add-dts-for-7z100.patch -O ./package/boot/uboot-zynq/patches/040-add-dts-for-7z100.patch
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/7z100-miscs/patches/u-boot/041-update-uart-for-7z100.patch -O ./package/boot/uboot-zynq/patches/041-update-uart-for-7z100.patch
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/7z100-miscs/patches/u-boot/042-add-defconfig-for-7z100.patch -O ./package/boot/uboot-zynq/patches/042-add-defconfig-for-7z100.patch
+
+	# Patch Linux
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/7z100-miscs/patches/linux/zynq/image/Makefile -O ./target/linux/zynq/image/Makefile
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/7z100-miscs/patches/linux/zynq/patches/121-add-dts-for-7z100.patch -O ./target/linux/zynq/patches/121-add-dts-for-7z100.patch
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/7z100-miscs/patches/linux/zynq/profiles/7z100.mk -O ./target/linux/zynq/profiles/7z100.mk
     fi
 }
 
@@ -202,7 +225,7 @@ Usage: $0 [--version] [--help] [--build] [--cgminer] [--cleanup]
      AVA_TARGET_BOARD   Environment variable, available target:
                         tl-wr703n-v1, pi-modelb-v1
                         pi-modelb-v2, tl-mr3020-v1
-                        zctrl
+                        zctrl, xc7z100
                         use pi-modelb-v2 if unset
 
      AVA_MACHINE        Environment variable, available machine:
