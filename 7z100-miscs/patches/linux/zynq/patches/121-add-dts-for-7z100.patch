@@ -1,0 +1,51 @@
+--- /dev/null
++++ b/arch/arm/boot/dts/zynq-7z100.dts
+@@ -0,0 +1,48 @@
++/*
++ *  Copyright (C) 2017 Canaan
++ *  Copyright (C) 2011 - 2014 Xilinx
++ *  Copyright (C) 2012 National Instruments Corp.
++ *
++ * This software is licensed under the terms of the GNU General Public
++ * License version 2, as published by the Free Software Foundation, and
++ * may be copied, distributed, and modified under those terms.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++/dts-v1/;
++/include/ "zynq-7000.dtsi"
++
++/ {
++	model = "Canaan 7Z100";
++	compatible = "xlnx,zynq-zed", "xlnx,zynq-7000";
++
++	aliases {
++		serial0 = &uart0;
++	};
++
++	memory {
++		device_type = "memory";
++		reg = <0x0 0x40000000>;
++	};
++
++	chosen {
++		bootargs = "earlyprintk";
++		stdout-path = "serial0:115200n8";
++	};
++};
++
++&clkc {
++	ps-clk-frequency = <33333333>;
++};
++
++&sdhci0 {
++	disable-wp;
++	status = "okay";
++};
++
++&uart0 {
++	status = "okay";
++};

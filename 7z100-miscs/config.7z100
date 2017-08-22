@@ -1,0 +1,46 @@
+#
+# This file must be copied to .config in the OpenWrt root folder,
+# then run: yes "" | make oldconfig > /dev/null
+#
+CONFIG_TARGET_zynq=y
+CONFIG_TARGET_zynq_7Z100=y
+CONFIG_TARGET_BOARD="zynq"
+CONFIG_TARGET_ARCH_PACKAGES="zynq"
+
+#
+# Kernel
+#
+CONFIG_PACKAGE_kmod-lib-crc-ccitt=y
+
+#
+# Busybox
+#
+CONFIG_BUSYBOX_CONFIG_FEATURE_EDITING_SAVEHISTORY=y
+CONFIG_BUSYBOX_CONFIG_FEATURE_REVERSE_SEARCH=y
+
+#
+# Apps
+#
+CONFIG_PACKAGE_coreutils=y
+CONFIG_PACKAGE_sed=y
+
+#
+# SSL
+#
+CONFIG_PACKAGE_wget=y
+CONFIG_PACKAGE_libopenssl=y
+CONFIG_PACKAGE_libpcre=y
+CONFIG_PACKAGE_zlib=y
+CONFIG_PACKAGE_ca-certificates=y
+
+CONFIG_OPENSSL_WITH_EC=y
+
+#
+# Filesystem
+#
+CONFIG_PACKAGE_e2fsprogs=y
+
+#
+# Editor
+#
+CONFIG_PACKAGE_nano=y
