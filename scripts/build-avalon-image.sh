@@ -119,7 +119,7 @@ prepare_patch() {
         wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/7z100-miscs/patches/u-boot/Makefile -O ./package/boot/uboot-zynq/Makefile
         wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/7z100-miscs/patches/u-boot/001-use-dtc-in-kernel.patch -O ./package/boot/uboot-zynq/patches/001-use-dtc-in-kernel.patch
         wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/7z100-miscs/patches/u-boot/040-add-dts-for-7z100.patch -O ./package/boot/uboot-zynq/patches/040-add-dts-for-7z100.patch
-        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/7z100-miscs/patches/u-boot/041-update-uart-for-7z100.patch -O ./package/boot/uboot-zynq/patches/041-update-uart-for-7z100.patch
+        wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/7z100-miscs/patches/u-boot/041-update-init-cfg-for-7z100.patch -O ./package/boot/uboot-zynq/patches/041-update-init-cfg-for-7z100.patch
         wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/7z100-miscs/patches/u-boot/042-add-defconfig-for-7z100.patch -O ./package/boot/uboot-zynq/patches/042-add-defconfig-for-7z100.patch
 
 	# Patch Linux
