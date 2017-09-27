@@ -14,9 +14,9 @@
 # Learn bash: http://explainshell.com/
 set -e
 
-SCRIPT_VERSION=20170823
+SCRIPT_VERSION=20170927
 
-# Support machine: avalon6, avalon4, abc, avalon7
+# Support machine: avalon6, avalon4, abc, avalon7, avalon8
 [ -z "${AVA_MACHINE}" ] && AVA_MACHINE=avalon6
 
 # Support target board: rpi3-modelb, rpi2-modelb, rpi1-modelb, tl-wr703n-v1, tl-mr3020-v1, wrt1200ac, zedboard, orangepi-2, zctrl, xc7z100
@@ -30,6 +30,7 @@ avalon4_owrepo="svn://svn.openwrt.org/openwrt/trunk@43076"
 avalon6_owrepo="git://git.openwrt.org/openwrt.git@cac971da"
 abc_owrepo="git://git.openwrt.org/openwrt.git"
 avalon7_owrepo="git://github.com/openwrt/openwrt.git@aef6a415"
+avalon8_owrepo="git://github.com/openwrt/openwrt.git@aef6a415"
 
 # OpenWrt feeds, features: NULL(Default), NiceHash, DHCP, bitcoind
 [ -z "${FEATURE}" ] && FEEDS_CONF_URL=https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.${AVA_MACHINE}.conf
@@ -68,6 +69,8 @@ prepare_version() {
     cd ${OPENWRT_DIR}
     if [ "${AVA_MACHINE}" == "avalon7" ]; then
         GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer master | cut -f1 | cut -c1-7`
+    elif [ "${AVA_MACHINE}" == "avalon8" ]; then
+        GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer avalon8 | cut -f1 | cut -c1-7`
     else
         GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer avalon4 | cut -f1 | cut -c1-7`
     fi
@@ -229,7 +232,7 @@ Usage: $0 [--version] [--help] [--build] [--cgminer] [--cleanup]
                         use pi-modelb-v2 if unset
 
      AVA_MACHINE        Environment variable, available machine:
-                        avalon7, avalon6, avalon4
+                        avalon8, avalon7, avalon6, avalon4
                         use avalon6 if unset
 
 Written by: Xiangfu <xiangfu@openmobilefree.net>
