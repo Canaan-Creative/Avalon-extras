@@ -5,16 +5,16 @@
 # For details see the UNLICENSE file at the root of the source tree.
 #
 # ----- Customer ----------------------------------------------------------
-# PLATFORM: MM721, MM741
+# PLATFORM: MM721, MM741, MM821
 PLATFORM ?= MM721
 
-# PMU: pmu721, pmu741
+# PMU: pmu721, pmu741, pmu821
 PMU ?= pmu721
 
 BATCHFILE	:= $(shell mktemp)
 isedir  ?= /home/Xilinx/14.6/ISE_DS
 xil_env ?= . $(isedir)/settings$(shell getconf LONG_BIT).sh &>/dev/null
-ifeq ($(PMU),pmu841)
+ifeq ($(PMU),pmu821)
     NXP_PARAMETERS = -g -2 -vendor=NXP -pLPC824 -wire=winUSB -s50 -flash-driver=LPC800_32.cfx
 else
     NXP_PARAMETERS = -g -2 -vendor=NXP -pLPC11U14/201 -wire=winUSB -s50 -flash-driver=LPC11_12_13_32K_4K.cfx

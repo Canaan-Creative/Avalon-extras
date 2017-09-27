@@ -14,15 +14,15 @@ parser.add_option("-c", "--choose", dest="is_rig", default="0", help="0 Is For R
 
 ser = Serial(options.serial_port, 115200, 8, timeout=0.2) # 1 second
 
-PMU841_TYPE = ( 'PMU841' )
+PMU821_TYPE = ( 'PMU821' )
 
-PMU841_VER = ( '0dd0' )
+PMU821_VER = ( '0dd0' )
 
-PMU841_PG  = { 'pg_good': '0001', 'pg_bad': '0002' }
+PMU821_PG  = { 'pg_good': '0001', 'pg_bad': '0002' }
 
-PMU841_LED = { 'led_close': '0000', 'led_green': '0001', 'led_red': '0002' }
+PMU821_LED = { 'led_close': '0000', 'led_green': '0001', 'led_red': '0002' }
 
-PMU841_ADC = { 'ntc_l': 800, 'ntc_h': 1000, 'v12_l':931, 'v12_h': 1024, 'vcore_l': 927, 'vcore_h': 1024}
+PMU821_ADC = { 'ntc_l': 800, 'ntc_h': 1000, 'v12_l':931, 'v12_h': 1024, 'vcore_l': 927, 'vcore_h': 1024}
 
 error_message = {
     'serial_port': 'Check the power supply or invalid PMU.',
@@ -109,12 +109,12 @@ def detect_version():
         print (error_message['serial_port'])
         return False
     PMU_DNA = binascii.hexlify(res[6:14])
-    if res[25:29] == PMU841_VER:
-        PMU_TYPE = PMU841_TYPE
-        PMU_VER = PMU841_VER
-        PMU_ADC = PMU841_ADC
-        PMU_LED = PMU841_LED
-        PMU_PG  = PMU841_PG
+    if res[25:29] == PMU821_VER:
+        PMU_TYPE = PMU821_TYPE
+        PMU_VER = PMU821_VER
+        PMU_ADC = PMU821_ADC
+        PMU_LED = PMU821_LED
+        PMU_PG  = PMU821_PG
 
     print(PMU_TYPE + " VER:" + PMU_VER)
     print(PMU_TYPE + " DNA:" + PMU_DNA)
