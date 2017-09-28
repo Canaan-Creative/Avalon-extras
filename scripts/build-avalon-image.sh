@@ -238,6 +238,7 @@ Usage: $0 [--version] [--help] [--build] [--cgminer] [--cleanup]
 Written by: Xiangfu <xiangfu@openmobilefree.net>
             Fengling <Fengling.Qin@gmail.com>
             Yangjun <yangjun@canaan-creative.com>
+	    xuzhenxing <xuzhenxing@canaan-creative.com>
                                                      Version: ${SCRIPT_VERSION}"
  }
 
