@@ -6,6 +6,7 @@ from optparse import OptionParser
 import binascii
 import sys
 import time
+import math
 
 parser = OptionParser()
 parser.add_option("-s", "--serial", dest="serial_port", default="/dev/ttyUSB0", help="Serial port")
@@ -205,7 +206,7 @@ def get_result():
 pmu_state_name = (
     'NTC1:   ',
     'NTC2:   ',
-    'V12:  ',
+    'V12:    ',
     'VCORE1: ',
     'VCORE2: '
 )
@@ -223,6 +224,31 @@ pmu_led_state = {
     '0008': 'Red Led Blink'
 }
 
+def convert_to_vin(adc):
+    return adc * 3.3 / 4095
+
+def convert_to_vcore(vin):
+    return vin / 20 * (20 + 43)
+
+def convert_to_vcc(vin):
+    return vin / 5.62 * (5.62 + 20)
+
+SERIESRESISTOR=820
+THERMISTORNOMINAL=10000
+BCOEFFICIENT=3500
+TEMPERATURENOMINAL=25
+def convert_to_temp(adc):
+    resistance = 4095 / adc - 1
+    resistance = SERIESRESISTOR / resistance
+    ret = resistance / THERMISTORNOMINAL
+    ret = math.log(ret)
+    ret /= BCOEFFICIENT
+    ret += 1.0 / (TEMPERATURENOMINAL + 273.15)
+    ret = 1.0 / ret
+    ret -= 273.15
+
+    return ret
+
 def get_state():
     input_str = mm_package("30", module_id = None);
     ser.flushInput()
@@ -233,7 +259,13 @@ def get_state():
         return False
     for index in range(len(pmu_state_name)):
         a = int(binascii.hexlify(res[(index * 2 + 6):(index * 2 + 8)]), 16)
-        print(pmu_state_name[index] + '%d' %a)
+        if (index < 2):
+            print(pmu_state_name[index] + '%d' %a + '(%f' %convert_to_temp(a) + 'C)')
+        elif (index == 2):
+            print(pmu_state_name[index] + '%d' %a + '(%f' %convert_to_vcc(convert_to_vin(a)) + 'V)')
+        else:
+            print(pmu_state_name[index] + '%d' %a + '(%f' %convert_to_vcore(convert_to_vin(a)) + 'V)')
+
     a = binascii.hexlify(res[16:18])
     pmu_pg_state_key = pmu_pg_state.keys()
     for index in range(len(pmu_pg_state_key)):
