@@ -5,5 +5,5 @@ Type=Application
 Terminal=false
 Icon[en_US]=gnome-panel-launcher
 Exec=gnome-terminal -e /home/factory/Avalon-extras/scripts/avalon8/avalon8-pmu-test.py
-Name[en_US]=TestAvalon7_pmu
+Name[en_US]=TestAvalon8_pmu
 Icon=gnome-panel-launcher
