@@ -164,6 +164,10 @@ def detect_version():
         PMU_ADC = PMU741_ADC
         PMU_LED = PMU741_LED
         PMU_PG  = PMU741_PG
+    else:
+        print("Invalid PMU version")
+        return False
+
     print(PMU_TYPE + " VER:" + PMU_VER)
     print(PMU_TYPE + " DNA:" + PMU_DNA)
     return True
@@ -204,6 +208,7 @@ def set_led_state(led):
     else:
         print("Bad led's state vaule!")
 
+# 0: Pass, 1: Slice 1 fail, 2: Slice 2 fail, 3: UART or VBase fail
 def get_result():
     input_str = mm_package("30", module_id = None);
     ser.flushInput()
@@ -211,52 +216,52 @@ def get_result():
     res = ser.readall()
     if res == "":
         print error_message['serial_port']
-        return False
+        return 3
     a = int(binascii.hexlify(res[6:8]), 16)
     if (a < PMU_ADC['ntc_l']) or (a > PMU_ADC['ntc_h']):
         print error_message['ntc_1']
-        return False
+        return 1
     a = int(binascii.hexlify(res[8:10]), 16)
     if (a < PMU_ADC['ntc_l']) or (a > PMU_ADC['ntc_h']):
         print error_message['ntc_2']
-        return False
+        return 2
     a = int(binascii.hexlify(res[10:12]), 16)
     if (a < PMU_ADC['v12_l']) or (a > PMU_ADC['v12_h']):
         print error_message['v12_1']
-        return False
+        return 1
     a = int(binascii.hexlify(res[12:14]), 16)
     if (a < PMU_ADC['v12_l']) or (a > PMU_ADC['v12_h']):
         print error_message['v12_2']
-        return False
+        return 2
     a = int(binascii.hexlify(res[14:16]), 16)
     if (a < PMU_ADC['vcore_l']) or (a > PMU_ADC['vcore_h']):
         print error_message['vcore_1']
-        return False
+        return 1
     a = int(binascii.hexlify(res[16:18]), 16)
     if (a < PMU_ADC['vcore_l']) or (a > PMU_ADC['vcore_h']):
         print error_message['vcore_2']
-        return False
+        return 2
     a = int(binascii.hexlify(res[18:20]), 16)
     if (a < PMU_ADC['vbase_l']) or (a > PMU_ADC['vbase_h']):
         print error_message['vbase']
-        return False
+        return 3
     a = binascii.hexlify(res[20:22])
     if (a != PMU_PG['pg_good']):
         print error_message['pg_1']
-        return False
+        return 1
     a = binascii.hexlify(res[22:24])
     if (a != PMU_PG['pg_good']):
         print error_message['pg_2']
-        return False
+        return 2
     a = binascii.hexlify(res[24:26])
     if (a != PMU_LED['led_close']):
         print error_message['led_1']
-        return False
+        return 1
     a = binascii.hexlify(res[26:28])
     if (a != PMU_LED['led_close']):
         print error_message['led_2']
-        return False
-    return True
+        return 2
+    return 0
 
 pmu_state_name = (
     'NTC1:   ',
@@ -340,16 +345,22 @@ if __name__ == '__main__':
         if options.is_rig == '0':
             set_led_state("0000")
             set_vol_value("88dd")
-            if detect_version() == False:
-                sys.exit(0)
-            time.sleep(3)
-            if get_result() == False:
-                set_led_state("0202")
-                print(PMU_TYPE + " test fail")
-            else:
-                set_led_state("0101")
-                print(PMU_TYPE + " test pass")
-            set_vol_value("0000")
+            if detect_version() == True:
+                time.sleep(3)
+                ret = get_result()
+                if ret == 0:
+                    set_led_state("0101")
+                    print(PMU_TYPE + " test pass")
+                elif ret == 1:
+                    set_led_state("0801")
+                    print(PMU_TYPE + " Slice 1 test fail")
+                elif ret == 2:
+                    set_led_state("0108")
+                    print(PMU_TYPE + " Slice 2 test fail")
+                else:
+                    set_led_state("0202")
+                    print(PMU_TYPE + " test fail")
+
             raw_input("Please enter to continue:")
         elif options.is_rig == '1':
             test_polling()
