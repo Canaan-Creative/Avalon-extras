@@ -12,7 +12,11 @@ parser.add_option("-s", "--serial", dest="serial_port", default="/dev/ttyUSB0", 
 parser.add_option("-c", "--choose", dest="is_rig", default="0", help="0 Is For Rig Testing")
 (options, args) = parser.parse_args()
 
-ser = Serial(options.serial_port, 115200, 8, timeout=0.2) # 1 second
+ser = None
+try:
+    ser = Serial(options.serial_port, 115200, 8, timeout=0.2) # 1 second
+except Exception as e:
+    print str(e)
 
 PMU721_TYPE = ( 'PMU721' )
 PMU741_TYPE = ( 'PMU741' )
@@ -343,23 +347,29 @@ def test_polling():
 if __name__ == '__main__':
     while (True):
         if options.is_rig == '0':
-            set_led_state("0000")
-            set_vol_value("88dd")
-            if detect_version() == True:
-                time.sleep(3)
-                ret = get_result()
-                if ret == 0:
-                    set_led_state("0101")
-                    print(PMU_TYPE + " test pass")
-                elif ret == 1:
-                    set_led_state("0801")
-                    print(PMU_TYPE + " Slice 1 test fail")
-                elif ret == 2:
-                    set_led_state("0108")
-                    print(PMU_TYPE + " Slice 2 test fail")
-                else:
-                    set_led_state("0202")
-                    print(PMU_TYPE + " test fail")
+            try:
+                set_led_state("0000")
+                set_vol_value("88dd")
+                if detect_version() == True:
+                    time.sleep(3)
+                    ret = get_result()
+                    if ret == 0:
+                        set_led_state("0101")
+                        print(PMU_TYPE + " test pass")
+                    elif ret == 1:
+                        set_led_state("0801")
+                        print(PMU_TYPE + " Slice 1 test fail")
+                    elif ret == 2:
+                        set_led_state("0108")
+                        print(PMU_TYPE + " Slice 2 test fail")
+                    else:
+                        set_led_state("0202")
+                        print(PMU_TYPE + " test fail")
+            except:
+                print("Errors are found on USB or connections.")
+                print("Please check the cable and run it again!")
+                raw_input("Press any key to exit!")
+                sys.exit(1)
 
             raw_input("Please enter to continue:")
         elif options.is_rig == '1':
