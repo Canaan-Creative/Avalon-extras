@@ -297,33 +297,38 @@ def run_detect(usbdev, endpin, endpout, cmd):
 if __name__ == '__main__':
     # Detect AUC
     usbdev, endpin, endpout = enum_usbdev(auc_vid, auc_pid)
-    if usbdev:
-        ret = auc_xfer(usbdev, endpin, endpout, "00", "a1", "801A0600")
-        if ret:
-            print "AUC ver: " + ''.join([chr(x) for x in ret])
-        else:
-            print "AUC ver: null"
+    try:
+        if usbdev:
+            ret = auc_xfer(usbdev, endpin, endpout, "00", "a1", "801A0600")
+            if ret:
+                print "AUC ver: " + ''.join([chr(x) for x in ret])
+            else:
+                print "AUC ver: null"
 
-    if usbdev is None:
-        print "No Avalon USB Converter or compatible device can be found!"
-        sys.exit("Enum failed!")
+        if usbdev is None:
+            print "No Avalon USB Converter or compatible device can be found!"
 
-    idx_index = 1
-    while True:
-        if idx_index == 1:
-            # Detect MM
-            mm_ver = run_detect(usbdev, endpin, endpout,
-                                mm_package(TYPE_DETECT))
-            if mm_ver is None:
-                print("MM ver: Something is wrong or modular id not correct")
-                sys.exit("Detect mm failed!")
+        idx_index = 1
+        while True:
+            if idx_index == 1:
+                # Detect MM
+                mm_ver = run_detect(usbdev, endpin, endpout,
+                                    mm_package(TYPE_DETECT))
+                if mm_ver is None:
+                    print("MM ver: Something is wrong or modular id not correct")
+                    sys.exit("Detect mm failed!")
 
-        # Run core test
-        miner_count = run_testa7(
-            usbdev, endpin, endpout,
-            mm_package(TYPE_TEST,
-                       idx=str(idx_index).rjust(2, '0')))
-        idx_index += 1
-        if (idx_index > miner_count):
-            idx_index = 1
-            raw_input("Please enter any key to continue")
+            # Run core test
+            miner_count = run_testa7(
+                    usbdev, endpin, endpout,
+                    mm_package(TYPE_TEST,
+                               idx=str(idx_index).rjust(2, '0')))
+            idx_index += 1
+            if (idx_index > miner_count):
+                idx_index = 1
+                raw_input("Please enter any key to continue")
+
+    except Exception as e:
+        print str(e)
+        raw_input("Press any key to exit!")
+        sys.exit(1)
