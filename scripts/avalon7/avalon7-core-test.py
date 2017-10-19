@@ -39,7 +39,7 @@ auc_pid = 0x33f2
 TYPE_TEST = "32"
 TYPE_DETECT = "10"
 DATA_OFFSET = 6
-parser = OptionParser(version="%prog ver: 20161227_1745")
+parser = OptionParser(version="%prog ver: 20171019_1156")
 # TODO: Add voltage control
 #       Add miner support
 #       Add frequency support
