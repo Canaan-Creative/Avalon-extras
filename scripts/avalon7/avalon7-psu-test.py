@@ -335,7 +335,7 @@ def show_help():
 \n\
 PSU test script, you can input any raw data for testing.\n\
 h: Help\n\
-s: Set      The Output Voltage of PSU\n\
+raw data: The Output Voltage of PSU\n\
             |----------------------------------|\n\
             |   Input Value  |     Voltage     |\n\
             |----------------------------------|\n\
