@@ -30,8 +30,8 @@ PMU741_PG  = { 'pg_good': '0001', 'pg_bad': '0002' }
 PMU721_LED = { 'led_close': '0000', 'led_green': '0001', 'led_red': '0002' }
 PMU741_LED = { 'led_close': '0000', 'led_green': '0001', 'led_red': '0002' }
 
-PMU721_ADC = { 'ntc_l': 800, 'ntc_h': 1000, 'v12_l':931, 'v12_h': 1024, 'vcore_l': 804, 'vcore_h': 889,  'vbase_l': 735, 'vbase_h': 813 }
-PMU741_ADC = { 'ntc_l': 800, 'ntc_h': 1000, 'v12_l':931, 'v12_h': 1024, 'vcore_l': 927, 'vcore_h': 1024, 'vbase_l': 735, 'vbase_h': 813 }
+PMU721_ADC = { 'ntc_l': 800, 'ntc_h': 1000, 'v12_l':931, 'v12_h': 1024, 'vcore_l': 804, 'vcore_h': 889 }
+PMU741_ADC = { 'ntc_l': 800, 'ntc_h': 1000, 'v12_l':931, 'v12_h': 1024, 'vcore_l': 927, 'vcore_h': 1024 }
 
 error_message = {
     'serial_port': 'Connection failed.',
@@ -41,7 +41,6 @@ error_message = {
     'v12_2': 'V12_2 value error.',
     'vcore_1': 'VCORE1 value error.',
     'vcore_2': 'VCORE2 value error.',
-    'vbase': 'VBASE value error.',
     'pg_1' : 'PG1 value error.',
     'pg_2' : 'PG2 value error.' ,
     'led_1': 'LED1 status error.',
@@ -212,7 +211,7 @@ def set_led_state(led):
     else:
         print("Bad led's state vaule!")
 
-# 0: Pass, 1: Slice 1 fail, 2: Slice 2 fail, 3: UART or VBase fail
+# 0: Pass, 1: Slice 1 fail, 2: Slice 2 fail, 3: UART fail
 def get_result():
     input_str = mm_package("30", module_id = None);
     ser.flushInput()
@@ -245,10 +244,6 @@ def get_result():
     if (a < PMU_ADC['vcore_l']) or (a > PMU_ADC['vcore_h']):
         print error_message['vcore_2']
         return 2
-    a = int(binascii.hexlify(res[18:20]), 16)
-    if (a < PMU_ADC['vbase_l']) or (a > PMU_ADC['vbase_h']):
-        print error_message['vbase']
-        return 3
     a = binascii.hexlify(res[20:22])
     if (a != PMU_PG['pg_good']):
         print error_message['pg_1']
@@ -274,7 +269,6 @@ pmu_state_name = (
     'V12-2:  ',
     'VCORE1: ',
     'VCORE2: ',
-    'VBASE:  '
 )
 
 pmu_pg_state  = {
