@@ -5,16 +5,16 @@
 # For details see the UNLICENSE file at the root of the source tree.
 #
 # ----- Customer ----------------------------------------------------------
-# PLATFORM: MM721, MM741, MM821
-PLATFORM ?= MM721
+# MM_PLATFORM: MM721, MM741, MM821
+MM_PLATFORM ?= MM721
 
-# PMU: pmu721, pmu741, pmu821
-PMU ?= pmu721
+# MCU_PLATFORM: pmu721, pmu741, pmu821, auc2, auc3
+MCU_PLATFORM ?= pmu721
 
 BATCHFILE	:= $(shell mktemp)
 isedir  ?= /home/Xilinx/14.6/ISE_DS
 xil_env ?= . $(isedir)/settings$(shell getconf LONG_BIT).sh &>/dev/null
-ifeq ($(PMU),pmu821)
+ifeq ($(MCU_PLATFORM),pmu821)
     NXP_PARAMETERS = -g -2 -vendor=NXP -pLPC824 -wire=winUSB -s50 -flash-driver=LPC800_32.cfx
 else
     NXP_PARAMETERS = -g -2 -vendor=NXP -pLPC11U14/201 -wire=winUSB -s50 -flash-driver=LPC11_12_13_32K_4K.cfx
@@ -28,11 +28,11 @@ SHELL := /bin/bash
 .PHONY: reflash load erase erase_ulink2 reflash_ulink2
 
 # Bitstream rules
-reflash: $(PLATFORM).mcs
+reflash: $(MM_PLATFORM).mcs
 	echo setmode -bs	>> $(BATCHFILE)
 	echo setcable -p auto	>> $(BATCHFILE)
 	echo identify		>> $(BATCHFILE)
-ifeq ($(PLATFORM),MM721)
+ifeq ($(MM_PLATFORM),MM721)
 	echo attachFlash -p 1 -spi W25Q80BV	        >> $(BATCHFILE)
 else 
 	echo attachFlash -p 1 -spi W25Q16BV             >> $(BATCHFILE)
@@ -43,7 +43,7 @@ endif
 	$(SHELL) -c '$(xil_env) && impact -batch $(BATCHFILE)'
 	@rm -f $(BATCHFILE)
 
-load: $(PLATFORM).bit
+load: $(MM_PLATFORM).bit
 	echo setmode -bs	>> $(BATCHFILE)
 	echo setcable -p auto	>> $(BATCHFILE)
 	echo identify		>> $(BATCHFILE)
@@ -53,11 +53,11 @@ load: $(PLATFORM).bit
 	$(SHELL) -c '$(xil_env) && impact -batch $(BATCHFILE)'
 	@rm -f $(BATCHFILE)
 
-erase: $(PLATFORM)
+erase: $(MM_PLATFORM)
 	echo setmode -bs	>> $(BATCHFILE)
 	echo setcable -p auto	>> $(BATCHFILE)
 	echo identify		>> $(BATCHFILE)
-ifeq ($(PLATFORM),MM721)
+ifeq ($(MM_PLATFORM),MM721)
 	echo attachFlash -p 1 -spi W25Q80BV		>> $(BATCHFILE)
 else
 	echo attachFlash -p 1 -spi W25Q16BV
@@ -67,7 +67,7 @@ endif
 	$(SHELL) -c '$(xil_env) && impact -batch $(BATCHFILE)'
 	@rm -f $(BATCHFILE)
 
-reflash_ulink2: $(PMU).axf erase_ulink2
+reflash_ulink2: $(MCU_PLATFORM).axf erase_ulink2
 	(while ! (sleep 0.5 && $(LPCXPRESSODIR)/crt_emu_cm_redlink -flash-load-exec $< $(NXP_PARAMETERS)); do : ; done;)
 
 erase_ulink2:
