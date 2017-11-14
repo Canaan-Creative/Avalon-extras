@@ -13,20 +13,27 @@ parser.add_option("-s", "--serial", dest="serial_port", default="/dev/ttyUSB0", 
 parser.add_option("-c", "--choose", dest="is_rig", default="0", help="0 Is For Rig Testing")
 (options, args) = parser.parse_args()
 
-ser = Serial(options.serial_port, 115200, 8, timeout=0.2) # 1 second
+ser = None
+try:
+    ser = Serial(options.serial_port, 115200, 8, timeout=0.2) # 1 second
+except Exception as e:
+    print str(e)
 
 PMU821_TYPE = ( 'PMU821' )
 
-PMU821_VER = ( '0dd0' )
+PMU821_VER = ( '8C' )
 
 PMU821_PG  = { 'pg_good': '0001', 'pg_bad': '0002' }
 
 PMU821_LED = { 'led_close': '0000', 'led_green': '0001', 'led_red': '0002' }
 
-PMU821_ADC = { 'ntc_l': 800, 'ntc_h': 1000, 'v12_l':931, 'v12_h': 1024, 'vcore_l': 927, 'vcore_h': 1024}
+#ntc: check the table(Thick Film Chip NTC Thermistor Devices_CMFA103J3500HANT.pdf)
+#v12_l/h(Vin) equation: x * 3.3 / 4095 = (12~15) * 5.62 / 25.62
+#vcore_l/h(Vout) equation: x * 3.3 / 4095 = (8.1~10.4) * 20 / 63
+PMU821_ADC = { 'ntc_l': 524, 'ntc_h': 9615, 'v12_l':3267, 'v12_h': 4095, 'vcore_l': 3191, 'vcore_h': 4095}
 
 error_message = {
-    'serial_port': 'Check the power supply or invalid PMU.',
+    'serial_port': 'Connection failed.',
     'ntc_1': 'NTC_1 value error.',
     'ntc_2': 'NTC_2 value error.',
     'v12': 'V12 value error.',
@@ -76,9 +83,9 @@ def show_help():
 h: Help\n\
 1: Detect The PMU Version\n\
 2: Set	  The PMU Output Voltage\n\
-          |---------|----------|----------|\n\
-          |   8888  |  7.30V   |  9.12V   |\n\
-          |---------|----------|----------|\n\
+          |---------|---------------------|\n\
+          |   8888  |       9.88V         |\n\
+          |---------|---------------------|\n\
 3: Set    The PMU Led State\n\
           |-------------------------------|\n\
           | Setting |      Led state      |\n\
@@ -110,12 +117,16 @@ def detect_version():
         print (error_message['serial_port'])
         return False
     PMU_DNA = binascii.hexlify(res[6:14])
-    if res[25:29] == PMU821_VER:
+    if res[14:16] == PMU821_VER:
         PMU_TYPE = PMU821_TYPE
-        PMU_VER = PMU821_VER
+        PMU_VER = res[14:29]
         PMU_ADC = PMU821_ADC
         PMU_LED = PMU821_LED
         PMU_PG  = PMU821_PG
+    else:
+        print(res[14:29])
+        print("Invalid PMU version")
+        return False
 
     print(PMU_TYPE + " VER:" + PMU_VER)
     print(PMU_TYPE + " DNA:" + PMU_DNA)
@@ -163,43 +174,43 @@ def get_result():
     ser.write(input_str.decode('hex'))
     res = ser.readall()
     if res == "":
-        print (error_message['serial_port'])
+        print(error_message['serial_port'])
         return False
     a = int(binascii.hexlify(res[6:8]), 16)
     if (a < PMU_ADC['ntc_l']) or (a > PMU_ADC['ntc_h']):
-        print (error_message['ntc_1'])
+        print(error_message['ntc_1'])
         return False
     a = int(binascii.hexlify(res[8:10]), 16)
     if (a < PMU_ADC['ntc_l']) or (a > PMU_ADC['ntc_h']):
-        print (error_message['ntc_2'])
+        print(error_message['ntc_2'])
         return False
     a = int(binascii.hexlify(res[10:12]), 16)
     if (a < PMU_ADC['v12_l']) or (a > PMU_ADC['v12_h']):
-        print (error_message['v12'])
+        print(error_message['v12'])
         return False
     a = int(binascii.hexlify(res[12:14]), 16)
     if (a < PMU_ADC['vcore_l']) or (a > PMU_ADC['vcore_h']):
-        print (error_message['vcore_1'])
+        print(error_message['vcore_1'])
         return False
     a = int(binascii.hexlify(res[14:16]), 16)
     if (a < PMU_ADC['vcore_l']) or (a > PMU_ADC['vcore_h']):
-        print (error_message['vcore_2'])
+        print(error_message['vcore_2'])
         return False
     a = binascii.hexlify(res[16:18])
     if (a != PMU_PG['pg_good']):
-        print (error_message['pg_1'])
+        print(error_message['pg_1'])
         return False
     a = binascii.hexlify(res[18:20])
     if (a != PMU_PG['pg_good']):
-        print (error_message['pg_2'])
+        print(error_message['pg_2'])
         return False
     a = binascii.hexlify(res[20:22])
     if (a != PMU_LED['led_close']):
-        print (error_message['led_1'])
+        print(error_message['led_1'])
         return False
     a = binascii.hexlify(res[22:24])
     if (a != PMU_LED['led_close']):
-        print (error_message['led_2'])
+        print(error_message['led_2'])
         return False
     return True
 
