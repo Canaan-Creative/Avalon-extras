@@ -83,23 +83,23 @@ def show_help():
 h: Help\n\
 1: Detect The PMU Version\n\
 2: Set	  The PMU Output Voltage\n\
-          |---------|---------------------|\n\
-          |   8888  |       9.88V         |\n\
-          |---------|---------------------|\n\
+          |-----------------|---------------------|\n\
+          |   008088018088  |       8.49V         |\n\
+          |-----------------|---------------------|\n\
 3: Set    The PMU Led State\n\
-          |-------------------------------|\n\
-          | Setting |      Led state      |\n\
-          |---------|---------------------|\n\
-          |   0000  |   All   Led Off     |\n\
-          |---------|---------------------|\n\
-          |   0101  |   Green Led On      |\n\
-          |---------|---------------------|\n\
-          |   0202  |   Red   Led On      |\n\
-          |---------|---------------------|\n\
-          |   0404  |   Green Led Blink   |\n\
-          |---------|---------------------|\n\
-          |   0808  |   Red   Led Blink   |\n\
-          |---------|---------------------|\n\
+          |---------------------------------------|\n\
+          |     Setting     |      Led state      |\n\
+          |-----------------|---------------------|\n\
+          |   000000010000  |   All   Led Off     |\n\
+          |-----------------|---------------------|\n\
+          |   000101010101  |   Green Led On      |\n\
+          |-----------------|---------------------|\n\
+          |   000202010202  |   Red   Led On      |\n\
+          |-----------------|---------------------|\n\
+          |   000404010404  |   Green Led Blink   |\n\
+          |-----------------|---------------------|\n\
+          |   000808010808  |   Red   Led Blink   |\n\
+          |-----------------|---------------------|\n\
 4: Get    The PMU State\n\
 q: Quit\n")
 
@@ -133,28 +133,27 @@ def detect_version():
     return True
 
 def judge_vol_range(vol):
-    if len(vol) != 4:
+    if len(vol) != 12:
         return False
-    if (vol[0:2] != "00") and (vol[0:2] != "88") and (vol[0:2] != "80") and (vol[0:2] != "08"):
-        return False
-    try:
-        binascii.a2b_hex(vol[2:4])
-    except:
+    if (vol[0:2] != "00") and (vol[6:8] != "01"):
         return False
 
     return True
 
 def judge_led_range(led):
-    if len(led) != 4:
+    if len(led) != 12:
         return False
-    if (led[0:1] != "0") and (led[2:3] != "0"):
+    if (led[0:2] != "00") and (led[6:8] != "01"):
         return False
 
     return True
 
 def set_vol_value(vol_value):
     if judge_vol_range(vol_value) == True:
-        input_str = mm_package("22", module_id = None, pdata = vol_value);
+        input_str = mm_package("22", idx = vol_value[0:2], module_id = None, pdata = vol_value[2:6]);
+        ser.flushInput()
+        ser.write(input_str.decode('hex'))
+        input_str = mm_package("22", idx = vol_value[6:8], module_id = None, pdata = vol_value[8:12]);
         ser.flushInput()
         ser.write(input_str.decode('hex'))
     else:
@@ -162,7 +161,10 @@ def set_vol_value(vol_value):
 
 def set_led_state(led):
     if judge_led_range(led) == True:
-        input_str = mm_package("24", module_id = None, pdata = led);
+        input_str = mm_package("24", idx = led[0:2], module_id = None, pdata = led[2:6]);
+        ser.flushInput()
+        ser.write(input_str.decode('hex'))
+        input_str = mm_package("24", idx = led[6:8], module_id = None, pdata = led[8:12]);
         ser.flushInput()
         ser.write(input_str.decode('hex'))
     else:
@@ -323,19 +325,19 @@ def test_polling():
 if __name__ == '__main__':
     while (True):
         if options.is_rig == '0':
-            set_led_state("0000")
-            set_vol_value("88dd")
+            set_led_state("000000010000")
+            set_vol_value("008088018088")
             if detect_version() == False:
                 sys.exit(0)
             # Wait 3 seconds at least for power good
             time.sleep(3)
             if get_result() == False:
-                set_led_state("0202")
+                set_led_state("000202010202")
                 print(PMU_TYPE + " test fail")
             else:
-                set_led_state("0101")
+                set_led_state("000101010101")
                 print(PMU_TYPE + " test pass")
-            set_vol_value("0000")
+            set_vol_value("000000010000")
             raw_input("Please enter to continue:")
         elif options.is_rig == '1':
             test_polling()
