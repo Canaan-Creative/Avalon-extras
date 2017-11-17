@@ -28,9 +28,9 @@ PMU821_PG  = { 'pg_good': '0001', 'pg_bad': '0002' }
 PMU821_LED = { 'led_close': '0000', 'led_green': '0001', 'led_red': '0002' }
 
 #ntc: check the table(Thick Film Chip NTC Thermistor Devices_CMFA103J3500HANT.pdf)
-#v12_l/h(Vin) equation: x * 3.3 / 4095 = (12~15) * 5.62 / 25.62
-#vcore_l/h(Vout) equation: x * 3.3 / 4095 = (8.1~10.4) * 20 / 63
-PMU821_ADC = { 'ntc_l': 524, 'ntc_h': 9615, 'v12_l':3267, 'v12_h': 4095, 'vcore_l': 3191, 'vcore_h': 4095}
+#v12_l/h(Vin) equation: x * 3.3 / 4095 = (11~14) * 5.62 / 25.62
+#vcore_l/h(Vout) equation: x * 3.3 / 4095 = (8.2~8.7) * 20 / 63
+PMU821_ADC = { 'ntc_l': 524, 'ntc_h': 9615, 'v12_l':2994, 'v12_h': 3810, 'vcore_l': 3230, 'vcore_h': 3427}
 
 error_message = {
     'serial_port': 'Connection failed.',
