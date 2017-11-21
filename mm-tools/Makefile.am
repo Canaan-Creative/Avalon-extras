@@ -22,3 +22,8 @@ mm_tools_SOURCES += crc16_soft.c
 else
 mm_tools_SOURCES += crc16.c
 endif
+
+if USE_FLASH_LAYOUT_2M
+mm_tools_CPPFLAGS += -DUSE_FLASH_LAYOUT_2M
+endif
+

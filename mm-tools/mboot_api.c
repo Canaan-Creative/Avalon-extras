@@ -10,14 +10,39 @@
 #include "crc.h"
 #include "iic.h"
 
-#define MCS1_INFO_ADDR_BASE 0xfff80
-#define MCS1_INFO_LEN 16 //bytes
-#define MCS1_ADDR_BASE 0x80000
+struct flash_layout {
+	/*
+	 * [0, mcs1_offset - 1] is mcs0
+	 * reserved for bootloader
+	 */
+	unsigned int mcs1_offset;
+	unsigned int mcs1_cfg_offset;	/* size: 3 sectors */
+	unsigned int mcs1_info_offset;	/* size: 16 bytes */
+	unsigned int flash_size;
+};
+
+static struct flash_layout w25qxx_layout =
+#ifdef USE_FLASH_LAYOUT_2M
+{
+	0x100000,
+	0x1fc000,
+	0x1fff80,
+	0x200000
+};
+#else
+{
+	0x80000,
+	0xfc000,
+	0xfff80,
+	0x100000
+};
+#endif
+
 #define SPI_FLASH_BLOCK 0x10000
 #define SPI_FLASH_32K	0x8000
 #define SPI_FLASH_SEC 0x1000
 #define SPI_FLASH_PAGE 256 //byte
-#define CMD_LEN 4
+
 #define IIC_SLAVE_CTL 0x40
 #define IIC_SLAVE_DAT 0x41
 #define CS_ENABLE 0
@@ -141,13 +166,12 @@ static int flash_erase_op(struct i2c_drv *iic, unsigned int addr, unsigned char 
 	return 0;
 }
 
-static int flash_earse(struct i2c_drv *iic)
+static int flash_fast_erase(struct i2c_drv *iic, unsigned int start, unsigned int end)
 {
-	unsigned int addr = MCS1_ADDR_BASE;
-	int i;
+	unsigned int addr = start;
 
 	printf("%s-BE64 addr = %x\n", iic->name, addr);
-	for (i = 0; i < 7; i++) {
+	while ((addr + SPI_FLASH_BLOCK) <= end) {
 		if (flash_erase_op(iic, addr, 0xd8))
 			return 1;
 		addr += SPI_FLASH_BLOCK;
@@ -157,30 +181,52 @@ static int flash_earse(struct i2c_drv *iic)
 
 	printf("\n");
 	printf("%s-BE32 addr = %x\n", iic->name, addr);
-	if (flash_erase_op(iic, addr, 0x52))
-		return 1;
-	addr += SPI_FLASH_32K;
-	printf("+");
-	fflush(stdout);
+	while ((addr + SPI_FLASH_32K) <= end) {
+		if (flash_erase_op(iic, addr, 0x52))
+			return 1;
+		addr += SPI_FLASH_32K;
+		printf("+");
+		fflush(stdout);
+	}
 
 	printf("\n");
 	printf("%s-SE addr = %x\n", iic->name, addr);
-	for (i = 0; i < 4; i++) {
+	while ((addr + SPI_FLASH_SEC) <= end) {
 		if (flash_erase_op(iic, addr, 0x20))
 			return 1;
 		addr += SPI_FLASH_SEC;
 		printf("+");
 		fflush(stdout);
 	}
-	/* mboot confg reserved, 3 sectors[0xfc000 ~ 0xfe000] */
 	printf("\n");
-	printf("%s-SE addr = %x\n", iic->name, 0xff000);
-	/* Last sector */
-	if (flash_erase_op(iic, 0xff000, 0x20))
+
+	/* addr should be align with SPI_FLASH_SEC */
+	if (addr != end) {
+		printf("\nmcs1 is not SPI_FLASH_SEC align");
 		return 1;
+	}
+
+	return 0;
+}
+
+static int flash_earse(struct i2c_drv *iic)
+{
+	/* step 1: erase mcs1 firmware */
+	flash_fast_erase(iic,
+			w25qxx_layout.mcs1_offset,
+			w25qxx_layout.mcs1_cfg_offset);
+
+	/* step 2: mcs1 confg reserved */
+
+	/* step 3: erase mcs1_info, NOTE: only 16bytes, but we erase 1 sector */
+	printf("%s-SE addr = %x\n", iic->name, w25qxx_layout.mcs1_info_offset);
+	if (flash_erase_op(iic, w25qxx_layout.mcs1_info_offset, 0x20))
+		return 1;
+
 	printf("+");
 	fflush(stdout);
 	printf("\n");
+
 	return 0;
 }
 
@@ -237,7 +283,10 @@ static int flash_prog_info(struct i2c_drv *iic, unsigned short crc, unsigned int
 
         mcs1_info[14] = 0x00;
         mcs1_info[15] = 0x00;
-	if (flash_prog_page(iic, mcs1_info, MCS1_INFO_ADDR_BASE, 16))
+	if (flash_prog_page(iic,
+			mcs1_info,
+			w25qxx_layout.mcs1_info_offset,
+			16))
 		return 1;
 
 	return 0;
@@ -302,8 +351,14 @@ static int mboot_mcs_file(char *mcs_filepath)
 				mm_type[i / 2] = char2byte(tmp[9 + i], tmp[9 + i + 1]);
 		}
 
+		/* 1M mm flag: 020000040008F2, 2M mm flag: 020000040010EA */
+#ifdef USE_FLASH_LAYOUT_2M
+		if(tmp[0] == ':' && tmp[7] == '0' && tmp[8] == '4' && tmp[11] == '1' && tmp[12] == '0')
+                        mm_flg = 1;
+#else
 		if(tmp[0] == ':' && tmp[7] == '0' && tmp[8] == '4' && tmp[11] == '0' && tmp[12] == '8')
                         mm_flg = 1;
+#endif
 		//:10ff8000
 		if(tmp[0] == ':' && tmp[1] == '1' && tmp[2] == '0' && tmp[3] == 'f' && tmp[4] == 'f' && tmp[5] == '8' && tmp[6] == '0' && tmp[7] == '0' && tmp[8] == '0')
                         mm_info = 1;
@@ -345,7 +400,7 @@ static void *upgrade_op(void *arg)
 {
 	struct i2c_drv *iic = (struct i2c_drv *)arg;
 	unsigned char FLASH_PAGE[SPI_FLASH_PAGE];
-	unsigned int addr = MCS1_ADDR_BASE;
+	unsigned int addr = w25qxx_layout.mcs1_offset;
 	int byte_num, all_byte;
 	unsigned short crc_init = 0;
 	FILE *mboot_mcs_fp_new;
@@ -470,6 +525,7 @@ void mboot_finish(struct i2c_drv *iic)
 void mboot(char *mcs_filepath)
 {
 	gmcs1_len = mboot_mcs_file(mcs_filepath);
+	printf("gmcs1_len = %d\n", gmcs1_len);
 
 	if ((mm_type[0] == 'M') && (mm_type[1] == 'M')) {
 		mm_send_upgrade_info(&mm_type[2], 3);

@@ -53,6 +53,13 @@ AC_ARG_ENABLE([soft_crc],
              )
 AM_CONDITIONAL([USE_SOFT_CRC], [test x$soft_crc = xyes])
 
+flash_layout_2m='no'
+AC_ARG_ENABLE([flash_layout_2m],
+             [AC_HELP_STRING([--enable-flash-layout-2m], [Enable Flash Layout 2M (default disabled)])],
+             [flash_layout_2m=$enableval]
+             )
+AM_CONDITIONAL([USE_FLASH_LAYOUT_2M], [test x$flash_layout_2m = xyes])
+
 AC_CONFIG_FILES([
 	Makefile
 	compat/Makefile
@@ -73,6 +80,11 @@ if test "x$soft_crc" = xyes; then
 echo "  USE_SOFT_CRC....: Enable"
 else
 echo "  USE_SOFT_CRC....: Disable"
+fi
+if test "x$flash_layout_2m" = xyes; then
+echo "  USE_FLASH_LAYOUT_2M....: Enable"
+else
+echo "  USE_FLASH_LAYOUT_2M....: Disable"
 fi
 echo "  USE_IIC_RPI.....: Enable"
 echo "  USE_IIC_AUC.....: Enable"
