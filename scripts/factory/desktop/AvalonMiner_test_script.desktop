@@ -4,6 +4,6 @@ Version=1.0
 Type=Application
 Terminal=false
 Icon[en_US]=gnome-panel-launcher
-Exec=gnome-terminal -e /home/factory/Avalon-extras/scripts/avalon7/avalon7-core-test.py
+Exec=gnome-terminal -e /home/factory/Avalon-extras/scripts/avalon_common/avalon-core-test.py
 Name[en_US]=AvalonMiner_test_script
 Icon=gnome-panel-launcher
