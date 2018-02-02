@@ -5,7 +5,7 @@
 # For details see the UNLICENSE file at the root of the source tree.
 #
 # ----- Customer ----------------------------------------------------------
-# MM_PLATFORM: MM721, MM741, MM821
+# MM_PLATFORM: MM721, MM741, MM821, MM841
 MM_PLATFORM ?= MM721
 
 # MCU_PLATFORM: pmu721, pmu741, pmu821, auc2, auc3
