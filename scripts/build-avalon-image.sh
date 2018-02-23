@@ -14,7 +14,7 @@
 # Learn bash: http://explainshell.com/
 set -e
 
-SCRIPT_VERSION=20170927
+SCRIPT_VERSION=20180223
 
 # Support machine: avalon6, avalon4, abc, avalon7, avalon8
 [ -z "${AVA_MACHINE}" ] && AVA_MACHINE=avalon6
@@ -29,8 +29,8 @@ SCRIPT_VERSION=20170927
 avalon4_owrepo="svn://svn.openwrt.org/openwrt/trunk@43076"
 avalon6_owrepo="git://git.openwrt.org/openwrt.git@cac971da"
 abc_owrepo="git://git.openwrt.org/openwrt.git"
-avalon7_owrepo="git://github.com/openwrt/openwrt.git@aef6a415"
-avalon8_owrepo="git://github.com/openwrt/openwrt.git@aef6a415"
+avalon7_owrepo="git://github.com/Canaan-Creative/openwrt-archive.git"
+avalon8_owrepo="git://github.com/Canaan-Creative/openwrt-archive.git"
 
 # OpenWrt feeds, features: NULL(Default), NiceHash, DHCP, bitcoind
 [ -z "${FEATURE}" ] && FEEDS_CONF_URL=https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.${AVA_MACHINE}.conf
