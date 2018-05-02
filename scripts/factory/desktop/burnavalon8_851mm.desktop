@@ -1,0 +1,9 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Icon[en_US]=gnome-panel-launcher
+Exec=gnome-terminal -e '/home/factory/Avalon-extras/scripts/factory/loop.sh "./burn-mm.sh MM851"'
+Name[en_US]=BurnAvalon8_851mm
+Icon=gnome-panel-launcher
