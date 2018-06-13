@@ -108,7 +108,9 @@ if __name__ == '__main__':
             del data[6:8]
             continue
 
-        print('Device ID:%d, Power value:%d' % (i, power_data))
+        logging.debug('Device ID:%d, Power value:%d', i, power_data)
+
+        print('Power value:%d' % (power_data))
         power_file.write(str(power_data))
         power_file.write('\n')
         del data[6:8]
