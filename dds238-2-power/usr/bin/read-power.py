@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Opening the serial port
 COM_PortName = "/dev/ttyUSB0"
-COM_Port = serial.Serial(COM_PortName, timeout = 1)  # Open the COM port
+COM_Port = serial.Serial(COM_PortName, timeout = 0.3)  # Open the COM port
 logging.debug('Com Port: %s, %s', COM_PortName, 'Opened')
 
 COM_Port.baudrate = 2400                # Set Baud rate
@@ -71,12 +71,12 @@ def rs485_read():
         return -1
 
 def rs485_write(data):
+    COM_Port.reset_input_buffer()
+    COM_Port.reset_output_buffer()
     bytes_cnt  = COM_Port.write(data)   # Write data to serial port
     logging.debug('Write Count = %d. %s ', bytes_cnt, 'bytes written')
 
 if __name__ == '__main__':
-    path = "CGMiner_Power.log"
-
     '''
     Device addr; func: read:0x03, write:0x10(16);
     MODBUS protocol read/write
@@ -84,9 +84,6 @@ if __name__ == '__main__':
     device-id, func, start-reg-hi, start-reg-lo, data-reg-hi, data-reg-lo, crc-lo, crc-hi
     '''
     data = [0x00, 0x03, 0x00, 0x0e, 0x00, 0x01]
-
-    # Read miner power value to file
-    power_file = open(path, 'w+')
 
     # Read power dev id range: 1 ~ 24
     for i in range(1, 25):
@@ -103,15 +100,10 @@ if __name__ == '__main__':
             power_data = rs485_read()
             if (power_data > -1):
                 break
-
-        if (power_data < 30):
-            del data[6:8]
+        if (power_data == -1):
             continue
 
-        logging.debug('Device ID:%d, Power value:%d', i, power_data)
-
+        logging.info('Device ID:%d, Power value:%d', i, power_data)
         print('Power value:%d' % (power_data))
-        power_file.write(str(power_data))
-        power_file.write('\n')
         del data[6:8]
     COM_Port.close()
