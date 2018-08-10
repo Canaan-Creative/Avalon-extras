@@ -1,0 +1,24 @@
+#!/usr/bin/expect
+#
+# Author March 2018 Zhenxing Xu <xuzhenxing@canaan-creative.com>
+#
+
+set timeout 20
+
+set ip_addr [lindex $argv 0]
+set cmd [lindex $argv 1]
+set opt [lindex $argv 2]
+set file [lindex $argv 3]
+
+spawn ssh -n root@$ip_addr -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $cmd $opt
+
+if { $file != "" } {
+    log_file $file
+}
+
+expect "password:"
+send "1\r"
+
+expect {
+    \"Permission denied, please try again.\" exit
+}

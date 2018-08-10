@@ -1,0 +1,25 @@
+#!/usr/bin/expect
+#
+# Author March 2018 Zhenxing Xu <xuzhenxing@canaan-creative.com>
+#
+
+set timeout 20
+
+set ip_addr [lindex $argv 0]
+set dir [lindex $argv 1]
+set flag [lindex $argv 2]
+
+if { "$flag" == "0" } {
+    spawn scp  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$ip_addr:/etc/config/cgminer ./$dir
+} elseif { "$flag" == "1" }  {
+    spawn scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ./$dir/cgminer root@$ip_addr:/etc/config
+} else {
+    exit
+}
+
+expect "password:"
+send "1\r"
+
+expect {
+    \"Permission denied, please try again.\" exit
+}
