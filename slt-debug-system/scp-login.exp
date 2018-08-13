@@ -1,0 +1,16 @@
+#!/usr/bin/expect
+
+set timeout 20
+
+set ip_addr [lindex $argv 0]
+set flag [lindex $argv 1]
+
+if { "$flag" == "0" } {
+    spawn scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$ip_addr:/etc/config/cgminer ./
+} else {
+    spawn scp  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ./cgminer root@$ip_addr:/etc/config
+}
+
+expect {
+    \"Permission denied, please try again.\" exit
+}
