@@ -8,7 +8,7 @@ DATE=`date +%Y-%m-%d-%H-%M-%S`
 dirname=$IP"-"$DATE"-"$2"-"$4
 mkdir $dirname
 
-cat estats.log  | grep "\[MM ID" > ./$dirname/CGMiner_Debug.log
+cat estats.log  | grep "MM ID1\=" > ./$dirname/CGMiner_Debug.log
 cat edevs.log | grep -v Reply  > ./$dirname/CGMiner_Edevs.log
 cat summary.log | grep -v Reply  > ./$dirname/CGMiner_Summary.log
 
@@ -22,7 +22,7 @@ echo "$@" > options.log
 for i in CGMiner_Debug.log
 do
     cat $i | sed 's/] /\]\n/g' | grep GHSmm | sed 's/GHSmm\[//g' | sed 's/\]//g' > $i.GHSmm
-    cat $i | sed 's/] /\]\n/g' | grep Temp  | sed 's/Temp\[//g'  | sed 's/\]//g' > $i.Temp
+    cat $i | sed 's/] /\]\n/g' | grep 'Temp\['  | sed 's/Temp\[//g'  | sed 's/\]//g' > $i.Temp
     cat $i | sed 's/] /\]\n/g' | grep TMax  | sed 's/TMax\[//g'  | sed 's/\]//g' > $i.TMax
     cat $i | sed 's/] /\]\n/g' | grep WU    | sed 's/WU\[//g'    | sed 's/\]//g' > $i.WU
     cat $i | sed 's/] /\]\n/g' | grep DH    | sed 's/DH\[//g'    | sed 's/\]//g' > $i.DH
