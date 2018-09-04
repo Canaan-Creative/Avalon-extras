@@ -44,15 +44,19 @@ do
     ./ssh-login.exp $CIP /etc/init.d/cgminer restart
     sleep $time
 
+    # Create CGMiner_Power.log
+    touch ./$dirip/CGMiner_Power.log
+
     # Read AvalonMiner Power
-    ./ssh-power.py $PIP | sed '/^$/d' | cut -d \: -f 2 > ./$dirip/CGMiner_Power.log
-    for i in `cat ./$dirip/CGMiner_Power.log`
+    ./ssh-power.py $PIP | sed '/^$/d' | cut -d \: -f 3 > ./$dirip/tmp.log
+    for i in `cat ./$dirip/tmp.log`
     do
         if [ $i -ge 300 -a $i -le 3000 ]; then
             echo $i >> ./$dirip/CGMiner_Power.log
         fi
     done
-    sleep 3
+    rm ./$dirip/tmp.log
+    sleep 1
 
     # Debuglog switch
     dbg=`./ssh-login.exp $CIP cgminer-api debug | grep "\[Debug\] => true" | wc -l`
@@ -75,9 +79,19 @@ if [ -z "${more_options_flag}" ]; then
     more_options=`cat ./$dirip/cgminer | grep more_options`
     tmp=`echo ${more_options#*more_options} | sed "s/'//g"`
 
+    # Create CGMiner_Power.log
+    touch ./$dirip/CGMiner_Power.log
+
     # Read AvalonMiner Power
-    ./ssh-power.py $PIP | sed '/^$/d' | cut -d \: -f 2 > ./$dirip/CGMiner_Power.log
-    sleep 3
+    ./ssh-power.py $PIP | sed '/^$/d' | cut -d \: -f 3 > ./$dirip/tmp.log
+    for i in `cat ./$dirip/tmp.log`
+    do
+        if [ $i -ge 300 -a $i -le 3000 ]; then
+            echo $i >> ./$dirip/CGMiner_Power.log
+        fi
+    done
+    rm ./$dirip/tmp.log
+    sleep 1
 
     # Debuglog switch
     dbg=`./ssh-login.exp $CIP cgminer-api debug | grep "\[Debug\] => true" | wc -l`
