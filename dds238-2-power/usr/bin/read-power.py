@@ -103,7 +103,7 @@ if __name__ == '__main__':
         if (power_data == -1):
             continue
 
-        logging.info('Device ID:%d, Power value:%d', i, power_data)
-        print('Power value:%d' % (power_data))
+        logging.debug('Device ID:%d, Power value:%d', i, power_data)
+        print('Device ID:%d, Power value:%d' % (i, power_data))
         del data[6:8]
     COM_Port.close()
