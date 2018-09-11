@@ -101,6 +101,7 @@ if __name__ == '__main__':
             if (power_data > -1):
                 break
         if (power_data == -1):
+            del data[6:8]
             continue
 
         logging.debug('Device ID:%d, Power value:%d', i, power_data)
