@@ -1,6 +1,7 @@
 #!/bin/bash
 # This is a script for build avalon controller image
 #
+#  Copyright 2018 Zhenxing Xu <xuzhenxing@canaan-creative.com>
 #  Copyright 2017 Yangjun <yangjun@canaan-creative.com>
 #  Copyright 2014-2017 Mikeqin <Fengling.Qin@gmail.com>
 #  Copyright 2012-2015 Xiangfu <xiangfu@openmobilefree.com>
@@ -14,10 +15,10 @@
 # Learn bash: http://explainshell.com/
 set -e
 
-SCRIPT_VERSION=20180223
+SCRIPT_VERSION=20180912
 
-# Support machine: avalon6, avalon4, abc, avalon7, avalon8
-[ -z "${AVA_MACHINE}" ] && AVA_MACHINE=avalon6
+# Support machine: avalon6, avalon4, abc, avalon7, avalon8, avalon9
+[ -z "${AVA_MACHINE}" ] && AVA_MACHINE=avalon9
 
 # Support target board: rpi3-modelb, rpi2-modelb, rpi1-modelb, tl-wr703n-v1, tl-mr3020-v1, wrt1200ac, zedboard, orangepi-2, zctrl, xc7z100
 [ -z "${AVA_TARGET_BOARD}" ] && AVA_TARGET_BOARD=rpi3-modelb
@@ -31,6 +32,7 @@ avalon6_owrepo="git://git.openwrt.org/openwrt.git@cac971da"
 abc_owrepo="git://git.openwrt.org/openwrt.git"
 avalon7_owrepo="git://github.com/Canaan-Creative/openwrt-archive.git"
 avalon8_owrepo="git://github.com/Canaan-Creative/openwrt-archive.git"
+avalon9_owrepo="git://github.com/Canaan-Creative/openwrt-archive.git"
 
 # OpenWrt feeds, features: NULL(Default), NiceHash, DHCP, bitcoind
 [ -z "${FEATURE}" ] && FEEDS_CONF_URL=https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.${AVA_MACHINE}.conf
@@ -71,6 +73,8 @@ prepare_version() {
         GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer master | cut -f1 | cut -c1-7`
     elif [ "${AVA_MACHINE}" == "avalon8" ]; then
         GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer avalon8 | cut -f1 | cut -c1-7`
+    elif [ "${AVA_MACHINE}" == "avalon9" ]; then
+        GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer avalon9 | cut -f1 | cut -c1-7`
     else
         GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer avalon4 | cut -f1 | cut -c1-7`
     fi
