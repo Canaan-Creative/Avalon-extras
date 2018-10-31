@@ -24,9 +24,8 @@ def ssh_read_power(ip):
                 if k == retry - 1:
                     return None
         try:
-            stdin, stdout, stderr = ssh.exec_command(
-                'python /usr/bin/readpower')
-            time.sleep(2)
+            stdin, stdout, stderr = ssh.exec_command('readpower')
+            time.sleep(1)
             v = stdout.read()
         except:
             ssh.close()
