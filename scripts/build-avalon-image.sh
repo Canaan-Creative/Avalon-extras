@@ -1,7 +1,9 @@
 #!/bin/bash
 # This is a script for build avalon controller image
 #
-#  Copyright 2018 Zhenxing Xu <xuzhenxing@canaan-creative.com>
+#  Copyright 2018- SHI Bin <shibin@canaan-creative.com>
+#  Copyright 2018- Zhenxing Xu <xuzhenxing@canaan-creative.com>
+#  Copyright 2017-2018 Johnson <fanzixiao@canaan-creative.com>
 #  Copyright 2017 Yangjun <yangjun@canaan-creative.com>
 #  Copyright 2014-2017 Mikeqin <Fengling.Qin@gmail.com>
 #  Copyright 2012-2015 Xiangfu <xiangfu@openmobilefree.com>
@@ -15,12 +17,12 @@
 # Learn bash: http://explainshell.com/
 set -e
 
-SCRIPT_VERSION=20181024
+SCRIPT_VERSION=20181118
 
 # Support machine: avalon6, avalon4, abc, avalon7, avalon8, avalon9, avalon911
 [ -z "${AVA_MACHINE}" ] && AVA_MACHINE=avalon9
 
-# Support target board: rpi3-modelb, rpi2-modelb, rpi1-modelb, tl-wr703n-v1, tl-mr3020-v1, wrt1200ac, zedboard, orangepi-2, zctrl, xc7z100
+# Support target board: h3, orangepi-2, rpi1-modelb, rpi2-modelb, rpi3-modelb, tl-mr3020-v1, tl-wr703n-v1, wrt1200ac, xc7z100, zedboard, zctrl
 [ -z "${AVA_TARGET_BOARD}" ] && AVA_TARGET_BOARD=rpi3-modelb
 
 # Patch repo
@@ -52,6 +54,7 @@ zedboard_brdcfg=("zynq" "config.${AVA_MACHINE}.zedboard")
 zctrl_brdcfg=("zynq" "config.${AVA_MACHINE}.zctrl")
 xc7z100_brdcfg=("zynq" "config.7z100")
 orangepi_2_brdcfg=("sunxi" "config.${AVA_MACHINE}.orangepi2")
+h3_brdcfg=("sunxi" "config.${AVA_MACHINE}.h3")
 
 which wget > /dev/null && DL_PROG=wget && DL_PARA="-nv -O"
 which curl > /dev/null && DL_PROG=curl && DL_PARA="-L -o"
@@ -85,7 +88,7 @@ prepare_version() {
     OW_GIT_VERSION=`git --git-dir=./feeds/cgminer/.git rev-parse HEAD | cut -c1-7`
 
     cat > ./files/etc/avalon_version << EOL
-Avalon Firmware - $DATE
+Avalon Firmware for $AVA_MACHINE - $DATE
     luci: $LUCI_GIT_VERSION
     cgminer: $GIT_VERSION
     cgminer-packages: $OW_GIT_VERSION
@@ -152,6 +155,8 @@ prepare_feeds() {
 
 prepare_source() {
     echo "Gen firmware for ${AVA_TARGET_BOARD}:${AVA_MACHINE}"
+    echo "TARGET BOARD   :${AVA_TARGET_BOARD}"
+    echo "TARGET MACHINE :${AVA_MACHINE}"
     cd ${SCRIPT_DIR}
     [ ! -d avalon ] && mkdir -p avalon/bin
     cd avalon
@@ -210,6 +215,7 @@ build_cgminer() {
 do_release() {
     cd ${ROOT_DIR}
     eval AVA_TARGET_PLATFORM=\${"`echo ${AVA_TARGET_BOARD//-/_}`"_brdcfg[0]}
+    echo "Target Platform: ${AVA_TARGET_PLATFORM}"
     mkdir -p ./bin/${DATE}/${AVA_TARGET_BOARD}/
     cp -a ./openwrt/bin/${AVA_TARGET_PLATFORM}/* ./bin/${DATE}/${AVA_TARGET_BOARD}/
 }
@@ -233,19 +239,23 @@ Usage: $0 [--version] [--help] [--build] [--cgminer] [--cleanup]
      --cleanup          Remove all files
 
      AVA_TARGET_BOARD   Environment variable, available target:
-                        tl-wr703n-v1, pi-modelb-v1
-                        pi-modelb-v2, tl-mr3020-v1
-                        zctrl, xc7z100
-                        use pi-modelb-v2 if unset
+                        h3, orangepi-2, pi-modelb-v1, pi-modelb-v2,
+                        rpi1-modelb, rpi2-modelb, rpi3-modelb,
+                        tl-mr3020-v1, tl-wr703n-v1, wrt1200ac,
+                        xc7z100, zedboard, zctrl
+                        use rpi3-modelb if unset
 
      AVA_MACHINE        Environment variable, available machine:
-                        avalon9, avalon911, avalon8, avalon7, avalon6, avalon4
-                        use avalon6 if unset
+                        avalon911, avalon9, avalon8, avalon7, avalon6, avalon4
+                        use avalon9 if unset
 
 Written by: Xiangfu <xiangfu@openmobilefree.net>
             Fengling <Fengling.Qin@gmail.com>
             Yangjun <yangjun@canaan-creative.com>
+            Johnson <fanzixiao@canaan-creative.com>
             xuzhenxing <xuzhenxing@canaan-creative.com>
+            chengping <13641793410@163.com>
+            shibin <shibin@canaan-creative.com>
                                                      Version: ${SCRIPT_VERSION}"
  }
 
