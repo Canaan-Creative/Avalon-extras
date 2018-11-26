@@ -32,10 +32,15 @@ SCRIPT_VERSION=20181118
 avalon4_owrepo="svn://svn.openwrt.org/openwrt/trunk@43076"
 avalon6_owrepo="git://git.openwrt.org/openwrt.git@cac971da"
 abc_owrepo="git://git.openwrt.org/openwrt.git"
-avalon7_owrepo="git://github.com/Canaan-Creative/openwrt-archive.git"
-avalon8_owrepo="git://github.com/Canaan-Creative/openwrt-archive.git"
-avalon9_owrepo="git://github.com/Canaan-Creative/openwrt-archive.git"
-avalon911_owrepo="git://github.com/Canaan-Creative/openwrt-archive.git"
+if [ "${AVA_TARGET_BOARD}" == "h3" ]; then
+    OWREPO_PATH="chengping1970/openwrt";
+else
+    OWREPO_PATH="Canaan-Creative/openwrt-archive";
+    fi
+avalon7_owrepo="git://github.com/"${OWREPO_PATH}".git"
+avalon8_owrepo="git://github.com/"${OWREPO_PATH}".git"
+avalon9_owrepo="git://github.com/"${OWREPO_PATH}".git"
+avalon911_owrepo="git://github.com/"${OWREPO_PATH}".git"
 
 # OpenWrt feeds, features: NULL(Default), NiceHash, DHCP, bitcoind
 [ -z "${FEATURE}" ] && FEEDS_CONF_URL=https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.${AVA_MACHINE}.conf
@@ -54,7 +59,7 @@ zedboard_brdcfg=("zynq" "config.${AVA_MACHINE}.zedboard")
 zctrl_brdcfg=("zynq" "config.${AVA_MACHINE}.zctrl")
 xc7z100_brdcfg=("zynq" "config.7z100")
 orangepi_2_brdcfg=("sunxi" "config.${AVA_MACHINE}.orangepi2")
-h3_brdcfg=("sunxi" "config.${AVA_MACHINE}.h3")
+h3_brdcfg=("targets/sunxi/cortexa7" "config.${AVA_MACHINE}.h3")
 
 which wget > /dev/null && DL_PROG=wget && DL_PARA="-nv -O"
 which curl > /dev/null && DL_PROG=curl && DL_PARA="-L -o"
