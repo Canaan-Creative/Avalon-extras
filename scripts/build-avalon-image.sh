@@ -17,9 +17,9 @@
 # Learn bash: http://explainshell.com/
 set -e
 
-SCRIPT_VERSION=20181118
+SCRIPT_VERSION=20181219
 
-# Support machine: avalon6, avalon4, abc, avalon7, avalon8, avalon9, avalon911
+# Support machine: avalon6, avalon4, abc, avalon7, avalon8, avalon9, avalon911, avalonlc3
 [ -z "${AVA_MACHINE}" ] && AVA_MACHINE=avalon9
 
 # Support target board: h3, orangepi-2, rpi1-modelb, rpi2-modelb, rpi3-modelb, tl-mr3020-v1, tl-wr703n-v1, wrt1200ac, xc7z100, zedboard, zctrl
@@ -36,11 +36,12 @@ if [ "${AVA_TARGET_BOARD}" == "h3" ]; then
     OWREPO_PATH="chengping1970/openwrt";
 else
     OWREPO_PATH="Canaan-Creative/openwrt-archive";
-    fi
+fi
 avalon7_owrepo="git://github.com/"${OWREPO_PATH}".git"
 avalon8_owrepo="git://github.com/"${OWREPO_PATH}".git"
 avalon9_owrepo="git://github.com/"${OWREPO_PATH}".git"
 avalon911_owrepo="git://github.com/"${OWREPO_PATH}".git"
+avalonlc3_owrepo="git://github.com/"${OWREPO_PATH}".git"
 
 # OpenWrt feeds, features: NULL(Default), NiceHash, DHCP, bitcoind
 [ -z "${FEATURE}" ] && FEEDS_CONF_URL=https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.${AVA_MACHINE}.conf
@@ -86,6 +87,8 @@ prepare_version() {
         GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer avalon9 | cut -f1 | cut -c1-7`
     elif [ "${AVA_MACHINE}" == "avalon911" ]; then
         GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer avalon911 | cut -f1 | cut -c1-7`
+    elif [ "${AVA_MACHINE}" == "avalonlc3" ]; then
+        GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer avalonlc3 | cut -f1 | cut -c1-7`
     else
         GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer avalon4 | cut -f1 | cut -c1-7`
     fi
@@ -162,6 +165,7 @@ prepare_source() {
     echo "Gen firmware for ${AVA_TARGET_BOARD}:${AVA_MACHINE}"
     echo "TARGET BOARD   :${AVA_TARGET_BOARD}"
     echo "TARGET MACHINE :${AVA_MACHINE}"
+
     cd ${SCRIPT_DIR}
     [ ! -d avalon ] && mkdir -p avalon/bin
     cd avalon
