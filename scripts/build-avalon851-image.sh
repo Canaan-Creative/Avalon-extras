@@ -102,11 +102,12 @@ prepare_patch() {
     if [ "${AVA_MACHINE}" == "avalon8_lp" ]; then
         tmp1=`cat ./feeds/cgminer/cgminer/files/cgminer.avalon8_lp.config | grep "fan"`
         tmp2="	option fan		'3'"
+        sed -i "s/${tmp1}/${tmp2}/g" ./feeds/cgminer/cgminer/files/cgminer.avalon8_lp.config
     else
         tmp1=`cat ./feeds/cgminer/cgminer/files/cgminer.avalon8.config | grep "fan"`
         tmp2="	option fan		'10'"
+        sed -i "s/${tmp1}/${tmp2}/g" ./feeds/cgminer/cgminer/files/cgminer.avalon8.config
     fi
-    sed -i "s/${tmp1}/${tmp2}/g" ./feeds/cgminer/cgminer/files/cgminer.avalon8.config
 }
 
 prepare_config() {
@@ -119,7 +120,7 @@ prepare_version() {
     if [ "${AVA_MACHINE}" == "avalon8_lp" ]; then
         GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer avalon8_lp | cut -f1 | cut -c1-7`
     else
-        GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer avalon8 | cut -f1 | cut -c1-7
+        GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer avalon8 | cut -f1 | cut -c1-7`
     fi
     LUCI_GIT_VERSION=`git --git-dir=./feeds/luci/.git rev-parse HEAD | cut -c1-7`
     OW_GIT_VERSION=`git --git-dir=./feeds/cgminer/.git rev-parse HEAD | cut -c1-7`
