@@ -14,16 +14,17 @@
 
 set -e
 
-SCRIPT_VERSION=20180604
+SCRIPT_VERSION=20181221
 
-# Support machine: avalon851
-AVA_MACHINE=avalon8
+# Support machine: avalon851, avalon8_lp
+[ -z "${AVA_MACHINE}" ] && AVA_MACHINE=avalon8
 
 # Support target board: rpi3-modelb, rpi2-modelb, rpi1-modelb
 [ -z "${AVA_TARGET_BOARD}" ] && AVA_TARGET_BOARD=rpi3-modelb
 
 # OpenWrt repo
 avalon8_owrepo="git://github.com/Canaan-Creative/openwrt-archive.git"
+avalon8_lp_owrepo="git://github.com/Canaan-Creative/openwrt-archive.git"
 
 # OpenWrt feeds, features:bitcoind
 [ -z "${FEATURE}" ] && FEEDS_CONF_URL=https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.${AVA_MACHINE}.conf
@@ -98,8 +99,13 @@ prepare_feeds() {
 
 prepare_patch() {
     cd ${OPENWRT_DIR}
-    tmp1=`cat ./feeds/cgminer/cgminer/files/cgminer.avalon8.config | grep "fan"`
-    tmp2="	option fan		'10'"
+    if [ "${AVA_MACHINE}" == "avalon8_lp" ]; then
+        tmp1=`cat ./feeds/cgminer/cgminer/files/cgminer.avalon8_lp.config | grep "fan"`
+        tmp2="	option fan		'3'"
+    else
+        tmp1=`cat ./feeds/cgminer/cgminer/files/cgminer.avalon8.config | grep "fan"`
+        tmp2="	option fan		'10'"
+    fi
     sed -i "s/${tmp1}/${tmp2}/g" ./feeds/cgminer/cgminer/files/cgminer.avalon8.config
 }
 
@@ -110,7 +116,11 @@ prepare_config() {
 
 prepare_version() {
     cd ${OPENWRT_DIR}
-    GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer avalon8 | cut -f1 | cut -c1-7`
+    if [ "${AVA_MACHINE}" == "avalon8_lp" ]; then
+        GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer avalon8_lp | cut -f1 | cut -c1-7`
+    else
+        GIT_VERSION=`git ls-remote https://github.com/Canaan-Creative/cgminer avalon8 | cut -f1 | cut -c1-7
+    fi
     LUCI_GIT_VERSION=`git --git-dir=./feeds/luci/.git rev-parse HEAD | cut -c1-7`
     OW_GIT_VERSION=`git --git-dir=./feeds/cgminer/.git rev-parse HEAD | cut -c1-7`
 
