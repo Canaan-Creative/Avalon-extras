@@ -17,7 +17,7 @@
 # Learn bash: http://explainshell.com/
 set -e
 
-SCRIPT_VERSION=20181221
+SCRIPT_VERSION=20190416
 
 # Support machine: avalon6, avalon4, abc, avalon7, avalon8, avalon8_lp, avalon9, avalon911, avalonlc3
 [ -z "${AVA_MACHINE}" ] && AVA_MACHINE=avalon9
@@ -151,6 +151,19 @@ prepare_patch() {
         wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/7z100-miscs/patches/linux/zynq/patches/121-add-dts-for-7z100.patch -O ./target/linux/zynq/patches/121-add-dts-for-7z100.patch
         wget https://raw.githubusercontent.com/${PATCH_REPO}/Avalon-extras/master/7z100-miscs/patches/linux/zynq/profiles/7z100.mk -O ./target/linux/zynq/profiles/7z100.mk
     fi
+
+    if [ "${AVA_MACHINE_EXT}" == "avalon851" ]; then
+        if [ "${AVA_MACHINE}" == "avalon8_lp" ]; then
+	    tmp1=`cat ./feeds/cgminer/cgminer/files/cgminer.avalon8_lp.config | grep "fan"`
+            tmp2="	option fan		'3'"
+            sed -i "s/${tmp1}/${tmp2}/g" ./feeds/cgminer/cgminer/files/cgminer.avalon8_lp.config
+        else
+            tmp1=`cat ./feeds/cgminer/cgminer/files/cgminer.avalon8.config | grep "fan"`
+            tmp2="	option fan		'10'"
+            sed -i "s/${tmp1}/${tmp2}/g" ./feeds/cgminer/cgminer/files/cgminer.avalon8.config
+        fi
+    fi
+
 }
 
 prepare_feeds() {
